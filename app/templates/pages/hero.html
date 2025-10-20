@@ -1,0 +1,108 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}Hero Banner | Hero-Banner{% endblock %}
+{% block content %}
+
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Hero Banner</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="index.html">
+                        <div class="text-tiny">Dashboard</div>
+                    </a>
+                </li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><div class="text-tiny">Hero Banner</div></li>
+            </ul>
+        </div>
+
+        <div class="wg-box">
+            <div class="flex items-center justify-between gap10 flex-wrap">
+                <div class="wg-filter flex-grow">
+                   <form class="form-search" method="GET" action="{% url 'hero' %}">
+                        <fieldset class="name">
+                            <input type="text" placeholder="Search here..." name="q" 
+                                value="{{ request.GET.q|default_if_none:'' }}" tabindex="2">
+                        </fieldset>
+                        <div class="button-submit">
+                            <button type="submit"><i class="icon-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+                <a class="tf-button style-1 w208" href="{% url 'add_hero' %}"><i class="icon-plus"></i>Add new</a>
+            </div>
+
+          <div class="table-responsive card-body p-0">
+                <table id="myDataTable" class="table table-hover no-border align-middle">
+            <thead class="table-head text-white text-center">
+            <tr>
+               <th class="id-col text-center align-middle p-0">#</th>
+                <th scope="col" class="text-center">Image</th>
+                <th scope="col" class="text-center">Title</th>
+                <th scope="col" class="text-center">Date</th>
+                <th scope="col" class="text-center">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hero in heros %}
+            <tr class="table-row">
+                <td class="fw-semibold px-3">{{ forloop.counter }}</td>
+                <td class="text-center">
+                    {% if hero.image %}
+                        <img src="{{ hero.image.url }}" width="70" height="70" class="rounded shadow-sm img-thumbnail" alt="{{ hero.title }}">
+                    {% else %}
+                        <span class="badge bg-secondary">No Image</span>
+                    {% endif %}
+                </td>
+                <td class="fw-bold text-dark text-center">{{ hero.title }}</td>
+                <td class="text-muted text-center">{{ hero.created_at|date:"M d, Y" }}</td>
+                <td class="text-center">
+                        <a href="{% url 'edit_hero' hero.pk %}"  class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit
+                            <i class="fa-solid fa-pen"></i>
+                                    </a>
+                        <!-- Delete Button -->
+                                <a href="#" 
+                                class="btn text-white fw-semibold bg-danger fs-5 shadow"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteModal{{ hero.pk }}">
+                                    Delete <i class="fa-solid fa-trash-can shadow"></i>
+                                    </a>
+
+                                <div class="modal fade" id="deleteModal{{ hero.pk }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="staticBackdropLabel">Confirm Delete</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                          <i class="bi bi-exclamation-triangle text-danger fs-1 mb-3"></i>
+                                        <p class="fw-semibold">Are you sure you want to delete <br><span class="text-danger">"{{ hero.title }}"</span>?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{% url 'delete_hero' hero.pk %}" class="btn btn-danger px-4">Yes, Delete</a>
+                                        </div>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No brands found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

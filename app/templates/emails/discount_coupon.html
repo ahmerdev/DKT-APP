@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px;">
+  <div style="max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 8px;">
+    <h2 style="color: #4CAF50;">{{ discount.title }}</h2>
+    <p>Hi {{ user.email }},</p>
+    <p>We’ve got a special offer for you 🎉</p>
+    <p><strong>Coupon Code:</strong> <code style="background: #eee; padding: 5px 10px;">{{ discount.code }}</code></p>
+    <p><strong>Discount:</strong> {{ discount.discount_type|title }} — {{ discount.value }}</p>
+    <p><strong>Valid:</strong> {{ discount.start_date }} → {{ discount.end_date }}</p>
+    <hr>
+    <p>Use this code at checkout to enjoy your savings!</p>
+    <p style="color: #888;">– The Store Team</p>
+  </div>
+</body>
+</html>

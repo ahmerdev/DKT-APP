@@ -1,0 +1,113 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}Redeem | Add-Redeem{% endblock %}
+{% block content %}
+                        <div class="main-content-inner">
+                            <div class="main-content-wrap">
+                                <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+                                    <h3>Add Redeem</h3>
+                                    <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                                        <li>
+                                            <a href="index-2.html">
+                                                <div class="text-tiny">Dashboard</div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <i class="icon-chevron-right"></i>
+                                        </li>
+                                        <li>
+                                            <a href="all-product.html">
+                                                <div class="text-tiny">Redeems</div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <i class="icon-chevron-right"></i>
+                                        </li>
+                                        <li>
+                                            <div class="text-tiny">Add Redeem</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- form-add-product -->
+                              <form class="tf-section-2 form-add-product" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="wg-box">
+        <!-- Subtitle -->
+        <fieldset class="name">
+            <div class="body-title mb-10">Product Subtitle <span class="tf-color-1">*</span></div>
+            <input class="mb-10" type="text" name="subtitle"
+                placeholder="Enter product subtitle"
+                value="{{ redeem.subtitle|default_if_none:'' }}" required>
+            <div class="text-tiny">Do not exceed 100 characters when entering the product subtitle.</div>
+        </fieldset>
+
+        <!-- Title -->
+        <fieldset class="name">
+            <div class="body-title mb-10">Product Title <span class="tf-color-1">*</span></div>
+            <input class="mb-10" type="text" name="title"
+                placeholder="Enter product title"
+                value="{{ redeem.title|default_if_none:'' }}" required>
+            <div class="text-tiny">Do not exceed 100 characters when entering the product title.</div>
+        </fieldset>
+
+        <!-- Description -->
+        <fieldset class="shortdescription">
+            <div class="body-title mb-10">Short Description <span class="tf-color-1">*</span></div>
+            <textarea class="mb-10 ht-150" name="description"
+                placeholder="Short Description" required>{{ redeem.description|default_if_none:'' }}</textarea>
+            <div class="text-tiny">Do not exceed 250 characters when entering the description.</div>
+        </fieldset>
+    </div>
+
+    <div class="wg-box">
+        <!-- Image -->
+        <fieldset>
+            <div class="body-title">Upload Image <span class="tf-color-1">*</span></div>
+            <div class="upload-image flex-grow d-flex flex-wrap gap-2" id="singleImagePreview">
+                {% if redeem and redeem.image %}
+                <div class="item" id="imgpreview" style="position: relative;">
+                    <img id="previewImg" src="{{ redeem.image.url }}" class="effect8" alt="{{ redeem.title }}"
+                        style="max-height: 120px; border-radius: 8px;">
+                    <button type="button" class="remove-btn" onclick="removeSingleImage()">×</button>
+                </div>
+                {% else %}
+                <div id="imgpreview" class="item" style="display:none; position: relative;">
+                    <img id="previewImg" src="" class="effect8" alt=""
+                        style="max-height: 120px; border-radius: 8px;">
+                    <button type="button" class="remove-btn" onclick="removeSingleImage()">×</button>
+                </div>
+                {% endif %}
+                <div id="upload-file" class="item up-load">
+                    <label class="uploadfile" for="myFile">
+                        <span class="icon"><i class="icon-upload-cloud"></i></span>
+                        <span class="body-text">Drop your images here or <span class="tf-color">click to browse</span></span>
+                        <input type="file" id="myFile" name="image" accept="image/*">
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Points Required -->
+        <fieldset class="name">
+            <div class="body-title mb-10">Points Required <span class="tf-color-1">*</span></div>
+            <input class="mb-10" type="number" name="points_required"
+                placeholder="Enter points"
+                value="{{ redeem.points_required|default_if_none:'' }}" required>
+        </fieldset>
+
+        <!-- Submit -->
+        <div class="cols gap10">
+            <button class="tf-button w-full" type="submit">
+                {% if redeem %}Update Redeem{% else %}Add Redeem{% endif %}
+            </button>
+        </div>
+    </div>
+</form>
+
+
+                                <!-- /form-add-product -->
+                            </div>
+                            </div>
+
+{% endblock %}
+

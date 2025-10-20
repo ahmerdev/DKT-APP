@@ -1,0 +1,28 @@
+<!-- templates/includes/delete_confirm_modal.html -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header bg-danger text-white rounded-top-4">
+        <h5 class="modal-title fw-bold" id="deleteModalLabel">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Delete
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <p class="fs-5 mb-4">Are you sure you want to delete <span id="deleteItemName" class="fw-bold text-danger"></span>?</p>
+        <div class="d-flex justify-content-center gap-3">
+          <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+          <a href="#" id="confirmDeleteBtn" class="btn btn-danger px-4 rounded-pill shadow-sm">Yes, Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showDeleteModal(deleteUrl, itemName) {
+  document.getElementById('confirmDeleteBtn').href = deleteUrl;
+  document.getElementById('deleteItemName').innerText = itemName || 'this item';
+  new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+}
+</script>

@@ -1,0 +1,110 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+
+{% block title %}Order | Create Order{% endblock %}
+{% block content %}
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Create Order</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="{% url 'order_list_ui' %}">
+                        <div class="text-tiny">Orders</div>
+                    </a>
+                </li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><div class="text-tiny">Create Order</div></li>
+            </ul>
+        </div>
+
+        <!-- Create Order Form -->
+        <form class="tf-section-2 form-add-product" method="POST" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="wg-box">
+        <!-- Address -->
+        <fieldset class="name">
+            <div class="body-title mb-10">Select User <span class="tf-color-1">*</span></div>
+            <div class="select">
+                <select name="user" required>
+                    <option value="">-- Select User --</option>
+                    {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title mb-10">Address <span class="tf-color-1">*</span></div>
+            <textarea name="address" class="mb-10 ht-150" placeholder="Enter delivery address" required></textarea>
+        </fieldset>
+
+        <!-- Shipping -->
+        <fieldset class="name">
+            <div class="body-title mb-10">Shipping Method <span class="tf-color-1">*</span></div>
+            <input type="text" class="mb-10" name="shipping" placeholder="Enter shipping method" required>
+        </fieldset>
+
+        <!-- Status -->
+        <fieldset class="name">
+            <div class="body-title mb-10">Order Status</div>
+            <div class="select">
+                <select name="status" required>
+                    <option value="pending">Pending</option>
+                    <option value="process">In Process</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- Order Items -->
+    <div class="wg-box">
+        <div class="body-title mb-10">Order Items</div>
+        <div id="itemsContainer">
+            <div class="item-row mb-3">
+                <input type="text" class="form-control mb-2" name="items[0][name]" placeholder="Product Name" required>
+                <input type="number" class="form-control mb-2" name="items[0][pts]" placeholder="Points">
+                <input type="number" step="0.01" class="form-control mb-2" name="items[0][price]" placeholder="Price" required>
+                <input type="text" class="form-control mb-2" name="items[0][variants]" placeholder="Variant (e.g. Size: M)">
+                <input type="file" name="items[0][image]" accept="image/*">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentNode.remove()">Remove</button>
+            </div>
+        </div>
+        <button type="button" class="tf-button mt-2" onclick="addItem()">+ Add Item</button>
+    </div>
+
+    <div class="cols gap10">
+        <button class="tf-button w-full" type="submit">Create Order</button>
+    </div>
+</form>
+
+    </div>
+</div>
+
+<script>
+let itemIndex = 1;
+
+function addItem() {
+    const container = document.getElementById("itemsContainer");
+
+    const div = document.createElement("div");
+    div.classList.add("item-row", "mb-3");
+
+    div.innerHTML = `
+        <input type="text" class="form-control mb-2" name="items[${itemIndex}][name]" placeholder="Product Name" required>
+        <input type="number" class="form-control mb-2" name="items[${itemIndex}][pts]" placeholder="Points">
+        <input type="number" step="0.01" class="form-control mb-2" name="items[${itemIndex}][price]" placeholder="Price" required>
+        <input type="text" class="form-control mb-2" name="items[${itemIndex}][variants]" placeholder="Variant (e.g. Size: M)">
+        <input type="file" class="form-control mb-2" name="items[${itemIndex}][image]" accept="image/*">
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentNode.remove()">Remove</button>
+    `;
+
+    container.appendChild(div);
+    itemIndex++;
+}
+
+</script>
+{% endblock %}

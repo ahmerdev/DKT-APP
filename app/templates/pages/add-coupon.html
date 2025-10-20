@@ -1,0 +1,112 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}Add Discount{% endblock %}
+
+{% block content %}
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Add Discount</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li><a href="{% url 'dashboard' %}"><div class="text-tiny">Dashboard</div></a></li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><a href="#"><div class="text-tiny">Discounts</div></a></li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><div class="text-tiny">Add Discount</div></li>
+            </ul>
+        </div>
+
+        <!-- Discount Form -->
+        <form class="tf-section-2 form-add-product" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="wg-box">
+                
+                <!-- Discount Title -->
+                <fieldset class="name">
+                    <div class="body-title mb-10">Discount Title <span class="tf-color-1">*</span></div>
+                    <input class="mb-10" type="text" name="title" placeholder="Enter Discount Title" value="{{ discount.title|default:'' }}" required>
+                    <div class="text-tiny">Do not exceed 100 characters.</div>
+                </fieldset>
+
+                <!-- Coupon Code -->
+                <fieldset class="name">
+                    <div class="body-title mb-10">Coupon Code <span class="tf-color-1">*</span></div>
+                    <input class="mb-10" type="text" name="code" placeholder="Enter Coupon Code" value="{{ discount.code|default:'' }}" required>
+                    <div class="text-tiny">Unique code for discount.</div>
+                </fieldset>
+
+                <!-- Discount Type -->
+                 
+                <fieldset class="name">
+                    <div class="body-title mb-10">Discount Type <span class="tf-color-1">*</span></div>
+                    <select name="discount_type" required>
+                        <option value="">Select Type</option>
+                        <option value="percentage" {% if discount.discount_type == "percentage" %}selected{% endif %}>Percentage</option>
+                        <option value="fixed" {% if discount.discount_type == "fixed" %}selected{% endif %}>Fixed Amount</option>
+                    </select>
+                </fieldset>
+
+                <!-- Discount Value -->
+                <fieldset class="name">
+                    <div class="body-title mb-10">Discount Value <span class="tf-color-1">*</span></div>
+                    <input type="number" step="0.01" min="0" name="value" placeholder="Enter Discount Value" value="{{ discount.value|default:'' }}" required>
+                </fieldset>
+
+                <!-- Submit Button -->
+                <div class="cols gap10 mt-20">
+                    <button class="tf-button w-full" type="submit">Save Discount</button>
+                </div>
+            </div>
+            <div class="wg-box">
+                    <!-- Start / End Date -->
+                <div class="cols gap10">
+                    <fieldset class="name">
+                        <div class="body-title mb-10">Start Date <span class="tf-color-1">*</span></div>
+                        <input type="date" name="start_date" value="{{ discount.start_date|date:'Y-m-d'|default:'' }}" required>
+                    </fieldset>
+                    <fieldset class="name">
+                        <div class="body-title mb-10">End Date <span class="tf-color-1">*</span></div>
+                        <input type="date" name="end_date" value="{{ discount.end_date|date:'Y-m-d'|default:'' }}" required>
+                    </fieldset>
+                </div>
+                 <div class="gap30 cols">
+                <div class="form-check mb-3">
+                    <div class="body-title mb-10">Apply to All Products</div>
+                    <input class="form-check-input" type="checkbox" name="apply_all_products" id="applyAllProducts">
+                </div>  
+                 <div class="form-check mt-4 mb-3">
+                    <div class="body-title mb-10">Apply to All Users</div>
+                    <input class="form-check-input" type="checkbox" name="apply_all_users" id="applyAllUsers">
+                </div>
+                </div>
+
+                <fieldset>
+                    <div class="body-title mb-10">Select Specific Products</div>
+                    <select class="form-multi-select" name="products" multiple data-coreui-search="true">
+                    {% for product in products %}
+                    <option value="{{ product.id }}">{{ product.name }}</option>
+                    {% endfor %}
+                    </select>
+                </fieldset>
+
+                <fieldset>
+                      <div class="body-title mb-10">Select Specific Users</div>
+                    <select class="form-multi-select" name="users" multiple data-coreui-search="true">
+                    {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.email }}</option>
+                        {% endfor %}
+                    </select>
+                </fieldset>
+                <!-- Active Toggle -->
+                <fieldset class="variant-toggle">
+                    <div class="body-title mb-10">Active</div>
+                    <div class="form-check form-switch mx-2">
+                        <input class="form-check-input" type="checkbox" name="active" value="1" {% if discount.active %}checked{% endif %}>
+                    </div>
+                </fieldset>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

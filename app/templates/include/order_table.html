@@ -1,0 +1,56 @@
+<div class="table-responsive card-body p-0">
+    <table id="myDataTable" class="table table-hover no-border align-middle">
+        <thead class="table-head text-white text-center">
+      <tr class="text-center">
+         <th class="id-col text-center align-middle p-0">#</th>
+        <th class="text-center">ID</th>
+        <th class="text-center">User Number</th>
+        <th class="text-center">Type</th>
+        <th class="text-center">Status</th>
+        <th class="text-center">Date</th>
+        <th class="text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr class="text-center">
+        <td class="text-center fs-4 fw-bold">{{ forloop.counter }}</td>
+        <td class="text-center fs-4 fw-bold">#{{ order.id }}</td>
+        <td class="text-center fs-4 fw-bold">{{ order.user }}</td>
+        <td class="text-center">
+          {% if order.type == "redeem" %}
+          <span class="badge shadow rounded-4 py-2 px-3 bg-primary">Normal Redeem</span>
+          {% else %}
+          <span class="badge shadow rounded-4 py-2 px-3 bg-info">Normal Order</span>
+          {% endif %}
+        </td>
+        <td class="text-center">
+            {% if order.status == "pending" %}
+                <span class="badge shadow rounded-4 py-2 px-3 text-bg-warning">Pending</span>
+            {% elif order.status == "inprocess" %}
+                <span class="badge shadow rounded-4 py-2 px-3 text-bg-info">In Process</span>
+            {% elif order.status == "delivered" %}
+                <span class="badge shadow rounded-4 py-2 px-3 text-bg-success">Delivered</span>
+            {% elif order.status == "on_the_way" %}
+                <span class="badge shadow rounded-4 py-2 px-3 text-bg-danger">On The way</span>
+            {% elif order.status == "cancelled" %}
+                <span class="badge shadow rounded-4 py-2 px-3 text-bg-danger">Cancelled</span>
+            {% else %}
+                <span class="badge shadow rounded-4 py-2 px-3 text-bg-info">{{ order.status }}</span>
+            {% endif %}
+        </td>
+        <td class="text-center text-muted">{{ order.created_at|date:"M d, Y" }}</td>
+        <td class="text-center">
+          <a href="{% url 'update_order_status_ui' order.pk %}" class="btn text-white fs-5 fw-semibold bg-primary shadow"> View <i class="fa-solid fa-eye shadow"></i></a>
+        <a href="{% url 'delete_order_ui' order.pk %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i></a>
+
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" class="text-center">No orders found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

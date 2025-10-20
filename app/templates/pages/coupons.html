@@ -1,0 +1,130 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}Ads-Banner | Ads-Banner{% endblock %}
+{% block content %}
+
+
+  <div class="main-content-inner">
+                            <div class="main-content-wrap">
+                                <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+                                    <h3>Discounts</h3>
+                                    <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                                        <li>
+                                            <a href="index.html">
+                                                <div class="text-tiny">Dashboard</div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <i class="icon-chevron-right"></i>
+                                        </li>
+                                        <li>
+                                            <div class="text-tiny">Discounts</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="wg-box">
+                                    <div class="flex items-center justify-between gap10 flex-wrap">
+                                        <div class="wg-filter flex-grow">
+                                           <form class="form-search" method="GET" action="{% url 'adbanner' %}">
+                                            <fieldset class="name">
+                                                <input type="text" placeholder="Search here..." name="q" 
+                                                    value="{{ request.GET.q|default_if_none:'' }}" tabindex="2">
+                                            </fieldset>
+                                            <div class="button-submit">
+                                                <button type="submit"><i class="icon-search"></i></button>
+                                            </div>
+                                        </form>
+
+                                        </div>
+                                        <a class="tf-button style-1 w208" href="{% url 'create_discount' %}"><i
+                                                class="icon-plus"></i>Add new</a>
+                                    </div>
+                                    <div class="table-responsive card-body p-0">
+                                        <table id="myDataTable" class="table table-hover no-border align-middle">
+                                            <thead class="table-head text-white text-center">
+                                                <tr>
+                                                    <th class="id-col text-center align-middle p-0">#</th>
+                                                    <th class="text-center">Title</th>
+                                                    <th class="text-center">Code</th>
+                                                    <th class="text-center">Type</th>
+                                                    <th class="text-center">Value</th>
+                                                    <th class="text-center">Products</th>
+                                                    <th class="text-center">Users</th>
+                                                    <th class="text-center">Start - End Date</th>
+                                                    <th class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="discount-table-body">
+                                                {% for discount in discounts %}
+                                                <tr>
+                                                    <td class="text-center">{{ forloop.counter }}</td>
+
+                                                    <td class="text-center fw-semibold">{{ discount.title }}</td>
+
+                                                    <td class="text-center">
+                                                        <span class="badge bg-primary">{{ discount.code }}</span>
+                                                    </td>
+
+                                                    <td class="text-center">
+                                                        {% if discount.discount_type == 'percentage' %}
+                                                            <span class="badge bg-success">Percentage</span>
+                                                        {% else %}
+                                                            <span class="badge bg-info">Flat</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td class="text-center">{{ discount.value }}</td>
+
+                                                    <td class="text-center">
+                                                        {% if discount.apply_all_products %}
+                                                            <span class="badge bg-success">All Products</span>
+                                                        {% elif discount.products.all %}
+                                                            {{ discount.products.all|join:", " }}
+                                                        {% else %}
+                                                            <span class="text-muted">None</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td class="text-center">
+                                                        {% if discount.apply_all_users %}
+                                                            <span class="badge bg-success">All Users</span>
+                                                        {% elif discount.users.all %}
+                                                            {{ discount.users.all|join:", " }}
+                                                        {% else %}
+                                                            <span class="text-muted">None</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td class="text-center">
+                                                        {% if discount.start_date or discount.end_date %}
+                                                            {{ discount.start_date|date:"m/d/Y" }} - {{ discount.end_date|date:"m/d/Y" }}
+                                                        {% else %}
+                                                            <span class="text-muted">No Date Set</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td class="text-center">
+                                                        <a href="{% url 'delete_discount' discount.pk %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">
+                                                            Delete <i class="fa-solid fa-trash-can"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="9" class="text-center">No Discounts found.</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="divider"></div>
+                                    <div class="flex items-center justify-between flex-wrap gap10 wgp-pagination">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+{% endblock %}

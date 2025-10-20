@@ -1,0 +1,82 @@
+<div class="modal fade" id="addaddress" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content  rounded-5">
+      <div class="modal-body">
+        <div class="container mt-4">
+             <!-- Create AppUser Form -->
+       <form method="POST" action="{% url 'customer_address' user.pk %}">
+            {% csrf_token %}
+            <div class="wg-box">
+                <style>
+.input-with-prefix {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+}
+
+.prefix {
+  padding: .375rem .75rem;
+  background-color: #e9ecef;
+  border-right: 1px solid #ced4da;
+}
+
+.input-with-prefix input {
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  padding: .375rem .75rem;
+}
+</style>
+            <div class="container">
+               <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h5 class="mb-3">Address Details</h5>
+                    </div>
+
+                    <!-- Address 1 -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Street</label>
+                        <input type="text" class="form-control" name="address[street]" placeholder="Enter street">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" name="address[city]" placeholder="Enter city">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">State</label>
+                        <input type="text" class="form-control" name="address[state]" placeholder="Enter state">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Postal Code</label>
+                        <input type="text" class="form-control" name="address[postal_code]" placeholder="Enter postal code">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Country</label>
+                        <input type="text" class="form-control" name="address[country]" placeholder="Enter country">
+                    </div>
+                     <div class="col-md-6 mt-4">
+                         <button class="tf-button w-full" type="submit">Create User Address</button>
+                    </div>
+                </div>
+
+            </div>
+                    
+                <!-- Password -->
+                
+            </div>
+        </form>
+
+</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn bg-danger text-white fs-5 py-3 px-4" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+       
+    

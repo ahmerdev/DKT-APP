@@ -1,0 +1,37 @@
+<div class="table-responsive card-body">
+    <table class="table table-hover  align-middle">
+        <thead class="table-head text-white text-center rounded-0">
+            <tr>
+                <th class="text-center">Image</th>
+                <th class="text-center">Item Name</th>
+                <th class="text-center">Quantity</th>
+                <th class="text-center">Price</th>
+                <th class="text-center">Points</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body">
+            {% for item in entry.items %}
+            <tr>
+                <td class="text-center">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}" width="50" class="rounded">
+                    {% else %}
+                        <span class="text-muted">No Image</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">{{ item.name }}</td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-center">
+                    {% if item.price > 0 %}
+                        Rs {{ item.price }}
+                    {% else %}
+                        Redeem
+                    {% endif %}
+                </td class="text-center">
+                </td>
+                <td class="text-center"><span class="badge bg-danger fs-5">{{ item.pts }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

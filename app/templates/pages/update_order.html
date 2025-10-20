@@ -1,0 +1,190 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}Update Order | Orders{% endblock %}
+{% block content %}
+
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Order #{{ order.id }}</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="{% url 'order_list_ui' %}">
+                        <div class="text-tiny">Orders</div>
+                    </a>
+                </li>
+                
+                <li><i class="icon-chevron-right"></i></li>
+                <li>
+                    <div class="text-tiny">Update Status</div>
+                </li>
+            </ul>
+        </div>
+        <div class="container-fluid">
+            <div class="row row-cols-1 row-cols-lg-3 g-3">
+                <div class="col">
+                     <!-- Order Detail Box -->
+                    <div class="wg-box h-100">
+                        <h4 class="mb-3">Order Details</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p><strong>Order ID:</strong> {{ order.id }}</p>
+                                <p><strong>User:</strong> {{ order.user }}</p>
+                                <p><strong>Shipping:</strong> {{ order.shipping }}</p>
+                            </div>
+                            <div>
+                                <p><strong>Order Type:</strong>
+                                    {% if order.type == "redeem" %}
+                                        <span class="badge bg-primary">Redeem Order</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Normal Order</span>
+                                    {% endif %}
+                                    </p>
+
+                                <p><strong>Address:</strong> {{ order.address }}</p>
+                                
+                                <p><strong>Status:</strong>
+                                    {% if order.status == "pending" %}
+                                        <span class="badge text-bg-warning">{{ order.get_status_display }}</span>
+                                    {% elif order.status == "inprocess" %}
+                                        <span class="badge text-bg-info">{{ order.get_status_display }}</span>
+                                    {% elif order.status == "delivered" %}
+                                        <span class="badge text-bg-success">{{ order.get_status_display }}</span>
+                                    {% elif order.status == "on_the_way" %}
+                                        <span class="badge text-bg-danger">{{ order.get_status_display }}</span>
+                                    {% elif order.status == "cancelled" %}
+                                        <span class="badge text-bg-danger">{{ order.get_status_display }}</span>    
+                                    {% else %}
+                                        <span class="badge text-bg-secondary">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </p>
+
+                                <p><strong>Date:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <!-- Payments Table -->
+                    <div class="wg-box mb-4">
+                        <h4 class="mb-3">Payments</h4>
+                        <div class="table-responsive card-body p-0">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-head text-white text-center">
+                                    <tr>
+                                        <th class="text-center fs-4 fw-bold">Method</th>
+                                        <th class="text-center fs-4 fw-bold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pay in order.payments.all %}
+                                    <tr>
+                                        <td class="text-center fs-4 fw-bold">{{ pay.method }}</td>
+                                        <td class="text-center fs-4 fw-bold"><span class="badge bg-warning fs-5">{{ pay.status }}</span></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="2" class="text-center">No payments found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                     <!-- Update Form -->
+                    <div class="wg-box h-100">
+                        <h4 class="mb-3">Update Status</h4>
+                        <form method="post" class="flex items-center gap20">
+                            {% csrf_token %}
+                            <fieldset class="name">
+                            <div class="select">
+                            <select name="status">
+                                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                                <option value="process" {% if order.status == "process" %}selected{% endif %}>In Process</option>
+                                <option value="on_the_way" {% if order.status == "on_the_way" %}selected{% endif %}>On The Way</option>
+                                <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
+                                <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+                            </select>
+                            </div>
+                        </fieldset>
+                        <div class="btn-up d-flex gap-2">
+                            <button type="submit" class="tf-button style-1">Update</button>
+                            <a href="{% url 'order_list_ui' %}" class="tf-button style-2">Back</a>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="row pt-3">
+                <div class="col-md-12">
+                    <!-- Items Table -->
+        <div class="wg-box mb-4">
+            <h4 class="mb-3">Order Items</h4>
+            <div class="table-responsive card-body p-0">
+                <table class="table table-hover  align-middle">
+                    <thead class="table-head text-white text-center">
+                        <tr>
+                            <th class="text-center fs-4 fw-bold">Image</th>
+                            <th class="text-center fs-4 fw-bold">Name</th>
+                            <th class="text-center fs-4 fw-bold">PTS</th>
+                            <th class="text-center fs-4 fw-bold">Variants</th>
+                            <th class="text-center fs-4 fw-bold">Quantity</th>
+                            <th class="text-center fs-4 fw-bold">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border border-1">
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td class="text-center fs-4 fw-bold">
+                                    {% if item.image %}
+                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" width="80" height="80">
+                                    {% else %}
+                                        No Image
+                                    {% endif %}
+                                </td>
+                                <td class="text-center fs-4 fw-bold">{{ item.name }}</td>
+                                <td class="text-center"><span class="badge bg-danger fs-5">{{ item.pts }}</span></td>
+                                <td class="text-center fs-4 fw-bold">{{ item.variants }}</td>
+                                <td class="text-center fs-4 fw-bold">{{ item.quantity }}</td>
+                                <td class="text-center fs-4 fw-bold">
+                                    {% if item.price > 0 %}
+                                        Rs {{ item.price }}
+                                    {% else %}
+                                        Redeem 
+                                    {% endif %}       
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No items found.</td>
+                            </tr>
+                            {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+           
+        </div>
+        
+                </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

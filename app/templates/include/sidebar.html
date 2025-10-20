@@ -1,0 +1,306 @@
+
+{% load static %}
+                <div class="section-menu-left">
+                    <div class="box-logo">
+                        <a href="{% url 'dashboard' %}">
+                            <img style="width: 50px;" class=""  alt="" src="{% static 'images/logo/logo.png' %}"
+                               >
+                        </a>
+                        <div class="button-show-hide">
+                            <i class="icon-menu-left"></i>
+                        </div>
+                    </div>
+                    <div class="center">
+                        <div class="center-item">
+                            <div class="center-heading">Main Home</div>
+                            <ul class="menu-list">
+                                <li class="menu-item">
+                                    <a href="{% url 'dashboard' %}" class="">
+                                        <div class="icon"><i class="icon-grid"></i></div>
+                                        <div class="text">Dashboard</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="center-item">
+                            <ul class="menu-list">
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-shopping-cart"></i></div>
+                                        <div class="text">Products</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'add_product' %}" class="">
+                                                <div class="text">Add Product</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'product' %}" class="">
+                                                <div class="text">Product List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-layers"></i></div>
+                                        <div class="text">Brands</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'add_brand' %}" class="">
+                                                <div class="text">New Brand</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'brand' %}" class="">
+                                                <div class="text">Brand List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-layers"></i></div>
+                                        <div class="text">Categories</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'add_category' %}" class="">
+                                                <div class="text">New Category</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'category' %}" class="">
+                                                <div class="text">Category List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-file-plus"></i></div>
+                                        <div class="text">Orders</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'create_order_ui' %}" class="">
+                                                <div class="text">Add Order</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'order_list_ui' %}" class="">
+                                                <div class="text">Order List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                 <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-user"></i></div>
+                                        <div class="text">Customers</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'create_appuser' %}" class="">
+                                                <div class="text">Add Customer</div>
+                                            </a>
+                                        </li>
+                                         <li class="sub-menu-item">
+                                            <a href="{% url 'appuser_list' %}" class="">
+                                                <div class="text">Customer List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                 <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-image"></i></div>
+                                        <div class="text">Banners</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'hero' %}" class="">
+                                                <div class="text">Hero Banner</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'banner' %}" class="">
+                                                <div class="text">Cateory Banner</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'adbanner' %}" class="">
+                                                <div class="text">Ads Banner</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-zap-off"></i></div>
+                                        <div class="text">Reward Points System</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'add_redeem' %}" class="">
+                                                <div class="text">Add Redeem</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'redeem' %}" class="">
+                                                <div class="text">Redeem List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-zap-off"></i></div>
+                                        <div class="text">Discounts</div>
+                                    </a>
+                                     <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'create_discount' %}" class="">
+                                                <div class="text">Add Coupns</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'discount' %}" class="">
+                                                <div class="text">Coupns List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                 <li class="menu-item">
+                                    <a href="slider.html" class="">
+                                        <div class="icon"><i class="icon-target"></i></div>
+                                        <div class="text">OTP System</div>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="users.html" class="">
+                                        <div class="icon"><i class="icon-users"></i></div>
+                                        <div class="text">Security & User Roles</div>
+                                    </a>
+                                </li>
+
+                                <li class="menu-item">
+                                    <a href="settings.html" class="">
+                                        <div class="icon"><i class="icon-settings"></i></div>
+                                        <div class="text">Settings</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-content-right">
+
+                    <div class="header-dashboard">
+                        <div class="wrap">
+                            <div class="header-left">
+                                <a href="{% url 'dashboard' %}">
+                                  <img style="width: 50px;" class=""  alt="" src="{% static 'images/logo/logo.png' %}"
+                                data-light="{% static 'images/logo/logo.png' %}" data-dark="{% static 'images/logo/logo.png' %}">
+                                </a>
+                                <div class="button-show-hide">
+                                    <i class="icon-menu-left"></i>
+                                </div>
+
+
+                                <form class="form-search flex-grow">
+                                    <fieldset class="name">
+                                        <input type="text" placeholder="Search here..." class="show-search" name="name"
+                                            tabindex="2" value="" aria-required="true" required="">
+                                    </fieldset>
+                                    <div class="button-submit">
+                                        <button class="" type="submit"><i class="icon-search"></i></button>
+                                    </div>
+                                    <div class="box-content-search" id="box-content-search">
+                                       
+                                    </div>
+                                </form>
+
+                            </div>
+                            <div class="header-grid">
+
+                              
+
+
+
+
+                                <div class="popup-wrap user type-header">
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button"
+                                            id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="header-user wg-user">
+                                        <span class="image">
+                                            {% if request.user.is_authenticated %}
+                                                {% if request.user.profile.image %}
+                                                    <img src="{{ request.user.profile.image.url }}" alt="{{ request.user.get_full_name }}">
+                                                {% else %}
+                                                    <!-- Agar image nahi hai to user ke naam ka pehla letter -->
+                                                    <span class="avatar-initial">
+                                                        {{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <!-- Guest ke liye "G" -->
+                                                <span class="avatar-initial">G</span>
+                                            {% endif %}
+                                        </span>
+                                        <span class="flex flex-column">
+                                            {% if request.user.is_authenticated %}
+                                                <span class="body-title mb-2">{{ request.user.get_full_name|default:request.user.username }}</span>
+                                                <span class="text-tiny">User</span>
+                                            {% else %}
+                                                <span class="body-title mb-2">Guest</span>
+                                            {% endif %}
+                                        </span>
+                                    </span>
+<style>
+    .avatar-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #7d1d27; /* apni pasand ka color */
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    text-transform: uppercase;
+}
+</style>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end has-content"
+            aria-labelledby="dropdownMenuButton3">
+            {% if request.user.is_authenticated %}
+                <li>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn body-title-2"><i class="icon-log-out"></i> Logout</button>
+                    </form>
+                </li>
+            {% else %}
+                <li>
+                    <a href="{% url 'login' %}" class="user-item">
+                        <div class="icon">
+                            <i class="icon-user"></i>
+                        </div>
+                        <div class="body-title-2">Login</div>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+
+    </div>
+</div>
+</div>

@@ -1,0 +1,216 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+
+{% block title %}Customer Detail{% endblock %}
+
+{% block content %}
+<style>
+    
+    .accordion-item.mb-2 {
+    border: 2px solid #990000;
+    padding: 15px;
+    margin: 20px;
+    border-radius: 20px;
+}
+</style>
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <h3 class="mb-4"> Customer Detail</h3>
+
+        <!-- User Info Card -->
+    <div class="card shadow-sm mb-5 px-2 py-4 rounded-5">
+         <div class="card-body">
+        <div class="profile d-flex justify-content-between">
+             <h5 class="card-title mb-3"><i class="fas fa-user"></i> User Info</h5>
+             <div class="profile-btn">
+         <a href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop"
+        class="btn text-white fs-4 fw-semibold bg-primary shadow px-4 py-2">View User Address  <i class="fa-solid fa-eye"></i></a>
+        <a href="#" data-bs-toggle="modal" data-bs-target="#addaddress"
+        class="btn text-white fs-4 fw-semibold bg-danger shadow px-4 py-2">
+        <i class="fa-solid fa-plus fs-4"></i> Add User Address</a>
+        <a href="{% url 'create_appuser' user.pk %}" 
+        class="btn text-white fs-4 fw-semibold bg-secondary shadow px-4 py-2">Edit Profile  <i class="fa-solid fa-pen"></i></a>
+             </div>
+
+             <!-- Button trigger modal -->
+            {% include 'include/view-address.html' %} 
+            {% include 'include/add-user-address.html' %} 
+            <!-- Modal -->
+
+        </div>
+       <div class="container py-5">
+        <div class="card  border-0 overflow-hidden">
+            <div class="row g-0 align-items-center justify-content-center py-4">
+
+      <!-- Left: User Profile -->
+      <div class="col-md-3 shadow-sm rounded-4 text-white text-center py-5" style="background-color: #7d1d27;">
+        <div class="user-profile d-inline-block">
+        {% if user.image %}
+        <img src="{{ user.image.url }}" 
+            alt="{{ user.name }}" 
+            class="img-fluid rounded-circle shadow" 
+            style="width: 180px; height: 180px; object-fit: cover;">
+        {% else %}
+        <img src="{% static 'images/avatar/user-1.png' %}" 
+            alt="profile" 
+            class="img-fluid rounded-circle shadow" 
+            style="width: 180px; height: 180px; object-fit: cover;">
+        {% endif %} 
+            <h5 class="fw-semibold mb-1 pt-3 text-white">{{ user.name }}</h5>
+          <small class="fw-semibold fs-4 d-block">User ID: {{ user.id }}</small>
+        </div>
+      </div>
+
+      <!-- Right: User Info -->
+      <div class="col-md-8 bg-white shadow-sm rounded-4 ms-3 py-3">
+        <div class="card-body p-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="card-title mb-0 text-black fs-1">User Information :</h4>
+            <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
+                <strong>Available Total Points:</strong>
+                <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ available_points }} </span>
+            </p>
+          </div>
+
+          <ul class="list-group list-group-flush lh-lg">
+            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+              <span class="fw-bold fs-4">Name:</span>
+              <strong class="fs-4">{{ user.name }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+              <span class="fw-bold fs-4">Email:</span>
+              <strong class="fs-4">{{ user.email }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+              <span class="fw-bold fs-4">Phone Number:</span>
+              <strong class="fs-4">{{ user.number }}</strong>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+              <span class="fw-bold fs-4">Account Created:</span>
+              <strong class="fs-4">{{ user.created_at|date:"M d, Y H:i" }}</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+
+        <!-- Orders History -->
+        <div class="card shadow-sm mt-5 px-2 py-4 rounded-5">
+            <div class="card-body">
+                <div class="history d-flex justify-content-between">
+                    <h5 class="card-title"><i class="fa-solid fa-box-open"></i> Order History</h5>
+                 <div class="tabs">
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fs-4 active p-4 rounded-pill" id="pills-home-tab"
+                 data-bs-toggle="pill" data-bs-target="#pills-home" 
+                 type="button" role="tab" aria-controls="pills-home"
+                  aria-selected="true"> Normal Orders ({{ normal_orders|length }})</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fs-4 p-4 rounded-pill" id="pills-profile-tab"
+                 data-bs-toggle="pill" data-bs-target="#pills-profile"
+                  type="button" role="tab" aria-controls="pills-profile"
+                   aria-selected="false"> Redeem Orders ({{ redeem_orders|length }})</button>
+            </li>
+            </ul>
+        </div>
+                </div>
+                
+
+       <!-- Normal Orders -->
+                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
+                    {% if normal_orders_data %}
+                        <div class="accordion" id="ordersAccordionNormal">
+                            {% for entry in normal_orders_data %}
+                            <div class="accordion-item mb-2">
+                                <h2 class="accordion-header" id="headingNormal{{ entry.order.id }}">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapseNormal{{ entry.order.id }}"
+                                        aria-expanded="false"
+                                        aria-controls="collapseNormal{{ entry.order.id }}">
+                                        <span class="me-3 fs-4">#{{ forloop.counter }}</span>
+                                        <strong class="me-3 fs-4">Order ID:</strong> {{ entry.order.id }} |
+                                        <strong class="me-3 fs-4">Status:</strong>
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-success">
+                                            {{ entry.order.status|title }}
+                                        </span>
+                                        <span class="ms-auto fs-4">{{ entry.order.created_at|date:"m/d/Y H:i" }}</span>
+                                    </button>
+                                </h2>
+                                <div id="collapseNormal{{ entry.order.id }}" class="accordion-collapse collapse"
+                                    aria-labelledby="headingNormal{{ entry.order.id }}"
+                                    data-bs-parent="#ordersAccordionNormal">
+                                    <div class="accordion-body pt-3">
+                                        <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
+                                            <strong>Earned Points:</strong>
+                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order_points }}</span>
+                                        </p>
+
+                                             {% include "include/customer-history.html" with orders=normal_orders %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No normal orders found for this customer.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Redeem Orders -->
+                <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
+                    {% if redeem_orders_data %}
+                        <div class="accordion" id="ordersAccordionRedeem">
+                            {% for entry in redeem_orders_data %}
+                            <div class="accordion-item mb-2">
+                                <h2 class="accordion-header" id="headingRedeem{{ entry.order.id }}">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapseRedeem{{ entry.order.id }}"
+                                        aria-expanded="false"
+                                        aria-controls="collapseRedeem{{ entry.order.id }}">
+                                        <span class="me-3 fs-4">#{{ forloop.counter }}</span>
+                                        <strong class="me-3 fs-4">Order ID:</strong> {{ entry.order.id }} |
+                                        <strong class="me-3 fs-4">Status:</strong> 
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-success">
+                                            {{ entry.order.status|title }}
+                                        </span>
+                                        <span class="ms-auto fs-4">{{ entry.order.created_at|date:"m/d/Y H:i" }}</span>
+                                    </button>
+                                </h2>
+                                <div id="collapseRedeem{{ entry.order.id }}" class="accordion-collapse collapse"
+                                    aria-labelledby="headingRedeem{{ entry.order.id }}"
+                                    data-bs-parent="#ordersAccordionRedeem">
+                                    <div class="accordion-body pt-5">
+                                        <p class="d-inline-block p-3 rounded-pill bg-danger text-white">
+                                            <strong>Spent Points:</strong>
+                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ spent_points }}</span>
+                                        </p>
+
+                                        {% include "include/customer-history.html" with orders=redeem_orders %}
+
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No redeem orders found for this customer.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

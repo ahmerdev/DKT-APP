@@ -1,0 +1,89 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}Redeem | Redeem{% endblock %}
+{% block content %}
+
+                       <div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>All Redeems</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="#">
+                        <div class="text-tiny">Dashboard</div>
+                    </a>
+                </li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><div class="text-tiny">All Redeems</div></li>
+            </ul>
+        </div>
+
+        <div class="wg-box">
+            <div class="flex items-center justify-between gap10 flex-wrap">
+                <div class="wg-filter flex-grow">
+                    <form class="form-search" method="get">
+                        <fieldset class="name">
+                            <input type="text" placeholder="Search here..." name="q"
+                                value="{{ request.GET.q|default_if_none:'' }}">
+                        </fieldset>
+                        <div class="button-submit">
+                            <button type="submit"><i class="icon-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+                <a class="tf-button style-1 w208" href="{% url 'add_redeem' %}">
+                    <i class="icon-plus"></i>Add new
+                </a>
+            </div>
+
+            <div class="table-responsive card-body p-0">
+                <table id="myDataTable" class="table table-hover no-border align-middle">
+                <thead class="table-head text-white text-center">
+                        <tr>
+                            <th scope="col" class="text-center">#</th>
+                            <th scope="col" class="text-center">Image</th>
+                            <th scope="col" class="text-center">Sub Title</th>
+                            <th scope="col" class="text-center">Title</th>
+                            <th scope="col" class="text-center">PTS</th>
+                            <th scope="col" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        {% for redeem in redeems %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td class="text-center">
+                                {% if redeem.image %}
+                                    <img src="{{ redeem.image.url }}" width="70" height="70" class="rounded shadow-sm img-thumbnail img-fluid" alt="{{ product.name }}">
+                                {% else %}
+                                    <span class="text-muted">No Image</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td class="text-center">{{ redeem.subtitle }}</td>
+                            <td class="text-center">{{ redeem.title }}</td>
+                            <td class="text-center">{{ redeem.points_required }}</td>
+                            <td class="text-center">
+                               
+                                    <a href="{% url 'edit_redeem' redeem.pk %}"  class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <a href="{% url 'delete_redeem' redeem.pk %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i>
+                                    </a>
+                                
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">No products found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

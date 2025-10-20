@@ -1,0 +1,261 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %}App Users | Customers{% endblock %}
+{% block content %}
+
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Customers</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="{% url 'dashboard' %}">
+                        <div class="text-tiny">Dashboard</div>
+                    </a>
+                </li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><div class="text-tiny">Customers</div></li>
+            </ul>
+        </div>
+
+        <div class="wg-box">
+            <div class="flex items-center justify-between gap10 flex-wrap">
+                <div class="wg-filter flex-grow">
+                    <form class="form-search" method="GET" action="">
+                        <fieldset class="name">
+                            <input type="text" placeholder="Search by number..." name="q" 
+                                value="{{ request.GET.q|default_if_none:'' }}" tabindex="2">
+                        </fieldset>
+                        <div class="button-submit">
+                            <button type="submit"><i class="icon-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+                <a class="tf-button style-1 w208" href="{% url 'create_appuser' %}">
+                    <i class="icon-plus"></i> Add new
+                </a>
+            </div>
+
+            <div class="table-responsive card-body p-0">
+                <table id="myDataTable" class="table table-hover no-border  align-middle">
+                    <thead class="table-head text-white text-center">
+                        <tr>
+                            <th class="id-col text-center align-middle p-0">#</th>
+                            <th scope="col" class="text-center">User Name</th>
+                            <th scope="col" class="text-center">User Number</th>
+                            <th scope="col" class="text-center">Created At</th>
+                            <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        {% for user in users %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td class="text-center">{{ user.name }}</td>
+                            <td class="text-center">{{ user.number }}</td>
+                            <td class="text-center">{{ user.created_at|date:"m/d/Y H:i" }}</td>
+                            <td class="text-center">
+                                    <a href="{% url 'customer_detail' user.pk %}" 
+                                      class="btn text-white fs-5 fw-semibold bg-primary shadow"> View <i class="fa-solid fa-eye shadow"></i></a>
+                                    <a href="{% url 'delete_appuser' user.pk %}" 
+                                       onclick="return confirm('Are you sure to delete this user?')" 
+                                       class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i></a>
+        </td>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No users found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+
+
+// ================================
+// Autotrader WooCommerce Integration
+// ================================
+
+if (!defined('ABSPATH')) exit;
+
+// ------------------------------
+// Ensure WooCommerce is active
+// ------------------------------
+add_action('admin_notices', function(){
+    if (!class_exists('WooCommerce')) {
+        echo '<div class="error"><p><strong>Autotrader Integration:</strong> WooCommerce plugin must be installed and active.</p></div>';
+    }
+});
+
+if (!class_exists('WooCommerce')) return;
+
+// =====================================================
+// Step 1: Fetch and cache Autotrader token
+// =====================================================
+function autotrader_get_token() {
+    $token_data = get_option('autotrader_token_data');
+    if ($token_data && $token_data['expires_at'] > time()) return $token_data['access_token'];
+
+    $response = wp_remote_post("https://api-sandbox.autotrader.co.uk/authenticate", [
+        'body' => [
+            'key'    => 'AM5Solutions-Sandbox-04-09-25',
+            'secret' => 'AyHGL11Hp8q0DkM5RwX5Km5sTvB3vM2y'
+        ],
+    ]);
+
+    if (is_wp_error($response)) return false;
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    if (!empty($body['access_token'])) {
+        $expires_at = strtotime($body['expires_at']);
+        update_option('autotrader_token_data', [
+            'access_token' => $body['access_token'],
+            'expires_at'   => $expires_at
+        ]);
+        return $body['access_token'];
+    }
+    return false;
+}
+
+// =====================================================
+// Step 2: Get baseline stock from Autotrader
+// =====================================================
+function autotrader_get_baseline_stock($page = 1, $pageSize = 50) {
+    $token = autotrader_get_token();
+    if (!$token) return ['error' => 'Token fetch failed'];
+
+    $url = "https://api-sandbox.autotrader.co.uk/stock?advertiserId=66897&page={$page}&pageSize={$pageSize}";
+    $response = wp_remote_get($url, [
+        'headers' => ['Authorization' => 'Bearer ' . $token],
+        'timeout' => 20,
+    ]);
+
+    if (is_wp_error($response)) return ['error' => $response->get_error_message()];
+    return json_decode(wp_remote_retrieve_body($response), true);
+}
+
+// =====================================================
+// Step 3: Create / Update WooCommerce product
+// =====================================================
+function autotrader_create_or_update_product($item) {
+    if (empty($item['vehicle'])) return;
+
+    $v = $item['vehicle'];
+    $a = $item['advertiser'] ?? [];
+    $sku = $item['metadata']['stockId'] ?? uniqid('autotrader_');
+    $price = $item['adverts']['retailAdverts']['totalPrice']['amountGBP'] ?? 0;
+
+    $existing_id = wc_get_product_id_by_sku($sku);
+
+    if ($existing_id) {
+        $product = wc_get_product($existing_id);
+    } else {
+        $product_id = wp_insert_post([
+            'post_title'   => $v['make'] . ' ' . $v['model'] . ' (' . $v['yearOfManufacture'] . ')',
+            'post_content' => 'Imported from Autotrader. Dealer: ' . ($a['name'] ?? 'Unknown'),
+            'post_status'  => 'publish',
+            'post_type'    => 'product',
+        ]);
+        if (!$product_id) return;
+        $product = new WC_Product_Simple($product_id);
+        $product->set_sku($sku);
+    }
+
+    $product->set_regular_price($price);
+    $product->set_price($price);
+    $product->set_manage_stock(false);
+    $product->set_stock_status('instock');
+    $product->save();
+
+    update_post_meta($product->get_id(), '_autotrader_stock_id', $sku);
+
+    // =====================================================
+    // Set featured image (primary or first gallery image)
+    // =====================================================
+    $image_url = $v['primaryImageUrl'] ?? $v['galleryImages'][0]['url'] ?? null;
+    if ($image_url) {
+        autotrader_set_product_image($product->get_id(), $image_url);
+    }
+
+    // =====================================================
+    // Assign to category "Autotrader Vehicles"
+    // =====================================================
+    if (!term_exists('Autotrader Vehicles', 'product_cat')) {
+        wp_insert_term('Autotrader Vehicles', 'product_cat');
+    }
+    wp_set_object_terms($product->get_id(), 'Autotrader Vehicles', 'product_cat', true);
+
+    return $product->get_id();
+}
+
+// =====================================================
+// Step 4: Set product image
+// =====================================================
+function autotrader_set_product_image($product_id, $image_url) {
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    require_once ABSPATH . 'wp-admin/includes/media.php';
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+
+    if (empty($image_url)) {
+        error_log("Autotrader image URL empty for product ID: $product_id");
+        return;
+    }
+
+    $image_id = media_sideload_image($image_url, $product_id, null, 'id');
+    if (is_wp_error($image_id)) {
+        error_log("Failed to sideload Autotrader image for product ID: $product_id - " . $image_id->get_error_message());
+    } else {
+        set_post_thumbnail($product_id, $image_id);
+    }
+}
+
+// =====================================================
+// Step 5: Manual sync shortcode
+// =====================================================
+add_shortcode('autotrader_sync', function(){
+    $page = 1;
+    $imported = 0;
+
+    do {
+        $data = autotrader_get_baseline_stock($page, 50);
+        if (isset($data['results']) && is_array($data['results'])) {
+            foreach ($data['results'] as $item) {
+                $product_id = autotrader_create_or_update_product($item);
+                if ($product_id) $imported++;
+            }
+        }
+        $page++;
+    } while (!empty($data['results']));
+
+    return '<p>Autotrader products synced successfully. Total imported: '.$imported.'</p>';
+});
+
+// =====================================================
+// Step 6: Optional auto-sync via cron (hourly)
+// =====================================================
+if (!wp_next_scheduled('autotrader_sync_cron')) {
+    wp_schedule_event(time(), 'hourly', 'autotrader_sync_cron');
+}
+
+add_action('autotrader_sync_cron', function(){
+    $page = 1;
+    do {
+        $data = autotrader_get_baseline_stock($page, 50);
+        if (isset($data['results'])) {
+            foreach ($data['results'] as $item) {
+                autotrader_create_or_update_product($item);
+            }
+        }
+        $page++;
+    } while (!empty($data['results']));
+});

@@ -1,0 +1,324 @@
+
+
+#logo_header_mobile {
+    max-width: 190px;
+}
+
+.wg-table.table-all-user>* {
+    min-width: 1260px;
+}
+
+.wgp-pagination svg {
+    height: 20px;
+}
+
+.wgp-pagination p {
+    font-size: 16px;
+}
+
+.pagination {
+    margin-left: 30px;
+
+    .page-link {
+        padding: 1.1rem;
+        font-size: 16px;
+    }
+}
+
+.swal-button--confirm {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.swal-button--confirm.active,
+.swal-button--confirm:active,
+.show>.swal-button--confirm.dropdown-toggle,
+.swal-button--confirm:hover {
+    background-color: #b02a37 !important;
+    border-color: #a52834 !important;
+    color: #fff;
+}
+
+.swal-footer {
+    text-align: center;
+}
+
+.table-bordered>:not(caption)>*>* {
+    border-width: inherit;
+    line-height: 32px;
+    font-size: 14px;
+    border: 1px solid #e1e1e1;
+    vertical-align: middle;
+}
+
+.table-striped .image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+
+
+/* .table-striped {
+    min-width: 1200px;
+} */
+
+.table-striped th:nth-child(2),
+.table-striped td:nth-child(2) {
+    width: 250px;
+    padding-bottom: 18px;
+}
+
+.pname {
+    display: flex;
+    gap: 13px;
+}
+
+.view-icon {
+    width: 20px;
+    margin: 0 auto;
+}
+/* .wg-table.table-all-user>* {
+    min-width: 1260px;
+} */
+
+/*------*/
+.wgp-pagination svg {
+    height: 20px;
+}
+
+.wgp-pagination p {
+    font-size: 16px;
+}
+
+.pagination {
+    margin-left: 30px;
+
+    .page-link {
+        padding: 1.1rem;
+        font-size: 16px;
+    }
+}
+
+.swal-button--confirm {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.swal-button--confirm.active,
+.swal-button--confirm:active,
+.show>.swal-button--confirm.dropdown-toggle,
+.swal-button--confirm:hover {
+    background-color: #b02a37 !important;
+    border-color: #a52834 !important;
+    color: #fff;
+}
+
+.swal-footer {
+    text-align: center;
+}
+
+.table-bordered>:not(caption)>*>* {
+    border-width: inherit;
+    line-height: 32px;
+    font-size: 14px;
+    border: 1px solid #e1e1e1;
+    vertical-align: middle;
+}
+
+.table-striped .image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table-striped {
+    min-width: 1200px;
+}
+
+.table-striped th:nth-child(2),
+.table-striped td:nth-child(2) {
+    width: 250px;
+    padding-bottom: 18px;
+}
+
+.pname {
+    display: flex;
+    gap: 13px;
+}
+
+.view-icon {
+    width: 20px;
+    margin: 0 auto;
+}
+
+
+ 
+  /* Remove all table borders */
+  .table.no-border td,
+  .table.no-border th,
+  .table.no-border {
+    border: none !important;
+  }
+
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 20px;
+}
+
+.table-head {
+    background-color: #7d1d27 !important;
+    color: #fff;
+}
+
+  /* Font size for entire table */
+  .table td,
+  .table th {
+    font-size: 14px;
+    vertical-align: middle;
+    padding: 25px 10px;
+  }
+
+  /* Narrow column for ID */
+  .table th.id-col,
+  .table td.id-col {
+    width: 40px;
+    text-align: center;
+  }
+
+  /* Optional hover background */
+  .table-hover tbody tr:hover {
+    background-color: #ffecec;
+  }
+
+  /* Spacing for icons */
+  .action-icons i {
+    font-size: 16px;
+  }
+
+  .form-check-input {
+    margin-left: 0.5rem;
+  }
+
+
+/* Customize switch background and dot */
+.form-check-input {
+  width: 50px !important;
+  height: 25px !important;
+  background-color: #fff !important; /* default = white */
+  border-radius: 30px !important;
+  position: relative !important;
+  appearance: none !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease-in-out !important;
+  outline: none !important;
+  border: 1px solid #ccc !important;
+}
+
+/* Dot inside the switch */
+.form-check-input::before {
+  content: "" !important;
+  position: absolute !important;
+  width: 21px !important;
+  height: 21px !important;
+  background-color: #ccc !important; /* dot gray when inactive */
+  border-radius: 50% !important;
+  top: 1px !important;
+  left: 1px !important;
+  transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out !important;
+}
+
+/* When checkbox is checked */
+.form-check-input:checked {
+  background-color: #7d1d27 !important; /* blue background */
+  border-color: #7d1d27 !important;
+}
+
+/* When checked, move and make dot white */
+.form-check-input:checked::before {
+  transform: translateX(24px) !important;
+  background-color: #fff !important;
+}  
+
+.nav-pills .nav-link {
+    background: 0 0;
+    border: 0;
+    border-radius: .25rem;
+    color: #000;
+    font-weight: 700;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    color: #fff;
+    background-color: #7d1d27;
+}
+
+
+.accordion-button:not(.collapsed) {
+    color: #fff;
+   background-color: #7d1d27;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .125);
+    padding: 12px;
+}
+
+.text-danger {
+    color: #7d1d27 !important;
+}
+
+.bg-danger {
+    background-color: #7d1d27 !important;
+}
+
+.form-multi-select-input-group {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #000;
+    font-size: 8px;
+}
+
+.form-multi-select-option.form-multi-select-option-with-checkbox {
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
+}
+
+
+.form-multi-select-tag {
+    background: #990000;
+    color: #fff;
+    padding: 8px 17px;
+    font-size: 16px;
+}
+
+
+
+.form-multi-select-tag-delete::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    content: "";
+    background-color: #fff;
+}
+
+@media (max-width: 786px) {
+    .table-striped {
+  min-width: 800px; /* smaller, allows scroll but not too large */
+  width: 100%;
+  table-layout: auto;
+}
+}
