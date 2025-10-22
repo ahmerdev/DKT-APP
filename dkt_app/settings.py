@@ -33,8 +33,7 @@ SECRET_KEY = 'django-insecure-0oomw^myzexxz(ek51%c-^)g+35*-)*egs4x=&+1ho24%06-jh
 # ALLOWED_HOSTS = ['13.51.177.129', 'localhost', '127.0.0.1']
 
 DEBUG = True
-ALLOWED_HOSTS = ['*']   # Ye temporarily sab hosts allow karega
-
+ALLOWED_HOSTS = ['13.51.177.129', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
