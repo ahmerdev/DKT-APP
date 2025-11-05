@@ -11,10 +11,123 @@ from django.utils.crypto import get_random_string
 from django.conf import settings
 from collections import defaultdict
 from django.db import IntegrityError, transaction
+from django.db.models.functions import TruncMonth
+from django.db.models import Count, Sum, F
+from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .forms import CategoryForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, DiscountForm
 from .models import Product, Redeem, ProductVariant, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+
+@login_required(login_url='login')
+def dashboard(request):
+    total_users = AppUser.objects.count()
+    total_orders = Order.objects.count()
+    total_sales = OrderItem.objects.aggregate(total=Sum('price'))['total'] or 0
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
+
+    # Total sale (sum of all OrderItem.price * quantity)
+    total_amount = (
+        OrderItem.objects.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    )
+
+    # Pending stats
+    pending_orders_qs = Order.objects.filter(status='pending')
+    pending_orders_count = pending_orders_qs.count()
+    pending_amount = (
+        OrderItem.objects.filter(order__status='pending')
+        .aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    )
+
+    # Delivered stats
+    delivered_orders = Order.objects.filter(status='delivered').count()
+    delivered_amount = (
+        OrderItem.objects.filter(order__status='delivered')
+        .aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    )
+
+    # Canceled stats
+    canceled_orders = Order.objects.filter(status='cancelled').count()
+    canceled_amount = (
+        OrderItem.objects.filter(order__status='cancelled')
+        .aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    )
+
+    # Monthly chart data
+    monthly_data = (
+        Order.objects.annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(total_orders=Count('id'))
+        .order_by('month')
+    )
+
+    monthly_sales = (
+        OrderItem.objects.annotate(month=TruncMonth('order__created_at'))
+        .values('month')
+        .annotate(total_sales=Sum(F('price') * F('quantity')))
+        .order_by('month')
+    )
+
+    # Merge both datasets
+    labels = [m['month'].strftime("%b %Y") for m in monthly_data]
+    order_counts = [m['total_orders'] for m in monthly_data]
+    sales_lookup = {s['month']: s['total_sales'] for s in monthly_sales}
+    sales_data = [float(sales_lookup.get(m['month'], 0)) for m in monthly_data]
+
+    # Prepare notification data
+    notifications = []
+    for order in pending_orders_qs.select_related('user').prefetch_related('items').order_by('-created_at')[:10]:
+        total_amt = (
+            order.items.aggregate(total=Sum(F("price") * F("quantity")))["total"] or 0
+        )
+        notifications.append({
+            "id": order.id,
+            "user_number": order.user.number if order.user else "Guest",
+            "status": order.status,
+            "total": float(total_amt),
+            "created_at": order.created_at.strftime("%b %d, %Y %H:%M"),
+        })
+
+    context = {
+        "notifications": notifications,
+        "new_notifications": len(notifications),
+        'total_orders': total_orders,
+        'total_users': total_users,
+        'total_sales': total_sales,
+        'recent_orders': recent_orders,
+        'total_amount': total_amount,
+        'pending_orders_count': pending_orders_count,
+        'pending_amount': pending_amount,
+        'delivered_orders': delivered_orders,
+        'delivered_amount': delivered_amount,
+        'canceled_orders': canceled_orders,
+        'canceled_amount': canceled_amount,
+        'labels': labels,
+        'order_counts': order_counts,
+        'sales_data': sales_data,
+    }
+    return render(request, 'pages/main.html', context)
+
+
+def mark_notifications_read(request):
+    if request.method == "POST":
+        Order.objects.filter(status='pending', is_read=False).update(is_read=True)
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
+
+@csrf_exempt  
+def clear_notifications(request):
+    if request.method == "POST":
+        if hasattr(Order, 'is_read'):
+            Order.objects.filter(status="pending", is_read=False).update(is_read=True)
+        else:
+            pass
+        return JsonResponse({"success": True})
+    
+    return JsonResponse({"success": False}, status=400)
 
 
 # Dashborad Admin Panel User Login
@@ -46,12 +159,6 @@ def user_logout(request):
 #  Home → Login redirect
 def home(request):
     return redirect('login')
-
-
-#  Dashboard (Protected)
-@login_required(login_url='login')
-def dashboard(request):
-    return render(request, "dashboard.html")
 
 
 # Dashboard App User List
@@ -799,101 +906,3 @@ def send_discount_email(discount):
         except Exception as e:
             print(f"Failed to send to {user.email}: {e}")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- # title = request.POST.get("title")
-        # code = request.POST.get("code")
-        # discount_type = request.POST.get("discount_type")
-        # value = request.POST.get("value")
-        # start_date  = request.POST.get("start_date")
-        # end_date = request.POST.get("end_date")
-        # apply_all_products = "apply_all_products" in request.POST
-        # apply_all_users = "apply_all_users" in request.POST
-
-        # # Create the discount object
-        # discount = Discount.objects.create(
-        #     title=title,
-        #     code=code,
-        #     discount_type=discount_type,
-        #     value=value,
-        #     start_date=start_date,
-        #     end_date=end_date,
-        #     apply_all_products=apply_all_products,
-        #     apply_all_users=apply_all_users,
-        # )
-
-
-
-
-
-
-
-# Send OTP API
-# @api_view(["POST"])
-# def send_otp(request):
-#     phone = request.data.get("phone")
-#     if not phone:
-#         return Response({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-#     try:
-#         verification = client.verify.v2.services(
-#             settings.TWILIO_VERIFY_SERVICE_SID
-#         ).verifications.create(to=phone, channel="sms")
-
-#         return Response({"status": verification.status}, status=status.HTTP_200_OK)
-
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Verify OTP API
-# @api_view(["POST"])
-# def verify_otp(request):
-#     phone = request.data.get("phone")
-#     code = request.data.get("code")
-
-#     if not phone or not code:
-#         return Response({"error": "Phone and code are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-#     try:
-#         verification_check = client.verify.v2.services(
-#             settings.TWILIO_VERIFY_SERVICE_SID
-#         ).verification_checks.create(to=phone, code=code)
-
-#         if verification_check.status == "approved":
-#             # Yahan user create/login logic dalna hoga (agar DB use karna hai to)
-#             return Response({"message": "OTP verified successfully"}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({"message": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
-
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-#  @media only screen and (max-width: 600px) {
-#   .lookBook__container {
-#     flex-direction: column-reverse;
-#   }
-# } 
