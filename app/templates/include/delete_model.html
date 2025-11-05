@@ -1,28 +1,42 @@
-<!-- templates/includes/delete_confirm_modal.html -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<!-- Global Delete Confirmation Modal -->
+<div class="modal fade" id="globalDeleteModal" tabindex="-1" aria-labelledby="globalDeleteLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg rounded-4">
-      <div class="modal-header bg-danger text-white rounded-top-4">
-        <h5 class="modal-title fw-bold" id="deleteModalLabel">
-          <i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Delete
+    <div class="modal-content border-0 shadow-lg rounded-4" style="backdrop-filter: blur(8px); background: rgba(255, 255, 255, 0.95);">
+      
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-danger d-flex align-items-center" id="globalDeleteLabel">
+          <i class="bi bi-trash3-fill me-2 fs-4"></i> Delete Confirmation
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body text-center py-4">
-        <p class="fs-5 mb-4">Are you sure you want to delete <span id="deleteItemName" class="fw-bold text-danger"></span>?</p>
-        <div class="d-flex justify-content-center gap-3">
-          <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
-          <a href="#" id="confirmDeleteBtn" class="btn btn-danger px-4 rounded-pill shadow-sm">Yes, Delete</a>
+        <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-danger rounded-circle mb-3" style="width: 70px; height: 70px;">
+          <i class="bi bi-exclamation-triangle-fill fs-1 text-white"></i>
         </div>
+        <h5 class="fw-semibold mb-2">Are you sure?</h5>
+        <p class="text-secondary mb-0">
+          You’re about to permanently delete<br>
+          <span id="deleteItemName" class="text-danger fw-bold">this item</span>.<br>
+          This action cannot be undone.
+        </p>
       </div>
+
+      <div class="modal-footer border-0 d-flex justify-content-center gap-3 pb-4">
+        <button type="button" class="btn btn-light border px-4 rounded-pill fw-semibold" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancel
+        </button>
+        <a id="confirmDeleteBtn" href="#" class="btn btn-danger px-4 rounded-pill fw-semibold">
+          <i class="bi bi-trash me-1"></i> Yes, Delete
+        </a>
+      </div>
+
     </div>
   </div>
 </div>
 
-<script>
-function showDeleteModal(deleteUrl, itemName) {
-  document.getElementById('confirmDeleteBtn').href = deleteUrl;
-  document.getElementById('deleteItemName').innerText = itemName || 'this item';
-  new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
-}
-</script>
+<style>
+  .modal-footer .btn:hover {
+    transform: translateY(-2px);
+  }
+</style>
