@@ -25,6 +25,8 @@ urlpatterns = [
 # Dashboard 
     path('', views.home, name='home'),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
+    path('clear-notifications/', views.clear_notifications, name='clear_notifications'),
 
 # Category Route
     path('add-category/', views.add_or_edit_category, name='add_category'),
