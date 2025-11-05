@@ -1,0 +1,231 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block content %}
+    <div class="container py-4">
+       <div class="row row-cols-2 row-cols-lg-5">
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                                 <i class="fa-solid fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Users</div>
+                                <h6>{{ total_users }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                               <i class="fa-solid fa-box-open text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Orders</div>
+                                <h6>{{ total_orders }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                               <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Sales</div>
+                                <h6>{{ total_sales|floatformat:2 }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                              <i class="fa-solid fa-chart-line text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Recent Activity</div>
+                                <h6>{{ recent_orders.count }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                                <i class="fa-solid fa-box-open text-white"></i>                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Pending Orders</div>
+                                <h6>{{ pending_orders_count }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col">
+                <div class="wg-chart-default">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap14">
+                                    <div class="image ic-bg bg-danger rounded-circle p-4">
+                                      <i class="fas fa-money-bill-wave text-white"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold fs-5 body-text mb-2">Pending Amount</div>
+                                        <h6>{{ pending_amount|floatformat:2 }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                             <i class="fa-solid fa-truck text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Delivered Orders</div>
+                                <h6>{{ delivered_orders }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                              <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Del-ORD Amount</div>
+                                <h6>{{ delivered_amount|floatformat:2 }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                                <i class="fa-solid fa-box-open text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Canceled Orders</div>
+                                <h6>{{ canceled_orders }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col">
+                 <div class="wg-chart-default">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap14">
+                                <div class="image ic-bg bg-danger rounded-circle p-4">
+                                   <i class="fas fa-money-bill-wave text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold fs-5 body-text mb-2">Cal-ORD Amount</div>
+                                    <h6>{{ canceled_amount|floatformat:2 }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+       </div>
+                                 
+                          
+            <!-- Orders Graph -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-semibold mb-0 text-dark">
+                <i class="bi bi-graph-up-arrow text-danger me-2"></i> Orders & Sales Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="ordersChart" height="110"></canvas>
+            </div>
+            </div>
+
+        <!-- Recent Orders Table -->
+        <div class="card shadow border-0 rounded-4 py-3 mt-5">
+            <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-semibold mb-0 text-dark">
+                <i class="fa-solid fa-box-open me-2 text-danger"></i> Recent Orders
+                </h5>
+                <a href="{% url 'order_list_ui' %}" class="text-decoration-none btn text-white fw-semibold bg-danger fs-5 shadow">
+                View All <i class="bi bi-arrow-right-short"></i>
+                </a>
+            </div>
+                    <div class="table-responsive card-body p-0">
+                        <table class="table table-hover no-border align-middle table-striped">
+                            <thead class="table-head text-white text-center">
+                        <tr class="text-center">
+                            <th class="text-center text-white">ORDER ID</th>
+                            <th class="text-center text-white">User</th>
+                            <th class="text-center text-white">Date</th>
+                            <th class="text-center text-white">Total</th>
+                            <th class="text-center text-white">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td class="text-center">#{{ order.id }}</td>
+                            <td class="text-center">{{ order.user }}</td>
+                            <td class="text-center">{{ order.created_at|date:"M d, Y" }}</td>
+                            <td class="text-center fs-4 fw-bold">
+                                        {% if item.price > 0 %}
+                                            Rs {{ item.price }}
+                                        {% else %}
+                                            Redeem 
+                                        {% endif %}       
+                                    </td>
+                            <td class="text-center">
+                                    {% if order.status == "pending" %}
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-warning">Pending</span>
+                                    {% elif order.status == "inprocess" %}
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-info">In Process</span>
+                                    {% elif order.status == "delivered" %}
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-success">Delivered</span>
+                                    {% elif order.status == "on_the_way" %}
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-danger">On The way</span>
+                                    {% elif order.status == "cancelled" %}
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-danger">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-info">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No recent orders</td></tr>
+                        {% endfor %}
+                    </tbody>
+            </table>
+            </div>
+        </div>
+</div>
+{% endblock %}
