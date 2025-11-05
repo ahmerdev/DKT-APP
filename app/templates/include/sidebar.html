@@ -81,7 +81,7 @@
 
                                 <li class="menu-item has-children">
                                     <a href="javascript:void(0);" class="menu-item-button">
-                                        <div class="icon"><i class="icon-file-plus"></i></div>
+                                        <div class="icon"><i class="icon-box"></i></div>
                                         <div class="text">Orders</div>
                                     </a>
                                     <ul class="sub-menu">
@@ -226,11 +226,50 @@
 
                             </div>
                             <div class="header-grid">
+                                <div class="popup-wrap message type-header">
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button"
+                                        id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false"
+                                        onclick="markNotificationsRead()">
+                                        <span class="header-item">
+                                            {% if new_notifications %}
+                                            <span class="text-tiny">{{ new_notifications }}</span>
+                                            {% endif %}
+                                            <i class="icon-bell"></i>
+                                        </span>
+                                        </button>
 
-                              
+                                        <ul class="dropdown-menu dropdown-menu-end has-content"
+                                            aria-labelledby="dropdownMenuButton2" style="width:300px;">
+                                        <li><h6>Incoming Orders</h6></li>
 
-
-
+                                        {% if notifications %}
+                                            {% for order in notifications %}
+                                            <li>
+                                                <div class="message-item item-{{ forloop.counter }}">
+                                                <div class="image"><i class="icon-noti-4"></i></div>
+                                                <div>
+                                                    <div class="body-title-2">
+                                                    Order #{{ order.id }} — <span class="badge bg-warning text-dark">{{ order.status|title }}</span>
+                                                    </div>
+                                                    <div class="text-tiny">
+                                                    <strong>Rs {{ order.total|floatformat:2 }}</strong> — User: {{ order.user_number }}
+                                                    </div>
+                                                    <small class="text-muted">{{ order.created_at }}</small>
+                                                </div>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                            <li><a href="#" class="tf-button w-full text-center" onclick="clearNotifications()">Clear All</a></li>
+                                        {% else %}
+                                            <li class="text-center text-muted py-3">
+                                            <i class="bi bi-bell-slash fs-4"></i><br>
+                                            No new orders
+                                            </li>
+                                        {% endif %}
+                                        </ul>
+                                    </div>
+                                    </div>
 
                                 <div class="popup-wrap user type-header">
                                     <div class="dropdown">
