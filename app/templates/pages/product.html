@@ -38,7 +38,7 @@
             </div>
 
             <div class="table-responsive card-body p-0">
-                 <table id="myDataTable" class="table table-hover no-border align-middle table-striped">
+                <table id="myDataTable" class="table table-hover no-border align-middle table-striped">
                 <thead class="table-head text-center">
                         <tr>
                             <th class="id-col text-center align-middle p-0 text-white">#</th>
@@ -85,8 +85,14 @@
                                     <a href="{% url 'edit_product' product.id %}"  class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-                                    <a href="{% url 'delete_product' product.id %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i>
-                                    </a>
+                                    <a href="{% url 'delete_product' product.id %}" 
+                               class="btn text-white fw-semibold bg-danger fs-5 shadow"
+                                data-bs-toggle="modal"
+                                    data-bs-target="#globalDeleteModal"
+                                    data-name="{{ product.name }}"
+                                    data-url="{% url 'delete_product' product.id %}">
+                                  Delete <i class="fa-solid fa-trash-can shadow"></i>
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
