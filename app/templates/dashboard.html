@@ -38,7 +38,7 @@
 </div>  -->
                 {% include 'include/notifications.html' %}
                 {% include 'include/sidebar.html' %}
-               
+               {% include 'include/delete_model.html' %}
                     <div class="main-content">
 
                         {% block content %}
@@ -66,104 +66,6 @@
 <script src="https://cdn.datatables.net/2.3.3/js/dataTables.bootstrap5.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui-pro@5.21.0/dist/js/coreui.bundle.min.js" integrity="sha384-SMiw+LVjSwW5vmKu0hAExEHRA2/voCGvFNnWG8AZhvXSyLXLonnHuWBDawDjEoyR" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
-    <script>
-        (function ($) {
-
-            var tfLineChart = (function () {
-
-                var chartBar = function () {
-
-                    var options = {
-                        series: [{
-                            name: 'Total',
-                            data: [0.00, 0.00, 0.00, 0.00, 0.00, 273.22, 208.12, 0.00, 0.00, 0.00, 0.00, 0.00]
-                        }, {
-                            name: 'Pending',
-                            data: [0.00, 0.00, 0.00, 0.00, 0.00, 273.22, 208.12, 0.00, 0.00, 0.00, 0.00, 0.00]
-                        },
-                        {
-                            name: 'Delivered',
-                            data: [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
-                        }, {
-                            name: 'Canceled',
-                            data: [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
-                        }],
-                        chart: {
-                            type: 'bar',
-                            height: 325,
-                            toolbar: {
-                                show: false,
-                            },
-                        },
-                        plotOptions: {
-                            bar: {
-                                horizontal: false,
-                                columnWidth: '10px',
-                                endingShape: 'rounded'
-                            },
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        legend: {
-                            show: false,
-                        },
-                        colors: ['#2377FC', '#FFA500', '#078407', '#FF0000'],
-                        stroke: {
-                            show: false,
-                        },
-                        xaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#212529',
-                                },
-                            },
-                            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                        },
-                        yaxis: {
-                            show: false,
-                        },
-                        fill: {
-                            opacity: 1
-                        },
-                        tooltip: {
-                            y: {
-                                formatter: function (val) {
-                                    return "$ " + val + ""
-                                }
-                            }
-                        }
-                    };
-
-                    chart = new ApexCharts(
-                        document.querySelector("#line-chart-8"),
-                        options
-                    );
-                    if ($("#line-chart-8").length > 0) {
-                        chart.render();
-                    }
-                };
-
-                /* Function ============ */
-                return {
-                    init: function () { },
-
-                    load: function () {
-                        chartBar();
-                    },
-                    resize: function () { },
-                };
-            })();
-
-            jQuery(document).ready(function () { });
-
-            jQuery(window).on("load", function () {
-                tfLineChart.load();
-            });
-
-            jQuery(window).on("resize", function () { });
-        })(jQuery);
-    </script>
     <script>
   document.addEventListener("DOMContentLoaded", function () {
     const toastElList = [].slice.call(document.querySelectorAll('.toast'))
@@ -206,6 +108,137 @@ $("#mytable #checkall").click(function () {
 });
 
 </script>
+<script>
+  const deleteModal = document.getElementById('globalDeleteModal');
+  deleteModal.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget; 
+    const itemName = button.getAttribute('data-name');
+    const deleteUrl = button.getAttribute('data-url');
+
+    const nameSpan = deleteModal.querySelector('#deleteItemName');
+    const confirmBtn = deleteModal.querySelector('#confirmDeleteBtn');
+
+    nameSpan.textContent = `"${itemName}"`;
+    confirmBtn.href = deleteUrl;
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ labels|json_script:"labels-data" }}
+{{ order_counts|json_script:"orders-data" }}
+{{ sales_data|json_script:"sales-data" }}
+<script>
+const labels = JSON.parse(document.getElementById('labels-data').textContent);
+const orderCounts = JSON.parse(document.getElementById('orders-data').textContent);
+const salesData = JSON.parse(document.getElementById('sales-data').textContent);
+
+const ctx = document.getElementById('ordersChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Orders',
+                data: orderCounts,
+                backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                borderColor: '#0d6efd',
+                borderWidth: 1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Sales (Rs)',
+                data: salesData,
+                type: 'line',
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y1'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top' },
+            title: {
+                display: true,
+                text: 'Monthly Orders & Sales Overview',
+                font: { size: 16 }
+            }
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                position: 'left',
+                beginAtZero: true,
+                title: { display: true, text: 'Orders' }
+            },
+            y1: {
+                type: 'linear',
+                position: 'right',
+                beginAtZero: true,
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: 'Sales (Rs)' }
+            }
+        }
+    }
+});
+</script>
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function clearNotifications() {
+    const csrftoken = getCookie("csrftoken");
+    fetch("{% url 'clear_notifications' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrftoken,
+            "Content-Type": "application/json",
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log("Notifications cleared!");
+            document.querySelector(".dropdown-menu.has-content").innerHTML =
+                '<li><p class="text-center text-muted mt-2">No new notifications</p></li>';
+            const badge = document.querySelector('.header-item .text-tiny');
+            if (badge) badge.textContent = "0";
+        } else {
+            console.error("Failed to clear:", data);
+        }
+    })
+    .catch(err => console.error("Error:", err));
+}
+</script>
+
+
+
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
