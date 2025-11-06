@@ -2,31 +2,31 @@ from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from .models import Order, OrderItem, Product, AppUser
 from django.utils import timezone
 
+# SALES REPORT
 def get_sales_report():
     items = OrderItem.objects.filter(order__status="delivered", order__type="normal")
 
     total_sales = items.aggregate(
-        total_sales=Sum(
-            ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())
-        )
+        total_sales=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField()))
     )["total_sales"] or 0
+
     total_cost = items.aggregate(
-        total_cost=Sum(
-            ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())
-        )
+        total_cost=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField()))
     )["total_cost"] or 0
 
     total_profit = total_sales - total_cost
+
     total_orders = items.values('order').distinct().count()
     total_quantity = items.aggregate(total_qty=Sum('quantity'))["total_qty"] or 0
 
     return {
         "total_orders": total_orders,
         "total_sales": total_sales,
-        "total_cost": total_cost,
-        "total_profit": total_profit,
         "total_quantity": total_quantity,
+        "total_cost": total_cost,
+        "total_profit": total_profit
     }
+
 
 
 # PROFIT REPORT
@@ -57,13 +57,16 @@ def get_product_report():
         .values('name')
         .annotate(
             total_quantity=Sum('quantity'),
-            total_sales=Sum(
-                ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())
-            )
+            total_sales=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())),
+            total_cost=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())),
+        )
+        .annotate(
+            total_profit=F('total_sales') - F('total_cost')
         )
         .order_by('-total_quantity')
     )
     return list(qs)
+
 
 
 
