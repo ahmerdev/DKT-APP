@@ -16,10 +16,23 @@ from django.db.models import Count, Sum, F
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from .reports import get_sales_report, get_profit_report, get_customer_potentials, get_product_report, get_product_profit_report
 from .forms import CategoryForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, DiscountForm
 from .models import Product, Redeem, ProductVariant, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+@login_required(login_url='login')
+def reports(request):
+    context = {
+        "sales": get_sales_report(),
+        "profit": get_profit_report(),
+        "top_customers": get_customer_potentials(),
+        "products": get_product_report(),
+        "product_profit" : get_product_profit_report(),
+
+    }
+    return render(request, "pages/reports.html", context)
 
 
 @login_required(login_url='login')
