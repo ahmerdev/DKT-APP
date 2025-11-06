@@ -52,19 +52,18 @@ def get_customer_potentials(top_n=5):
 # PRODUCT REPORT
 def get_product_report():
     qs = (
-        OrderItem.objects
-        .filter(order__status="delivered", order__type="normal")
-        .values('name')
-        .annotate(
-            total_quantity=Sum('quantity'),
-            total_sales=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())),
-            total_cost=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())),
-        )
-        .annotate(
-            total_profit=F('total_sales') - F('total_cost')
-        )
-        .order_by('-total_quantity')
+    OrderItem.objects
+    .filter(order__status="delivered", order__type="normal", product__isnull=False)
+    .values('name')
+    .annotate(
+        total_quantity=Sum('quantity'),
+        total_sales=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())),
+        total_cost=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())),
     )
+    .annotate(total_profit=F('total_sales') - F('total_cost'))
+    .order_by('-total_quantity')
+)
+
     return list(qs)
 
 
