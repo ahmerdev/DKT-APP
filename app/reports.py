@@ -67,19 +67,21 @@ def get_product_report():
 
 
 
+from django.db.models.functions import Coalesce
+
 def get_product_profit_report():
     items = (
         OrderItem.objects
         .filter(order__status="delivered")
         .select_related('product', 'order', 'order__user')
-        .values('name', 'product__cost_price', 'price', 'quantity', 'order__id', 'order__user__name')
+        .values('product__id', 'name', 'order__id', 'order__user__name')
         .annotate(
             total_sales=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())),
-            total_cost=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())),
+            total_cost=Sum(
+                ExpressionWrapper(Coalesce(F('product__cost_price'), 0) * F('quantity'), output_field=DecimalField())
+            ),
         )
-        .annotate(
-            total_profit=F('total_sales') - F('total_cost')
-        )
+        .annotate(total_profit=F('total_sales') - F('total_cost'))
         .order_by('-total_profit')
     )
 
