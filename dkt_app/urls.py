@@ -25,6 +25,7 @@ urlpatterns = [
 # Dashboard 
     path('', views.home, name='home'),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path('reports/',  views.reports, name='reports'),
     path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
     path('clear-notifications/', views.clear_notifications, name='clear_notifications'),
 
