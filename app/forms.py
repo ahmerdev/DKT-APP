@@ -46,7 +46,7 @@ class ProductForm(forms.ModelForm):
             "name", "slug", "category", "brand",
             "short_description", "description",
             "image",
-            "regular_price", "sale_price", "SKU", "quantity",
+            "cost_price", "regular_price", "sale_price", "SKU", "quantity",
             "stock_status", "points", "product_type"
             
         ]
