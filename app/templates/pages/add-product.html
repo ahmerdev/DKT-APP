@@ -160,6 +160,13 @@
                                     
 
                                         <div class="cols gap22">
+                                          <fieldset class="name">
+                                                <div class="body-title mb-10">Cost Price <span
+                                                        class="tf-color-1">*</span></div>
+                                                <input class="mb-10" type="text" placeholder="Enter Cost price"
+                                                    name="cost_price" tabindex="0" value="{{ product.cost_price|default_if_none:'' }}" aria-required="true"
+                                                    >
+                                            </fieldset>
                                             <fieldset class="name">
                                                 <div class="body-title mb-10">Regular Price <span
                                                         class="tf-color-1">*</span></div>
