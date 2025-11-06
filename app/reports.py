@@ -10,9 +10,9 @@ def get_sales_report():
             ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())
         )
     )["total_sales"] or 0
-    total_cost = items.aggregate(
+    total_cost = Product.objects.aggregate(
         total_cost=Sum(
-            ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())
+            ExpressionWrapper(F('cost_price') * F('quantity'), output_field=DecimalField())
         )
     )["total_cost"] or 0
 
@@ -27,7 +27,6 @@ def get_sales_report():
         "total_profit": total_profit,
         "total_quantity": total_quantity,
     }
-
 
 # PROFIT REPORT
 def get_profit_report():
