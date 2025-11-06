@@ -91,7 +91,7 @@ class Product(models.Model):
     points = models.PositiveIntegerField(default=0, null=True, blank=True)
 
     product_type = models.CharField(max_length=20, choices=PRODUCT_TYPE_CHOICES, default="simple")
-
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -211,6 +211,7 @@ class Order(models.Model):
                 return f"Order #{self.id} - {self.get_type_display()}"
 
 class OrderItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
     image = models.ImageField(upload_to="order_items/", null=True, blank=True)
     name = models.CharField(max_length=255)
