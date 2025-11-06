@@ -134,7 +134,7 @@
             <td class="text-center">PKR/ {{ p.total_sales }}</td>
             <td>{{ p.total_cost|floatformat:2 }}</td>
             <td class="{% if p.total_profit > 0 %}text-success{% else %}text-danger{% endif %}">
-                {{ p.total_profit|floatformat:2 }}
+              {{ p.total_profit|floatformat:2 }}
             </td>
           </tr>
           {% empty %}
