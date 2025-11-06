@@ -1,0 +1,148 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+
+{% block title %}📊 Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h3 class="mb-4 fw-bold text-danger">Business Reports</h3>
+<div class="row row-cols-2 row-cols-lg-5">
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                                 <i class="fa-solid fa-box-open text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Orders</div>
+                                <h6>{{ sales.total_orders }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                              <i class="fa-solid fa-cart-shopping text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Sold Products</div>
+                                <h6>{{ sales.total_quantity }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                               <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Cost</div>
+                                <h6>PKR/ {{ sales.total_cost }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                               <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Sales</div>
+                                <h6>{{ sales.total_sales|floatformat:2 }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="col">
+                <div class="wg-chart-default mb-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap14">
+                            <div class="image ic-bg bg-danger rounded-circle p-4">
+                               <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-5 body-text mb-2">Total Profit</div>
+                                <h6>PKR/ {{ sales.total_profit }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div>
+  <!-- Top Customers -->
+  <div class="card shadow-sm mb-5 border-0">
+    <div class="card-body">
+      <h4 class="fw-bold text-dark mb-3"> Top Customers</h4>
+       <div class="table-responsive card-body p-0">
+            <table id="myDataTable" class="table table-hover no-border align-middle table-striped">
+            <thead class="table-head text-center">
+            <tr>
+            <th class="text-center text-white">Customer Name</th>
+            <th class="text-center text-white">Total Spent ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in top_customers %}
+           <tr class="table-row">
+            <td class="text-center">{{ c.user__name }}</td>
+            <td class="text-center">{{ c.total_spent }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" class="text-center">No data available</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Product Performance -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h4 class="fw-bold text-dark mb-3">Product Performance</h4>
+       <div class="table-responsive card-body p-0">
+            <table id="myDataTable" class="table table-hover no-border align-middle table-striped">
+            <thead class="table-head text-center">
+            <tr>
+               <th class="id-col text-center align-middle p-0 text-white">#</th>
+                <th scope="col" class="text-center text-white">Product</th>
+                <th scope="col" class="text-center text-white">Quantity Sold</th>
+                <th scope="col" class="text-center text-white">Total Sales PKR</th>
+                <th class="text-center text-white">Cost Price (PKR)</th>
+                <th class="text-center text-white">Profit (PKR)</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+         <tr class="table-row">
+            <td class="fw-semibold px-3">{{ forloop.counter }}</td>
+            <td class="text-center">{{ p.name }}</td>
+            <td class="text-center">{{ p.total_quantity }}</td>
+            <td class="text-center">PKR/ {{ p.total_sales }}</td>
+            <td>{{ p.total_cost|floatformat:2 }}</td>
+            <td class="{% if p.total_profit > 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ p.total_profit|floatformat:2 }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-center">No sales data found</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
