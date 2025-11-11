@@ -187,7 +187,7 @@
                             <th class="text-center text-white">ORDER ID</th>
                             <th class="text-center text-white">User</th>
                             <th class="text-center text-white">Date</th>
-                            <th class="text-center text-white">Total</th>
+                            <th class="text-center text-white">Type</th>
                             <th class="text-center text-white">Status</th>
                         </tr>
                         </thead>
@@ -197,13 +197,13 @@
                             <td class="text-center">#{{ order.id }}</td>
                             <td class="text-center">{{ order.user }}</td>
                             <td class="text-center">{{ order.created_at|date:"M d, Y" }}</td>
-                            <td class="text-center fs-4 fw-bold">
-                                        {% if item.price > 0 %}
-                                            Rs {{ item.price }}
-                                        {% else %}
-                                            Redeem 
-                                        {% endif %}       
-                                    </td>
+                            <td class="text-center">
+                                {% if order.type == "redeem" %}
+                                <span class="badge shadow rounded-4 py-2 px-3 bg-primary">Normal Redeem</span>
+                                {% else %}
+                                <span class="badge shadow rounded-4 py-2 px-3 bg-info">Normal Order</span>
+                                {% endif %}
+                                </td>
                             <td class="text-center">
                                     {% if order.status == "pending" %}
                                         <span class="badge shadow rounded-4 py-2 px-3 text-bg-warning">Pending</span>
