@@ -156,6 +156,7 @@ class AppUser(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(max_length=254,unique=True, null=True, blank=True, validators=[validate_email], db_index=True)   
     image = models.ImageField(upload_to="users/", blank=True, null=True)  
+    is_active = models.BooleanField(default=True)
     password_hash = models.CharField(max_length=255)  
     api_token = models.CharField(max_length=128, blank=True, null=True)      
     created_at = models.DateTimeField(default=timezone.now)
@@ -219,8 +220,11 @@ class OrderItem(models.Model):
     variants = models.CharField(max_length=255, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        if self.product and self.cost_price is None:
+            self.cost_price = self.product.cost_price
         super().save(*args, **kwargs)
         self.order.update_order_type()
 
