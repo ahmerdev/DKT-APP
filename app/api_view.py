@@ -11,7 +11,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount
 from .serializers import CategorySerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
@@ -36,6 +36,21 @@ def create_app_user(request):
             "api_token": instance.api_token
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Active & Deactive
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def deactivate_account(request, pk):
+    user = get_object_or_404(AppUser, pk=pk)  
+    user.is_active = False
+    user.save()
+    
+    return Response(
+        {'message': f'User {user.number} has been deactivated successfully.'},
+        status=status.HTTP_200_OK
+    )
+
 
 
 #Mobile App User Update Profile API
@@ -127,6 +142,7 @@ def app_user_login(request):
         return Response({
             "id": user.id,
             "number": user.number,
+            "is_active": user.is_active,
             "api_token": user.api_token
         }, status=status.HTTP_200_OK)
     else:
@@ -263,6 +279,7 @@ def create_order(request):
             pts=item.get("pts", 0),
             variants=item.get("variants", ""),
             price=item.get("price", 0),
+            cost_price=item.get("cost_price", 0),
             quantity=item.get("quantity", 1),
         )
 
