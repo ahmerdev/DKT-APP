@@ -251,6 +251,7 @@
                                         {% if notifications %}
                                             {% for order in notifications %}
                                             <li>
+                                                <a href="{% url 'order_list_ui' %}" class="text-decoration-none text-dark">
                                                 <div class="message-item item-{{ forloop.counter }}">
                                                 <div class="image"><i class="icon-noti-4"></i></div>
                                                 <div>
@@ -263,6 +264,7 @@
                                                     <small class="text-muted">{{ order.created_at }}</small>
                                                 </div>
                                                 </div>
+                                                </a>
                                             </li>
                                             {% endfor %}
                                             <li><a href="#" class="tf-button w-full text-center" onclick="clearNotifications()">Clear All</a></li>
@@ -313,7 +315,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #7d1d27; /* apni pasand ka color */
+    background: #7d1d27; 
     color: #fff;
     font-weight: bold;
     font-size: 18px;
