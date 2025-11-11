@@ -7,10 +7,10 @@ def get_sales_report():
 
     total_sales = items.aggregate(
         total_sales=Sum(
-            ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())
+            ExpressionWrapper(F('price'), output_field=DecimalField())
         )
     )["total_sales"] or 0
-    total_cost = Product.objects.aggregate(
+    total_cost = items.aggregate(
         total_cost=Sum(
             ExpressionWrapper(F('cost_price') * F('quantity'), output_field=DecimalField())
         )
@@ -28,11 +28,12 @@ def get_sales_report():
         "total_quantity": total_quantity,
     }
 
+
 # PROFIT REPORT
 def get_profit_report():
     items = OrderItem.objects.filter(order__status="delivered", product__isnull=False)
 
-    profit_expr = ExpressionWrapper(
+    profit_expr =  ExpressionWrapper(
         (F('price') - F('product__cost_price')) * F('quantity'),
         output_field=DecimalField()
     )
@@ -43,7 +44,7 @@ def get_profit_report():
 #  CUSTOMER POTENTIAL REPORT
 def get_customer_potentials(top_n=5):
     qs = Order.objects.filter(status="delivered").values('user__name').annotate(
-        total_spent=Sum(ExpressionWrapper(F('items__price') * F('items__quantity'), output_field=DecimalField()))
+        total_spent=Sum(ExpressionWrapper(F('items__price'), output_field=DecimalField()))
     ).order_by('-total_spent')[:top_n]
     return list(qs)
 
@@ -53,35 +54,39 @@ def get_product_report():
     qs = (
         OrderItem.objects
         .filter(order__status="delivered", order__type="normal")
-        .values('name')
+        .values('product_id','name')
         .annotate(
             total_quantity=Sum('quantity'),
             total_sales=Sum(
-                ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())
-            )
+                ExpressionWrapper(F('price'), output_field=DecimalField())
+            ),
+            total_cost=Sum(
+                ExpressionWrapper(F('cost_price') * F('quantity'), output_field=DecimalField())
+            ),
         )
-        .order_by('-total_quantity')
+        .annotate(
+            total_profit=ExpressionWrapper(F('total_sales') - F('total_cost'), output_field=DecimalField())
+        )
+        .order_by('total_quantity')
     )
     return list(qs)
 
 
 
-from django.db.models.functions import Coalesce
-
 def get_product_profit_report():
     items = (
         OrderItem.objects
         .filter(order__status="delivered")
-        .select_related('product', 'order', 'order__user')
-        .values('product__id', 'name', 'order__id', 'order__user__name')
+        .select_related('order')
+        .values('name', 'price', 'quantity', 'order__id', 'order__user__name')
         .annotate(
             total_sales=Sum(ExpressionWrapper(F('price') * F('quantity'), output_field=DecimalField())),
-            total_cost=Sum(
-                ExpressionWrapper(Coalesce(F('product__cost_price'), 0) * F('quantity'), output_field=DecimalField())
-            ),
+            total_cost=Sum(ExpressionWrapper(F('product__cost_price') * F('quantity'), output_field=DecimalField())),
         )
         .annotate(total_profit=F('total_sales') - F('total_cost'))
         .order_by('-total_profit')
     )
 
     return list(items)
+
+
