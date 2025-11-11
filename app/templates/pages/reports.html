@@ -99,7 +99,9 @@
           {% for c in top_customers %}
            <tr class="table-row">
             <td class="text-center">{{ c.user__name }}</td>
-            <td class="text-center">{{ c.total_spent }}</td>
+            {% if c.total_spent > 0 %}
+            <td class="text-center">{{ c.total_spent|floatformat:2 }}</td>
+            {% endif %}
           </tr>
           {% empty %}
           <tr><td colspan="2" class="text-center">No data available</td></tr>
@@ -132,9 +134,9 @@
             <td class="text-center">{{ p.name }}</td>
             <td class="text-center">{{ p.total_quantity }}</td>
             <td class="text-center">PKR/ {{ p.total_sales }}</td>
-            <td>{{ p.total_cost|floatformat:2 }}</td>
-            <td class="{% if p.total_profit > 0 %}text-success{% else %}text-danger{% endif %}">
-              {{ p.total_profit|floatformat:2 }}
+           <td class="text-center">PKR {{ p.total_cost|floatformat:2 }}</td>
+            <td class="text-center {% if p.total_profit > 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ p.total_profit|floatformat:2 }}
             </td>
           </tr>
           {% empty %}
