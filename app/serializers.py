@@ -82,6 +82,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "short_description",
             "description",
             "image",
+            "cost_price",
             "regular_price",
             "sale_price",
             "SKU",
@@ -100,7 +101,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['image', 'name', 'pts', 'variants', 'price', 'quantity']
+        fields = ['image', 'name', 'pts', 'variants', 'price', 'quantity', 'cost_price']
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -124,7 +125,7 @@ class AppUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppUser
-        fields = ["id", "number", "name", "email", "image", "password", "password_hash",
+        fields = ["id", "number", "name", "email", "image", "is_active", "password", "password_hash",
                   "created_at", "api_token", "total_points", "addresses"]
         read_only_fields = ["id", "created_at", "password_hash", "api_token", "total_points"]
 
