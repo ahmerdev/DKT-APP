@@ -34,12 +34,15 @@ def reports(request):
     }
     return render(request, "pages/reports.html", context)
 
-
 @login_required(login_url='login')
 def dashboard(request):
     total_users = AppUser.objects.count()
-    total_orders = Order.objects.count()
-    total_sales = OrderItem.objects.aggregate(total=Sum('price'))['total'] or 0
+    total_orders = Order.objects.filter(status="delivered").count()
+    total_sales = (
+    OrderItem.objects
+    .filter(order__status="delivered")
+    .aggregate(total=Sum('price'))['total'] or 0
+)
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
 
     # Total sale (sum of all OrderItem.price * quantity)
@@ -52,21 +55,21 @@ def dashboard(request):
     pending_orders_count = pending_orders_qs.count()
     pending_amount = (
         OrderItem.objects.filter(order__status='pending')
-        .aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        .aggregate(total=Sum(F('price')))['total'] or 0
     )
 
     # Delivered stats
     delivered_orders = Order.objects.filter(status='delivered').count()
     delivered_amount = (
         OrderItem.objects.filter(order__status='delivered')
-        .aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        .aggregate(total=Sum(F('price')))['total'] or 0
     )
 
     # Canceled stats
     canceled_orders = Order.objects.filter(status='cancelled').count()
     canceled_amount = (
         OrderItem.objects.filter(order__status='cancelled')
-        .aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        .aggregate(total=Sum(F('price')))['total'] or 0
     )
 
     # Monthly chart data
@@ -94,7 +97,7 @@ def dashboard(request):
     notifications = []
     for order in pending_orders_qs.select_related('user').prefetch_related('items').order_by('-created_at')[:10]:
         total_amt = (
-            order.items.aggregate(total=Sum(F("price") * F("quantity")))["total"] or 0
+            order.items.aggregate(total=Sum(F("price")))["total"] or 0
         )
         notifications.append({
             "id": order.id,
@@ -178,6 +181,18 @@ def home(request):
 def appuser_list_ui(request):
     users = AppUser.objects.all().order_by("-created_at")
     return render(request, "pages/customer-list.html", {"users": users})
+
+
+# Active & Deactive 
+def user_status(request, pk):
+    user = get_object_or_404(AppUser, pk=pk)
+    user.is_active = not user.is_active  
+    user.save()
+    
+    status = "activated" if user.is_active else "deactivated"
+    messages.success(request, f"User {user.number} has been {status}.")
+    
+    return redirect('appuser_list') 
 
 
 # Dashboard App User Creation
@@ -918,4 +933,3 @@ def send_discount_email(discount):
             msg.send()
         except Exception as e:
             print(f"Failed to send to {user.email}: {e}")
-
