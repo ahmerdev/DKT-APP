@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.db.models import Sum
 import ast
-from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Address
+from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order,  About, ContactInfo, ContactForm, OrderItem, Payment, AppUser, Address
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,6 +37,26 @@ class HeroSerializer(serializers.ModelSerializer):
         model = Hero
         fields = ['id', 'title', 'subtext', 'image', 'created_at']          
 
+
+class PrivacySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Privacy
+        fields = ['id', 'p_title', 't_title', 'p_text', 't_text', 'created_at']      
+
+class AboutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = About
+        fields = ['id', 'title', 'text', 'created_at']     
+
+class ContactInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactInfo
+        fields = ['id', 'title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text', 'created_at']     
+
+class ContactFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactForm
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'message', 'created_at']  
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
