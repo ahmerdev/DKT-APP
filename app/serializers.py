@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.db.models import Sum
 import ast
-from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order,  About, ContactInfo, ContactForm, OrderItem, Payment, AppUser, Address
+from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, Privacy, About, ContactInfo, ContactForm, OrderItem, Payment, AppUser, Address
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
