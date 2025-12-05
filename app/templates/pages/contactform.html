@@ -1,0 +1,77 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %} Contact | Contact {% endblock %}
+{% block content %}
+
+<div class="main-content-inner">
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Contact Form</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="index.html">
+                        <div class="text-tiny">Dashboard</div>
+                    </a>
+                </li>
+                <li><i class="icon-chevron-right"></i></li>
+                <li><div class="text-tiny">Contact Form</div></li>
+            </ul>
+        </div>
+
+        <div class="wg-box">
+          <div class="table-responsive card-body p-0">
+            <table id="myDataTable" class="table table-hover no-border align-middle table-striped">
+            <thead class="table-head text-center">
+            <tr>
+               <th class="id-col text-center align-middle p-0 text-white">#</th>
+                <th scope="col" class="text-center text-white">Email</th>
+                <th scope="col" class="text-center text-white">Number</th>
+                <th scope="col" class="text-center text-white">Date</th>
+                <th scope="col" class="text-center text-white">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contactform in contactforms %}
+            <tr class="table-row">
+                <td class="fw-semibold px-3">{{ forloop.counter }}</td>
+                <td class="fw-bold text-dark text-center">{{ contactform.email }}</td>
+                <td class="fw-bold text-dark text-center">{{ contactform.phone }}</td>
+                <td class="text-muted text-center">{{ contactform.created_at|date:"M d, Y" }}</td>
+                <td class="text-center">
+                     <!-- View Button -->
+                   <a href="#" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#staticBackdrop"
+                        data-id="{{ contactform.id }}"
+                        class="btn btn-info btn-lg text-white fw-semibold shadow">
+                        View Contact Form <i class="fa-solid fa-eye"></i>
+                        </a>
+
+                         {% include 'include/viewcontact-form.html' %} 
+                        <!-- Delete Button -->
+                                <a href="{% url 'delete_contactform' contactform.pk %}" 
+                               class="btn text-white fw-semibold bg-danger fs-5 shadow"
+                                data-bs-toggle="modal"
+                                    data-bs-target="#globalDeleteModal"
+                                    data-name="{{ contactform.email }}"
+                                    data-url="{% url 'delete_contactform' contactform.pk %}">
+                                  Delete <i class="fa-solid fa-trash-can shadow"></i>
+                                </a>
+                          
+
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">No content found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
