@@ -284,3 +284,54 @@ class Discount(models.Model):
         if self.users.exists() and user not in self.users.all():
             return False
         return True
+
+
+class Privacy(models.Model):   
+    p_title = models.CharField(max_length=200)
+    t_title = models.CharField(max_length=200)
+    p_text = models.TextField(blank=True, null=True)
+    t_text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.p_title    
+    
+class About(models.Model):   
+    title = models.CharField(max_length=200)
+    text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title      
+
+class ContactInfo(models.Model):
+    title = models.CharField(max_length=200, default="Contact Us")
+    tagline = models.CharField(max_length=250, blank=True, null=True)  # Happy to Help etc.
+    
+    mailing_address = models.TextField()
+    helpline_number = models.CharField(max_length=100)
+    corporate_contact = models.CharField(max_length=100, blank=True, null=True)
+
+    email_generic = models.EmailField(max_length=200, blank=True, null=True)
+    email_collaboration = models.EmailField(max_length=200, blank=True, null=True)
+    email_hr = models.EmailField(max_length=200, blank=True, null=True)
+
+    drop_us_line_text = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+   
+
+class ContactForm(models.Model):
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=100)
+    message = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
