@@ -37,6 +37,21 @@ class HeroForm(forms.ModelForm):
         model = Hero
         fields = ['title', 'subtext', 'image']
 
+class PrivacyForm(forms.ModelForm):
+    class Meta:
+        model = Privacy
+        fields = ['p_title', 't_title', 'p_text', 't_text']
+
+class AboutForm(forms.ModelForm):
+    class Meta:
+        model = About
+        fields = ['title', 'text']
+
+
+class ContactInfoForm(forms.ModelForm):
+    class Meta:
+        model = ContactInfo
+        fields = ['title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text']
 
 class ProductForm(forms.ModelForm):
 
