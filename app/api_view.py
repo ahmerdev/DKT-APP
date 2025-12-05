@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount, Privacy, About, ContactInfo, ContactForm,
+from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount, Privacy, About, ContactInfo, ContactForm
 from .serializers import CategorySerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, AdSerializer, ProductSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ContactFormSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
