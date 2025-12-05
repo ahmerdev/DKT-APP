@@ -17,10 +17,182 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .reports import get_sales_report, get_profit_report, get_customer_potentials, get_product_report, get_product_profit_report
-from .forms import CategoryForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, DiscountForm
-from .models import Product, Redeem, ProductVariant, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount
+from .forms import CategoryForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, DiscountForm, PrivacyForm, AboutForm, ContactInfoForm
+from .models import Product, Redeem, ProductVariant, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+# Privacy View
+@login_required(login_url='login')
+def add_or_edit_privacy(request, pk=None):
+    if pk:
+        privacy = get_object_or_404(Privacy, pk=pk)
+        success_message = "Privacy updated successfully"
+    else:
+        privacy = None
+        success_message = "Privacy created successfully"
+
+    if request.method == "POST":
+        form = PrivacyForm(request.POST, request.FILES, instance=privacy)
+        if form.is_valid():
+            form.save()
+            messages.success(request, success_message)
+            return redirect("privacy")
+        else:
+            messages.error(request, "Something went wrong, please try again")
+    else:
+        form = PrivacyForm(instance=privacy)
+
+    return render(request, "pages/add-privacy.html", {"form": form, "privacy": privacy})
+
+
+
+#  Brand list with search
+@login_required(login_url='login')
+def privacy(request):
+    search_query = request.GET.get('q', '')
+    if search_query: 
+        privacies = Privacy.objects.filter(name__icontains=search_query).order_by('-id')
+    else:  
+        privacies = Privacy.objects.all().order_by('-id')
+    return render(request, "pages/privacy.html", {"privacies": privacies})
+
+
+
+# Delete Privacy
+@login_required(login_url='login')
+def delete_privacy(request, pk):
+    privacy = get_object_or_404(Privacy, pk=pk)
+    privacy.delete()
+    messages.warning(request, "Privacy deleted successfully!")
+    return redirect('privacy') 
+
+
+
+
+# About View
+@login_required(login_url='login')
+def add_or_edit_about(request, pk=None):
+    if pk:
+        about = get_object_or_404(About, pk=pk)
+        success_message = "About updated successfully"
+    else:
+        about = None 
+        success_message = "About created successfully"
+
+    if request.method == "POST":
+        form = AboutForm(request.POST, request.FILES, instance=about)
+        if form.is_valid():
+            form.save()
+            messages.success(request, success_message)
+            return redirect("about")
+        else:
+            messages.error(request, "Something went wrong, please try again")
+    else:
+        form = AboutForm(instance=about)
+
+    return render(request, "pages/add-about.html", {"form": form, "about": about })
+
+
+
+#  About list with search
+@login_required(login_url='login')
+def about(request):
+    search_query = request.GET.get('q', '')
+    if search_query: 
+        abouts = About.objects.filter(name__icontains=search_query).order_by('-id')
+    else:  
+        abouts = About.objects.all().order_by('-id')
+    return render(request, "pages/about.html", {"abouts": abouts})
+
+
+
+# Delete About
+@login_required(login_url='login')
+def delete_about(request, pk):
+    about = get_object_or_404(About, pk=pk)
+    about.delete()
+    messages.warning(request, "About deleted successfully!")
+    return redirect('about') 
+
+
+# Contact View
+@login_required(login_url='login')
+def add_or_edit_contact(request, pk=None):
+    if pk:
+        contact = get_object_or_404(ContactInfo, pk=pk)
+        success_message = "Contact Info updated successfully"
+    else:
+        contact = None 
+        success_message = "Contact Info created successfully"
+
+    if request.method == "POST":
+        form = ContactInfoForm(request.POST, request.FILES, instance=contact)
+        if form.is_valid():
+            form.save()
+            messages.success(request, success_message)
+            return redirect("about")
+        else:
+            messages.error(request, "Something went wrong, please try again")
+            print("Form Errors:", form.errors)
+    else:
+        form = ContactInfoForm(instance=contact)
+
+    return render(request, "pages/add-contact.html", {"form": form, "contact": contact })
+
+
+
+#  Contact list with search
+@login_required(login_url='login')
+def contact(request):
+    search_query = request.GET.get('q', '')
+    if search_query: 
+        contacts = ContactInfo.objects.filter(name__icontains=search_query).order_by('-id')
+    else:  
+        contacts = ContactInfo.objects.all().order_by('-id')
+    return render(request, "pages/contact.html", {"contacts": contacts})
+
+
+#  Contact list with search
+@login_required(login_url='login')
+def contactform_list(request):
+    search_query = request.GET.get('q', '')
+    if search_query: 
+        contactforms = ContactForm.objects.filter(name__icontains=search_query).order_by('-id')
+    else:  
+        contactforms = ContactForm.objects.all().order_by('-id')
+    return render(request, "pages/contactform.html", {"contactforms": contactforms})
+
+@login_required(login_url='login')
+def get_contact_form(request, pk):
+    try:
+        contact = ContactForm.objects.get(pk=pk)
+        data = {
+            "first_name": contact.first_name,
+            "last_name": contact.last_name,
+            "email": contact.email,
+            "phone": contact.phone,
+            "message": contact.message
+        }
+        return JsonResponse(data)
+    except ContactForm.DoesNotExist:
+        return JsonResponse({"error": "Contact not found"}, status=404)
+
+# Delete About
+@login_required(login_url='login')
+def delete_contact(request, pk):
+    contact = get_object_or_404(ContactInfo, pk=pk)
+    contact.delete()
+    messages.warning(request, "Contact deleted successfully!")
+    return redirect('contact') 
+
+@login_required(login_url='login')
+def delete_contactform(request, pk):
+    contactform = get_object_or_404(ContactForm, pk=pk)
+    contactform.delete()
+    messages.warning(request, "Contact deleted successfully!")
+    return redirect('contact_form')
+
 
 @login_required(login_url='login')
 def reports(request):
