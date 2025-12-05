@@ -13,11 +13,52 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount
-from .serializers import CategorySerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
+from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount, Privacy, About, ContactInfo, ContactForm,
+from .serializers import CategorySerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, AdSerializer, ProductSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ContactFormSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
+
+
+# Mobile App Privacy API
+@api_view(['GET'])
+def privacy_content_api(request):
+    privacy = Privacy.objects.all().order_by('-id')
+    serializer = PrivacySerializer(privacy, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# Mobile App About API
+@api_view(['GET'])
+def about_content_api(request):
+    about = About.objects.all().order_by('-id')
+    serializer = AboutSerializer(about, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# Mobile App About API
+@api_view(['GET'])
+def contact_content_api(request):
+    contact = ContactInfo.objects.all().order_by('-id')
+    serializer = ContactInfoSerializer(contact, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def create_contact(request):
+    serializer = ContactFormSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            "success": True,
+            "message": "Contact form submitted successfully!",
+            "data": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    return Response({
+        "success": False,
+        "errors": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 #Mobile App User Creation API
 @api_view(["POST"])
