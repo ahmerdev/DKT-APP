@@ -1,6 +1,6 @@
 from django import forms
 from django.forms.widgets import ClearableFileInput
-from .models import Product, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, AppUser, Discount
+from .models import Product, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, AppUser, Discount, Privacy, About, ContactInfo
 
 
 # pehle widget define karo
