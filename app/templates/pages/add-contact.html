@@ -1,0 +1,98 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %} contact | Add-contact {% endblock %}
+{% block content %}
+
+<div class="main-content-inner">
+    <!-- main-content-wrap -->
+    <div class="main-content-wrap">
+        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+            <h3>Add Contact Info</h3>
+            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                <li>
+                    <a href="#">
+                        <div class="text-tiny">Dashboard</div>
+                    </a>
+                </li>
+                <li>
+                    <i class="icon-chevron-right"></i>
+                </li>
+                <li>
+                    <a href="#">
+                        <div class="text-tiny">Contact Info</div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- new-category -->
+        <div class="wg-box">
+    <form class="form-new-product form-style-1" 
+          action="" method="POST" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <!-- ALL FIELDS INSIDE FORM -->
+        <fieldset class="name">
+            <div class="body-title">Contact Title <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Title" name="title"
+                value="{{ form.title.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Contact Tagline <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Tagline" name="tagline"
+                value="{{ form.tagline.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Mailing Address <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Mailing Address" name="mailing_address"
+                value="{{ form.mailing_address.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Helpline Number <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Helpline Number" name="helpline_number"
+                value="{{ form.helpline_number.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Corporate Contact <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Corporate Contact" name="corporate_contact"
+                value="{{ form.corporate_contact.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Email Generic <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Email Generic" name="email_generic"
+                value="{{ form.email_generic.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Email Collaboration <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Email Collaboration" name="email_collaboration"
+                value="{{ form.email_collaboration.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Email HR <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter HR Email" name="email_hr"
+                value="{{ form.email_hr.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <fieldset class="name">
+            <div class="body-title">Drop Us Line Text <span class="tf-color-1">*</span></div>
+            <input class="flex-grow" type="text" placeholder="Enter Drop Line Text" name="drop_us_line_text"
+                value="{{ form.drop_us_line_text.value|default_if_none:'' }}" required="">
+        </fieldset>
+
+        <!-- BUTTON PROPERLY INSIDE FORM -->
+        <div class="bot">
+            <button class="tf-button w208" type="submit">
+                {% if contact %} Update {% else %} Save {% endif %}
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
