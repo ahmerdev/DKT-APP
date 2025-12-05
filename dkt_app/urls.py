@@ -82,6 +82,28 @@ urlpatterns = [
     path("orders/delete/<int:pk>/", views.delete_order_ui, name="delete_order_ui"),
 
 
+    # Privacy & Terms Route
+    path('add-privacy/', views.add_or_edit_privacy, name='add_privacy'),
+    path("privacy/", views.privacy, name="privacy"),
+    path("edit-privacy/<int:pk>/", views.add_or_edit_privacy, name="edit_privacy"),
+    path("privacy/delete/<int:pk>/", views.delete_privacy  , name="delete_privacy"),
+
+# About Us Route
+    path('add-about/', views.add_or_edit_about, name='add_about'),
+    path("about/", views.about, name="about"),
+    path("edit-about/<int:pk>/", views.add_or_edit_about, name="edit_about"),
+    path("about/delete/<int:pk>/", views.delete_about  , name="delete_about"),    
+
+# Contact Us Route
+    path('add-contact/', views.add_or_edit_contact, name='add_contact'),
+    path("contact/", views.contact, name="contact"),
+    path("contact-form/", views.contactform_list, name="contact_form"),
+    path('get-contactform/<int:pk>/', views.get_contact_form, name='get-contact-form'),
+    path("edit-contact/<int:pk>/", views.add_or_edit_contact, name="edit_contact"),
+    path("contact/delete/<int:pk>/", views.delete_contact  , name="delete_contact"),
+    path("contactform/delete/<int:pk>/", views.delete_contactform  , name="delete_contactform"),
+    
+
 # Discounts Route 
     path('discounts/', views.discount, name="discount"),
     path('discounts/create/', views.create_discount, name="create_discount"),
@@ -92,11 +114,15 @@ urlpatterns = [
 # API
     path('api/categories/', api_view.category_list_api, name='api_category_list'),
     path('api/brands/', api_view.brand_list_api, name='api_brand_list'),
+    path('api/privacy/', api_view.privacy_content_api, name='api_privacy_content'),
+    path('api/about/', api_view.about_content_api, name='api_about_content'),
+    path('api/contact/', api_view.contact_content_api, name='api_contact_content'),
     path('api/banners/', api_view.banner_list_api, name='api_banner_list'),
     path('api/ads/', api_view.ad_list_api, name='api_ad_list'),
     path('api/heros/', api_view.hero_list_api, name='api_hero_list'),
     path("api/products/", api_view.product_list_api, name="product-list-api"),
     path("api/redeems/", api_view.redeem_list_api, name="redeem-list-api"),
+    path("api/create-form/", api_view.create_contact, name="create_form"),
     path("api/discounts/", api_view.validate_discount_api, name="validate-discount-api"),
     # path("api/send-otp/", api_view.send_otp, name="send-otp"),
     # path("api/verify-otp/", api_view.verify_otp, name="verify-otp"),
