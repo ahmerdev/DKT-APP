@@ -1,0 +1,202 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% load calc_tags %}
+{% load custom_tags %}
+{% block content %}
+
+
+<div class="container py-5">
+
+    <!-- TOP STATS -->
+    <h3 class="fw-bold mb-4">Reviews</h3>
+
+    <div class="row g-4 mb-5">
+
+    <!-- Total Reviews -->
+    <div class="col-md-4">
+        <div class="p-4 rounded-4 shadow-sm bg-white text-center">
+            <!-- Icon -->
+            <div class="mb-3">
+                <i class="fa-solid fa-star fa-3x" style="color: #FDCC0D;"></i>
+            </div>
+            <h5 class="fw-bold text-secondary mb-2">Total Reviews</h5>
+            <h2 class="fw-bold display-5 text-dark">{{ total_reviews }}</h2>
+            <p class="text-success fw-semibold fs-6">
+                <i class="fa-solid fa-arrow-up"></i> 21% Growth this year
+            </p>
+        </div>
+    </div>
+
+    <!-- Average Rating -->
+    <div class="col-md-4">
+        <div class="p-4 rounded-4 shadow-sm bg-white text-center">
+            <div class="mb-3">
+                <i class="fa-solid fa-star-half-stroke fa-3x text-primary"></i>
+            </div>
+            <h5 class="fw-bold text-secondary mb-2">Average Rating</h5>
+            <h2 class="fw-bold display-5 text-dark">{{ avg_rating|floatformat:1 }}</h2>
+            <div class="mb-5">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= avg_rating %}
+                        <span class="text-warning"> <i class="fa-solid fa-star fa-1x" style="color: #FDCC0D;"></i></span>
+                    {% else %}
+                        <span class="text-muted"><i class="fa-regular fa-star fa-1x" style="color: #FDCC0D;"></i></span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Breakdown -->
+    <div class="col-md-4">
+    <div class="mb-4 p-3 bg-white rounded-4 shadow-sm">
+    <h5 class="fw-bold text-dark mb-4 text-center">Rating Breakdown</h5>
+
+     {% for star, count in ratings.items %}
+    <div class="rating-row mb-2 d-flex align-items-center">
+    <span class="star-label"> <i class="fa-solid fa-star fa-1x" style="color: #FDCC0D;"></i> {{ star }} Star</span>
+    <div class="rating-bar">
+        <div class="rating-fill"
+             style="width: {{ count|percent:max_count }}%;">
+        </div>
+    </div>
+    <span class="count-label">{{ count }}</span>
+
+</div>
+{% endfor %}
+
+
+    </div>
+</div>
+</div>
+
+<style>
+    .rating-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 16px;
+}
+
+.star-label {
+    width: 60px;
+    font-weight: 600;
+    color: #555;
+}
+
+.rating-bar {
+    width: 300px;
+    height: 8px;
+    background: #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.rating-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+/* COLORS for each star row */
+.rating-row:nth-child(1) .rating-fill { background: #1abc9c; }  /* 5 Star */
+.rating-row:nth-child(2) .rating-fill { background: #d06cf2; }  /* 4 Star */
+.rating-row:nth-child(3) .rating-fill { background: #f1c40f; }  /* 3 Star */
+.rating-row:nth-child(4) .rating-fill { background: #3498db; }  /* 2 Star */
+.rating-row:nth-child(5) .rating-fill { background: #e67e22; }  /* 1 Star */
+
+.count-label {
+    width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: #444;
+}
+
+</style>
+    <!-- REVIEWS LIST: 2 PER ROW -->
+    <div class="row g-4 p-4 shadow bg-white my-5">
+        {% for review in reviews %}
+        <div class="col-md-6">
+            <div class="p-4 bg-white rounded-4 shadow h-100">
+
+                <div class="row align-items-start">
+
+                    <div class="col-md-4 user_img">
+                        {% if review.user.image %}
+                    <img src="{{ review.user.image.url }}" 
+                         class="rounded-circle me-3" 
+                         width="60" style="object-fit:cover; height: 60px;">
+                         {% else %}
+                    <img src="{% static 'images/avatar/user-1.png' %}" 
+                        alt="profile" 
+                        class="rounded-circle me-3" 
+                         width="60" style="object-fit:cover; height: 60px;">
+                    {% endif %} 
+                    <div class="user_info">
+                        <!-- User Name -->
+                        <h5 class="fw-bold mb-2 fs-5 text-dark">
+                            <i class="fa-solid fa-user"></i> {{ review.user.name }}
+                        </h5>
+
+                        <!-- Total Spend -->
+                        <div class="d-flex align-items-center mb-5 text-muted">
+                            <i class="fa-solid fa-coins me-2 text-warning"></i>
+                            <span><b>Total Spend:</b> Rs {{ review.total_spent|default:"0" }}</span>
+                        </div>
+                       
+                        <!-- Product -->
+                        <div class="d-flex align-items-center mt-5">
+                             <img src=" {{ review.item.image.url }}" 
+                         class="rounded-4 me-3" 
+                         width="40" style="object-fit:cover; height: 40px;">
+                            <i class="fa-solid fa-cart-plus me-2 text-success"></i>
+                            <span><b>Product:</b> {{ review.item.name }}</span>
+                        </div>
+
+                    </div>
+
+                        
+                    </div>
+                    <div class="col-md-8 review position-relative">
+
+                        <!-- Rating + Date -->
+                        <div>
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                  <i class="fa-solid fa-star" style="color: #FDCC0D;"></i>
+                                {% else %}
+                                  <i class="fa-regular fa-star" style="color: #FDCC0D;"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <small class="ms-3 text-black fs-6">{{ review.created_at|date:"d-m-Y" }}</small>
+                            <div class="action float-end">
+                                <a href="{% url 'delete_review' review.pk %}" 
+                                            class="btn text-white fw-semibold bg-danger fs-5 shadow"
+                                                data-bs-toggle="modal"
+                                                    data-bs-target="#globalDeleteModal"
+                                                    data-name="{{ review.user.number }}"
+                                                    data-url="{% url 'delete_review' review.pk %}">
+                                                <i class="fa-solid fa-trash-can shadow"></i>
+                                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Review Text -->
+                        <p class="mt-5 text-secondary" style="line-height:1.6;">
+                            {{ review.comment }}
+                        </p>
+
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted py-5">No reviews found.</p>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}
