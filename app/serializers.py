@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from django.db.models import Sum
+from django.db.models import Sum, Avg
 import ast
-from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, Privacy, About, ContactInfo, ContactForm, OrderItem, Payment, AppUser, Address
+from .sms import send_sms
+from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +16,30 @@ class BrandSerializer(serializers.ModelSerializer):
         model = Brand
         fields = ['id', 'name', 'slug', 'image', 'created_at']      
 
+class PrivacySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Privacy
+        fields = ['id', 'p_title', 't_title', 'p_text', 't_text', 'created_at']      
+
+class AboutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = About
+        fields = ['id', 'title', 'text', 'created_at']     
+
+class ContactInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactInfo
+        fields = ['id', 'title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text', 'created_at']     
+
+class ContactFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactForm
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'message', 'created_at']             
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'item', 'user', 'rating', 'comment', 'created_at']
 
 class BannerSerializer(serializers.ModelSerializer):
     category = serializers.StringRelatedField()   
@@ -37,26 +62,6 @@ class HeroSerializer(serializers.ModelSerializer):
         model = Hero
         fields = ['id', 'title', 'subtext', 'image', 'created_at']          
 
-
-class PrivacySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Privacy
-        fields = ['id', 'p_title', 't_title', 'p_text', 't_text', 'created_at']      
-
-class AboutSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = About
-        fields = ['id', 'title', 'text', 'created_at']     
-
-class ContactInfoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContactInfo
-        fields = ['id', 'title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text', 'created_at']     
-
-class ContactFormSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContactForm
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'message', 'created_at']  
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
@@ -92,6 +97,10 @@ class ProductSerializer(serializers.ModelSerializer):
     brand = serializers.StringRelatedField()
     gallery_images = ProductImageSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
+    
+    reviews = serializers.SerializerMethodField()
+    avg_rating = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -114,14 +123,40 @@ class ProductSerializer(serializers.ModelSerializer):
             "brand",
             "gallery_images",
             "variants",
+            "reviews",
+            "avg_rating",
+            "total_reviews",
             "created_at",
             "updated_at",
         ]
 
+    def get_reviews(self, obj):
+        # Product ke related order items
+        order_items = OrderItem.objects.filter(product=obj)
+        # Un order items ke reviews
+        reviews_qs = Review.objects.filter(item__in=order_items).order_by('-created_at')
+        return ReviewSerializer(reviews_qs, many=True).data
+
+    def get_avg_rating(self, obj):
+        order_items = OrderItem.objects.filter(product=obj)
+        reviews_qs = Review.objects.filter(item__in=order_items)
+        if reviews_qs.exists():
+            return round(reviews_qs.aggregate(avg=Avg('rating'))['avg'], 2)
+        return 0
+
+    def get_total_reviews(self, obj):
+        order_items = OrderItem.objects.filter(product=obj)
+        return Review.objects.filter(item__in=order_items).count()
+
+
+
+
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['image', 'name', 'pts', 'variants', 'price', 'quantity', 'cost_price']
+        fields = [ "id",'image', 'name', 'pts', 'variants', 'price', 'quantity', 'cost_price']
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -135,10 +170,36 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         fields = ['id', 'street', 'city', 'state', 'postal_code', 'country']
 
+class AppUserRegisterStepOneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AppUser
+        fields = ["number"]
+
+    def validate_number(self, value):
+        import re
+        if not re.fullmatch(r"\+?\d{9,15}", value):
+            raise serializers.ValidationError("Enter a valid phone number.")
+        return value
+
+class AppUserRegisterStepTwoSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=6, required=True)
+
+    class Meta:
+        model = AppUser
+        fields = ["name", "email", "password"]  
+
+    def update(self, instance, validated_data):
+        from django.contrib.auth.hashers import make_password
+        instance.name = validated_data.get("name", instance.name)
+        instance.email = validated_data.get("email", instance.email)
+        if "password" in validated_data:
+            instance.password_hash = make_password(validated_data["password"])
+        instance.save()
+        return instance
 
 
 class AppUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6, required=True)
+    password = serializers.CharField(write_only=True, min_length=6)
     password_hash = serializers.CharField(read_only=True)
     total_points = serializers.SerializerMethodField()
     addresses = AddressSerializer(many=True, required=False) 
