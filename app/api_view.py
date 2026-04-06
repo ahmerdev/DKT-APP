@@ -3,6 +3,11 @@ import json
 import secrets
 import base64
 import requests
+import random
+from django.core.cache import cache
+import time
+from .sms import send_sms
+from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from rest_framework import status
 from twilio.rest import Client
@@ -13,70 +18,177 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Discount, Privacy, About, ContactInfo, ContactForm
-from .serializers import CategorySerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, AdSerializer, ProductSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ContactFormSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
+from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
+from .serializers import CategorySerializer, AppUserRegisterStepOneSerializer, AppUserRegisterStepTwoSerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ReviewSerializer, ContactFormSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 
+# Temporary OTP storage (in-memory)
+otp_store = {}  # Format: { "number": { "otp": "123456", "timestamp": 1234567890 } }
 
-# Mobile App Privacy API
-@api_view(['GET'])
-def privacy_content_api(request):
-    privacy = Privacy.objects.all().order_by('-id')
-    serializer = PrivacySerializer(privacy, many=True, context={'request': request})
-    return Response(serializer.data)
+# Step 1: Generate OTP
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def forgot_password(request):
+    number = request.data.get("number")
+    if not number:
+        return Response({"error": "Phone number is required"}, status=400)
+
+    if not AppUser.objects.filter(number=number).exists():
+        if number.startswith("+92"):
+            local_number = "0" + number[3:]
+            if not AppUser.objects.filter(number=local_number, is_verified=True).exists():
+                return Response({"error": "User not found"}, status=404)
+            number = local_number  # local format use karo
+        else:
+
+            return Response({"error": "User not found"}, status=404)
+
+    otp = str(random.randint(1000, 9999))
+    cache.set(f"forgot_otp_{number}", otp, timeout=300)  # 5 min valid
+
+    send_sms(number, f"Your OTP is {otp}")
+
+    return Response({"message": "OTP sent"}, status=200)
 
 
-# Mobile App About API
-@api_view(['GET'])
-def about_content_api(request):
-    about = About.objects.all().order_by('-id')
-    serializer = AboutSerializer(about, many=True, context={'request': request})
-    return Response(serializer.data)
+# Step 2: Verify OTP + New Password
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def reset_password(request):
+    number = request.data.get("number")
+    otp = request.data.get("otp")
+    new_password = request.data.get("new_password")
+
+    if not all([number, otp, new_password]):
+        return Response({"error": "number, otp aur new_password required hain"}, status=400)
+
+    cached_otp = cache.get(f"forgot_otp_{number}")
+
+    if not cached_otp:
+        return Response({"error": "OTP expired"}, status=400)
+
+    if cached_otp != otp:
+        return Response({"error": "Invalid OTP"}, status=400)
+
+    try:
+        user = AppUser.objects.get(number=number)
+    except AppUser.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    from django.contrib.auth.hashers import make_password
+    user.password_hash = make_password(new_password)
+    user.save()
+
+    cache.delete(f"forgot_otp_{number}")
+
+    return Response({"message": "Password reset successfully"}, status=200)
 
 
-# Mobile App About API
-@api_view(['GET'])
-def contact_content_api(request):
-    contact = ContactInfo.objects.all().order_by('-id')
-    serializer = ContactInfoSerializer(contact, many=True, context={'request': request})
-    return Response(serializer.data)
-
-
-@api_view(['POST'])
-def create_contact(request):
-    serializer = ContactFormSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({
-            "success": True,
-            "message": "Contact form submitted successfully!",
-            "data": serializer.data
-        }, status=status.HTTP_201_CREATED)
-
-    return Response({
-        "success": False,
-        "errors": serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
 
 #Mobile App User Creation API
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_app_user(request):
-    serializer = AppUserSerializer(data=request.data)
+
+    serializer = AppUserRegisterStepOneSerializer(data=request.data)
     if serializer.is_valid():
-        instance = serializer.save()
-        # generate api token for app login
-        instance.api_token = secrets.token_urlsafe(32)
-        instance.save(update_fields=["api_token"])
+        number = serializer.validated_data["number"]
+
+        # Already registered check
+        if AppUser.objects.filter(number=number, is_verified=True).exists():
+            return Response({"error": "Number already registered"}, status=400)
+
+        otp = str(random.randint(1000, 9999))
+        cache.set(f"otp_{number}", otp, timeout=300)  
+
+        send_sms(number, f"Your OTP is {otp}")
+        return Response({"message": "OTP sent", "number": number}, status=200)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def complete_profile(request):
+    number = request.data.get("number")
+    temp_token = request.data.get("temp_token")
+
+    cached_token = cache.get(f"verified_{number}")
+    if not cached_token or cached_token != temp_token:
+        return Response({"error": "Invalid or expired token"}, status=400)
+
+    serializer = AppUserRegisterStepTwoSerializer(data=request.data)
+    if serializer.is_valid():
+        from django.contrib.auth.hashers import make_password
+        user = AppUser.objects.create(
+            number=number,
+            name=serializer.validated_data.get("name"),
+            email=serializer.validated_data.get("email"),
+            password_hash=make_password(serializer.validated_data.get("password")),
+            is_verified=True,
+            api_token=secrets.token_urlsafe(32)
+        )
+
+        cache.delete(f"verified_{number}")
+
         return Response({
-            "id": instance.id,
-            "number": instance.number,
-            "created_at": instance.created_at,
-            "api_token": instance.api_token
+            "id": user.id,
+            "number": user.number,
+            "name": user.name,
+            "email": user.email,
+            "api_token": user.api_token,
+            "created_at": user.created_at,
         }, status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def verify_otp(request):
+    number = request.data.get("number")
+    otp = request.data.get("otp")
+
+    cached_otp = cache.get(f"otp_{number}")
+
+    if cached_otp is None:
+        return Response({"error": "OTP expired"}, status=400)
+
+    if cached_otp != otp:
+        return Response({"error": "Invalid OTP"}, status=400)
+
+    temp_token = secrets.token_urlsafe(32)
+    cache.set(f"verified_{number}", temp_token, timeout=600)  
+
+    cache.delete(f"otp_{number}")
+
+    return Response({
+        "message": "OTP verified. Please complete your profile.",
+        "temp_token": temp_token,
+        "number": number
+    })
+    
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def resend_otp(request):
+    number = request.data.get("number")
+
+    if not number:
+        return Response({"error": "Number is required"}, status=400)
+
+    if AppUser.objects.filter(number=number, is_verified=True).exists():
+        return Response({"error": "Number already registered"}, status=400)
+
+    otp = str(random.randint(1000, 9999))
+    cache.set(f"otp_{number}", otp, timeout=300)
+
+    send_sms(number, f"Your OTP is {otp}")
+
+    return Response({"message": "OTP resent"})
 
 
 # Active & Deactive
@@ -92,8 +204,6 @@ def deactivate_account(request, pk):
         status=status.HTTP_200_OK
     )
 
-
-
 #Mobile App User Update Profile API
 @api_view(["PUT", "PATCH"])
 @permission_classes([AllowAny])
@@ -103,7 +213,7 @@ def update_profile_view(request, user_pk):
         user = AppUser.objects.get(pk=user_pk)
     except AppUser.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
+    
     serializer = AppUserSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()  
@@ -120,6 +230,8 @@ def update_profile_view(request, user_pk):
         }, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
 
 
 
@@ -227,6 +339,32 @@ def brand_list_api(request):
     serializer = BrandSerializer(brands, many=True, context={'request': request})
     return Response(serializer.data)
 
+
+# Mobile App Privacy API
+@api_view(['GET'])
+def privacy_content_api(request):
+    privacy = Privacy.objects.all().order_by('-id')
+    serializer = PrivacySerializer(privacy, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# Mobile App About API
+@api_view(['GET'])
+def about_content_api(request):
+    about = About.objects.all().order_by('-id')
+    serializer = AboutSerializer(about, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# Mobile App About API
+@api_view(['GET'])
+def contact_content_api(request):
+    contact = ContactInfo.objects.all().order_by('-id')
+    serializer = ContactInfoSerializer(contact, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+
 # Mobile App Banner API
 @api_view(['GET'])
 def banner_list_api(request):
@@ -267,6 +405,38 @@ def redeem_list_api(request):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
+def create_review(request):
+    serializer = ReviewSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            "success": True,
+            "message": "Review submitted successfully!",
+            "data": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    return Response({
+        "success": False,
+        "errors": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def create_contact(request):
+    serializer = ContactFormSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            "success": True,
+            "message": "Contact form submitted successfully!",
+            "data": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    return Response({
+        "success": False,
+        "errors": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])
