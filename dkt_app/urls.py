@@ -42,6 +42,29 @@ urlpatterns = [
     path("edit-brand/<int:pk>/", views.add_or_edit_brand, name="edit_brand"),
     path("brands/delete/<int:pk>/", views.delete_brand  , name="delete_brand"),
 
+
+# Privacy & Terms Route
+    path('add-privacy/', views.add_or_edit_privacy, name='add_privacy'),
+    path("privacy/", views.privacy, name="privacy"),
+    path("edit-privacy/<int:pk>/", views.add_or_edit_privacy, name="edit_privacy"),
+    path("privacy/delete/<int:pk>/", views.delete_privacy  , name="delete_privacy"),
+
+# About Us Route
+    path('add-about/', views.add_or_edit_about, name='add_about'),
+    path("about/", views.about, name="about"),
+    path("edit-about/<int:pk>/", views.add_or_edit_about, name="edit_about"),
+    path("about/delete/<int:pk>/", views.delete_about  , name="delete_about"),    
+
+# Contact Us Route
+    path('add-contact/', views.add_or_edit_contact, name='add_contact'),
+    path("contact/", views.contact, name="contact"),
+    path("contact-form/", views.contactform_list, name="contact_form"),
+    path('get-contactform/<int:pk>/', views.get_contact_form, name='get-contact-form'),
+    path("edit-contact/<int:pk>/", views.add_or_edit_contact, name="edit_contact"),
+    path("contact/delete/<int:pk>/", views.delete_contact  , name="delete_contact"),
+    path("contactform/delete/<int:pk>/", views.delete_contactform  , name="delete_contactform"),
+
+
 # Product Route
     path('product/', views.product, name='product'),
     path("product/add/", views.add_or_edit_product, name="add_product"),
@@ -82,33 +105,15 @@ urlpatterns = [
     path("orders/delete/<int:pk>/", views.delete_order_ui, name="delete_order_ui"),
 
 
-    # Privacy & Terms Route
-    path('add-privacy/', views.add_or_edit_privacy, name='add_privacy'),
-    path("privacy/", views.privacy, name="privacy"),
-    path("edit-privacy/<int:pk>/", views.add_or_edit_privacy, name="edit_privacy"),
-    path("privacy/delete/<int:pk>/", views.delete_privacy  , name="delete_privacy"),
-
-# About Us Route
-    path('add-about/', views.add_or_edit_about, name='add_about'),
-    path("about/", views.about, name="about"),
-    path("edit-about/<int:pk>/", views.add_or_edit_about, name="edit_about"),
-    path("about/delete/<int:pk>/", views.delete_about  , name="delete_about"),    
-
-# Contact Us Route
-    path('add-contact/', views.add_or_edit_contact, name='add_contact'),
-    path("contact/", views.contact, name="contact"),
-    path("contact-form/", views.contactform_list, name="contact_form"),
-    path('get-contactform/<int:pk>/', views.get_contact_form, name='get-contact-form'),
-    path("edit-contact/<int:pk>/", views.add_or_edit_contact, name="edit_contact"),
-    path("contact/delete/<int:pk>/", views.delete_contact  , name="delete_contact"),
-    path("contactform/delete/<int:pk>/", views.delete_contactform  , name="delete_contactform"),
-    
-
 # Discounts Route 
     path('discounts/', views.discount, name="discount"),
     path('discounts/create/', views.create_discount, name="create_discount"),
     path("discounts/delete/<int:pk>/", views.delete_discount, name="delete_discount"),
+    
 
+# Review Route
+    path("reviews/", views.reviews, name="review"),
+    path("review/delete/<int:pk>/", views.delete_review, name="delete_review"),
 # ->orderByRaw('(product_images.src IS NOT NULL AND products.regular_price IS NOT NULL) DESC')
 #             ->orderBy('products.regular_price', 'asc')
 # API
@@ -122,14 +127,21 @@ urlpatterns = [
     path('api/heros/', api_view.hero_list_api, name='api_hero_list'),
     path("api/products/", api_view.product_list_api, name="product-list-api"),
     path("api/redeems/", api_view.redeem_list_api, name="redeem-list-api"),
-    path("api/create-form/", api_view.create_contact, name="create_form"),
     path("api/discounts/", api_view.validate_discount_api, name="validate-discount-api"),
     # path("api/send-otp/", api_view.send_otp, name="send-otp"),
     # path("api/verify-otp/", api_view.verify_otp, name="verify-otp"),
     path("api/create-order/", api_view.create_order, name="create_order"),
+    path("api/create-form/", api_view.create_contact, name="create_form"),
+    path("api/create-review/", api_view.create_review, name="create_review"),
+   
     path("api/update-order-status/<int:order_pk>/", api_view.update_order_status, name="update_order_status"),
     path("api/orders/", api_view.list_orders, name="list-orders"),
     path('api/app-users/', api_view.create_app_user, name='create_app_user'),
+    path('api/complete_profile/', api_view.complete_profile, name='complete_profile'),
+    path('api/app-users/verify-otp/',api_view.verify_otp, name='verify_otp'),
+    path('api/app-users/resend_otp/',api_view.resend_otp, name='resend_otp'),
+    path("api/forgot-password/", api_view.forgot_password),
+    path("api/reset-password/", api_view.reset_password),
     path('api/app-user-address/<int:pk>/', api_view.create_user_address, name='create_user_address'),
     path('api/deactivate/<int:pk>/', api_view.deactivate_account, name='deactivate-account'),
     path('api/delete-user-address/<int:pk>/', api_view.delete_user_address, name='delete_user_address'),
