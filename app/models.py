@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.utils import timezone
 from django.db import models
+import random
+from datetime import timedelta
 
 
 class Category(models.Model):
@@ -59,6 +61,58 @@ class Hero(models.Model):
 
     def __str__(self):
         return self.title
+
+class Privacy(models.Model):   
+    p_title = models.CharField(max_length=200)
+    t_title = models.CharField(max_length=200)
+    p_text = models.TextField(blank=True, null=True)
+    t_text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.p_title    
+    
+class About(models.Model):   
+    title = models.CharField(max_length=200)
+    text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title      
+
+class ContactInfo(models.Model):
+    title = models.CharField(max_length=200, default="Contact Us")
+    tagline = models.CharField(max_length=250, blank=True, null=True)  # Happy to Help etc.
+    
+    mailing_address = models.TextField()
+    helpline_number = models.CharField(max_length=100)
+    corporate_contact = models.CharField(max_length=100, blank=True, null=True)
+
+    email_generic = models.EmailField(max_length=200, blank=True, null=True)
+    email_collaboration = models.EmailField(max_length=200, blank=True, null=True)
+    email_hr = models.EmailField(max_length=200, blank=True, null=True)
+
+    drop_us_line_text = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+   
+
+class ContactForm(models.Model):
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=100)
+    message = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
 
 
 class Product(models.Model):
@@ -158,11 +212,38 @@ class AppUser(models.Model):
     image = models.ImageField(upload_to="users/", blank=True, null=True)  
     is_active = models.BooleanField(default=True)
     password_hash = models.CharField(max_length=255)  
-    api_token = models.CharField(max_length=128, blank=True, null=True)      
+    api_token = models.CharField(max_length=128, blank=True, null=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)      
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.number
+
+     # OTP generator
+    def generate_otp(self):
+
+        otp = str(random.randint(100000, 999999))
+
+        self.otp = otp
+
+        self.otp_created_at = timezone.now()
+
+        self.save()
+
+        return otp
+
+
+    # OTP expiry check
+    def is_otp_expired(self):
+
+        if not self.otp_created_at:
+            return True
+
+        return timezone.now() > self.otp_created_at + timedelta(minutes=5)
+
 
 class Address(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE, related_name='addresses')
@@ -268,7 +349,7 @@ class Discount(models.Model):
     users = models.ManyToManyField(AppUser, blank=True)
     apply_all_products = models.BooleanField(default=False)
     apply_all_users = models.BooleanField(default=False)
-    max_uses = models.PositiveIntegerField(null=True, blank=True)  # Overall max uses
+    max_uses = models.PositiveIntegerField(null=True, blank=True)  
     used_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -284,54 +365,14 @@ class Discount(models.Model):
         if self.users.exists() and user not in self.users.all():
             return False
         return True
-
-
-class Privacy(models.Model):   
-    p_title = models.CharField(max_length=200)
-    t_title = models.CharField(max_length=200)
-    p_text = models.TextField(blank=True, null=True)
-    t_text = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.p_title    
     
-class About(models.Model):   
-    title = models.CharField(max_length=200)
-    text = models.TextField(blank=True, null=True)
+
+class Review(models.Model):
+    item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE, related_name='user_reviews', null=True, blank=True)
+    rating = models.IntegerField()  
+    comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title      
-
-class ContactInfo(models.Model):
-    title = models.CharField(max_length=200, default="Contact Us")
-    tagline = models.CharField(max_length=250, blank=True, null=True)  # Happy to Help etc.
-    
-    mailing_address = models.TextField()
-    helpline_number = models.CharField(max_length=100)
-    corporate_contact = models.CharField(max_length=100, blank=True, null=True)
-
-    email_generic = models.EmailField(max_length=200, blank=True, null=True)
-    email_collaboration = models.EmailField(max_length=200, blank=True, null=True)
-    email_hr = models.EmailField(max_length=200, blank=True, null=True)
-
-    drop_us_line_text = models.TextField(blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-   
-
-class ContactForm(models.Model):
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
-    email = models.EmailField()
-    phone = models.CharField(max_length=100)
-    message = models.TextField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.user.number} — {self.product.title}"
