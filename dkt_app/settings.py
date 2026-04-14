@@ -76,6 +76,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'dkt_app.wsgi.application'
+ZONG_WSDL_URL = "https://cbs.zong.com.pk/reachcwsv2/corporatesms.svc?wsdl"
+
+ZONG_USERNAME = "923711095755"
+ZONG_PASSWORD = "Pa$$word786"
+ZONG_MASK = "DKT PAK"
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  
