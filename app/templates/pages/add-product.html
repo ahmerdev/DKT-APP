@@ -616,7 +616,7 @@
                                                      alt="{{ v.sku }} image">
                                                 <input type="hidden"
                                                     name="variants[{{ forloop.counter0 }}][old_image]"
-                                                    value="{{ v.image.name }}">
+                                                    value="{{ v.image.url }}">
                                             </div>
                                         {% else %}
                                             <div class="img-preview-wrap" style="display:none"></div>
@@ -628,20 +628,6 @@
                     </div>
                 {% endfor %}
             {% endif %}
-        </div>
-
-        {# Shown when no combos exist yet #}
-        <div id="emptyVariants"
-             class="empty-variants"
-             {% if product and product.product_type == "variable" and product.variants.exists %}style="display:none"{% endif %}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                 viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
-                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-            </svg>
-            <p>Add options above to generate variant combinations</p>
         </div>
     </div>
 </div>
