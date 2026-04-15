@@ -251,226 +251,463 @@
 
     // Multiple gallery image preview
     document.getElementById('gFile').addEventListener('change', function (e) {
-        const files = e.target.files;
-        const gallery = document.getElementById('galleryPreview');
+    const files = e.target.files;
+    const gallery = document.getElementById('galleryPreview');
 
-        // Remove old previews (keep upload button only)
-        gallery.querySelectorAll('.preview-thumb').forEach(el => el.remove());
+    // Remove old previews (keep upload button only)
+    gallery.querySelectorAll('.preview-thumb').forEach(el => el.remove());
 
-        for (let i = 0; i < files.length; i++) {
-            const imgUrl = URL.createObjectURL(files[i]);
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('item', 'preview-thumb');
+    for (let i = 0; i < files.length; i++) {
+        const imgUrl = URL.createObjectURL(files[i]);
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('item', 'preview-thumb');
 
-            wrapper.innerHTML = `
-                <img src="${imgUrl}" alt="">
-                <button type="button" class="remove-btn">×</button>
-            `;
+        wrapper.innerHTML = `
+            <img src="${imgUrl}" alt="">
+            <button type="button" class="remove-btn">×</button>
+        `;
 
-            // Insert before upload button
-            gallery.insertBefore(wrapper, document.getElementById('galUpload'));
+        // Insert before upload button
+        gallery.insertBefore(wrapper, document.getElementById('galUpload'));
 
-            // Remove image on click
-            wrapper.querySelector('.remove-btn').addEventListener('click', () => {
-                wrapper.remove();
-            });
+        // Remove image on click
+        wrapper.querySelector('.remove-btn').addEventListener('click', () => {
+            wrapper.remove();
+        });
+    }
+
+    // ❌ Do NOT reset input here
+    // e.target.value = '';
+});
+
+
+
+/**
+ * variants.js
+ * Product Variant Manager — Django E-commerce Admin
+ * Handles: toggle, add/remove options, cartesian variant generation,
+ * data preservation on re-render, edit-mode auto-init, image preview
+ */
+
+'use strict';
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let optionIndex = 0; // unique counter for new option rows (never reused)
+
+// ─── DOM Ready ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    initToggle();
+    initFromExistingProduct();
+});
+
+// ─── Toggle Logic ────────────────────────────────────────────────────────────
+function initToggle() {
+    const toggle = document.getElementById('productTypeToggleSwitch');
+    if (!toggle) return;
+
+    toggle.addEventListener('change', function () {
+        const input = document.getElementById('productTypeInput');
+        const section = document.getElementById('variantSection');
+        const badge = document.getElementById('productTypeBadge');
+
+        if (this.checked) {
+            input.value = 'variable';
+            section.style.display = 'block';
+            if (badge) { badge.textContent = 'Variable'; badge.className = 'type-badge variable'; }
+            generateVariants();
+        } else {
+            input.value = 'simple';
+            section.style.display = 'none';
+            if (badge) { badge.textContent = 'Simple'; badge.className = 'type-badge simple'; }
         }
-
-        // Clear input so same file can be selected again
-        e.target.value = '';
     });
+}
 
+// ─── Edit Mode: Auto-init on page load ───────────────────────────────────────
+/**
+ * If product_type hidden input is "variable" (set by Django template),
+ * automatically turn the toggle ON and set up all listeners.
+ * This fixes the bug where edit page required manual toggle off/on.
+ */
+function initFromExistingProduct() {
+    const input = document.getElementById('productTypeInput');
+    const toggle = document.getElementById('productTypeToggleSwitch');
+    const section = document.getElementById('variantSection');
+    const badge = document.getElementById('productTypeBadge');
 
+    if (!input || !toggle || !section) return;
 
-// VARIATIONS PART
+    if (input.value === 'variable') {
+        // Force toggle ON without firing the 'change' event
+        toggle.checked = true;
+        section.style.display = 'block';
+        if (badge) { badge.textContent = 'Variable'; badge.className = 'type-badge variable'; }
 
-document.getElementById('productTypeToggleSwitch').addEventListener('change', function () {
-  const isChecked = this.checked;
-  const type = isChecked ? 'variable' : 'simple';
-  document.getElementById("productTypeInput").value = type;
+        // Attach listeners to existing option rows (rendered by Django template)
+        document.querySelectorAll('#optionContainer .option-row-wrap').forEach(function (wrap) {
+            attachOptionListeners(wrap);
+        });
 
-  const variantSection = document.getElementById('variantSection');
-  if (type === 'variable') {
-    variantSection.style.display = 'block';
-    document.querySelectorAll('[name=SKU], [name=quantity], [name=regular_price], [name=sale_price]').forEach(el => {
-      el.closest('fieldset').style.display = 'none';
-    });
-  } else {
-    variantSection.style.display = 'none';
-    document.querySelectorAll('[name=SKU], [name=quantity], [name=regular_price], [name=sale_price]').forEach(el => {
-      el.closest('fieldset').style.display = 'block';
-    });
-  }
-});
+        // Set optionIndex so new options don't clash with existing indices
+        const existing = document.querySelectorAll('#optionContainer .option-row-wrap');
+        optionIndex = existing.length;
 
-let optionCount = 0;
+        // Generate variants from pre-filled option inputs
+        generateVariants();
+    }
+}
 
+// ─── Add Option Row ───────────────────────────────────────────────────────────
 function addOption() {
-  optionCount++;
-  const container = document.createElement('div');
-  container.classList.add('mb-3');
-  container.innerHTML = `
-    <div class="row align-items-end option-row">
-      <div class="col-md-5">
-        <label class="form-label">Option ${optionCount} Name</label>
-        <input type="text" class="form-control option-name" placeholder="e.g. Size or Color">
-      </div>
-      <div class="col-md-5">
-        <label class="form-label">Values</label>
-        <input type="text" class="form-control option-values" placeholder="Comma separated values (e.g. S,M,L)">
-      </div>
-      <div class="col-md-2">
-        <button type="button" class="tf-button mt-2 remove-option">
-          <i class="fa-solid fa-trash-can shadow"></i>
-        </button>
-      </div>
-    </div>
-  `;
+    const container = document.getElementById('optionContainer');
+    const emptyMsg = document.getElementById('noOptionsMsg');
 
-  document.getElementById('optionContainer').appendChild(container);
+    const wrap = document.createElement('div');
+    wrap.className = 'option-row-wrap';
+    wrap.dataset.idx = optionIndex;
 
-  // naye input fields par listener lagao
-  container.querySelectorAll("input").forEach(el => {
-    el.addEventListener("input", generateVariants);
-  });
-
-  // remove button listener
-  container.querySelector(".remove-option").addEventListener("click", function () {
-    container.remove();
-    generateVariants(); // delete ke baad regenerate
-  });
-}
-
-function generateVariants() {
-  const names = Array.from(document.querySelectorAll('.option-name'))
-    .map(el => el.value.trim())
-    .filter(Boolean);
-
-  const values = Array.from(document.querySelectorAll('.option-values'))
-    .map(el => el.value.split(',').map(v => v.trim()).filter(Boolean));
-
-  if (!names.length || !values.length || names.length !== values.length) return;
-
-  const combos = cartesian(values); // [["Red","S"],["Red","M"],...]
-
-  const variantList = document.getElementById('variantList');
-
-  // 🟢 STEP 1: Purane data store karo
-  let oldData = {};
-  variantList.querySelectorAll(".card").forEach(card => {
-    const label = card.querySelector("h6").innerText.trim();
-    oldData[label] = {
-      sku: card.querySelector("input[name*='[sku]']")?.value,
-      stock: card.querySelector("input[name*='[stock]']")?.value,
-      regular_price: card.querySelector("input[name*='[regular_price]']")?.value,
-      sale_price: card.querySelector("input[name*='[sale_price]']")?.value,
-      points: card.querySelector("input[name*='[points]']")?.value,
-      description: card.querySelector("textarea[name*='[description]']")?.value,
-      image_url: card.querySelector("img")?.getAttribute("src") || ""
-    };
-  });
-
-  // 🟢 STEP 2: Purani list clear karke nayi banani
-  variantList.innerHTML = '';
-
-  combos.forEach((combo, index) => {
-    const label = combo.join(' / ');
-    const optionsObj = {};
-    names.forEach((n, i) => optionsObj[n] = combo[i]);
-    const optionsJSON = JSON.stringify(optionsObj).replace(/"/g, '&quot;');
-
-    const prev = oldData[label] || {};
-
-    variantList.insertAdjacentHTML('beforeend', `
-      <div class="col-md-12">
-        <div class="card shadow-sm border-0 rounded-4 mb-4">
-          <div class="card-body">
-            <h6 class="fw-bold mb-3 text-danger">${label}</h6>
-            <input type="hidden" name="variants[${index}][options]" value="${optionsJSON}">
-            <div class="row g-3">
-              <!-- SKU -->
-              <div class="col-md-6">
-                <fieldset class="name">
-                  <div class="body-title mb-10">SKU</div>
-                  <input class="mb-10" type="text" name="variants[${index}][sku]" placeholder="Enter SKU" value="${prev.sku || ''}">
-                </fieldset>
-              </div>
-              <!-- Stock -->
-              <div class="col-md-6">
-                <fieldset class="name">
-                  <div class="body-title mb-10">Quantity</div>
-                  <input class="mb-10" type="number" name="variants[${index}][stock]" placeholder="Enter quantity" value="${prev.stock || ''}">
-                </fieldset>
-              </div>
-              <!-- Prices -->
-              <div class="col-md-6">
-                <fieldset class="name">
-                  <div class="body-title mb-10">Regular Price *</div>
-                  <input class="mb-10" type="text" name="variants[${index}][regular_price]" required placeholder="Enter regular price" value="${prev.regular_price || ''}">
-                </fieldset>
-              </div>
-              <div class="col-md-6">
-                <fieldset class="name">
-                  <div class="body-title mb-10">Sale Price</div>
-                  <input class="mb-10" type="text" name="variants[${index}][sale_price]" placeholder="Enter sale price" value="${prev.sale_price || ''}">
-                </fieldset>
-              </div>
-              <!-- Points -->
-              <div class="col-md-12">
-                <fieldset class="name">
-                  <div class="body-title mb-10">Points</div>
-                  <input class="mb-10" type="number" name="variants[${index}][points]" value="${prev.points || ''}">
-                </fieldset>
-              </div>
-              <!-- Description -->
-              <div class="col-md-12">
-                <fieldset class="description">
-                  <div class="body-title mb-10">Description</div>
-                  <textarea class="mb-10" name="variants[${index}][description]" placeholder="Description">${prev.description || ''}</textarea>
-                </fieldset>
-              </div>
-              <!-- Image -->
-              <div class="col-md-12">
-                <fieldset>
-                  <div class="body-title">Upload images <span class="tf-color-1">*</span></div>
-                  <input type="file" accept="image/*" name="variants[${index}][image]" class="form-control">
-                  ${prev.image_url 
-                    ? `<div class="mt-2">
-                         <img src="${prev.image_url}" alt="Preview" style="max-height:100px;border-radius:6px;">
-                         <input type="hidden" name="variants[${index}][old_image]" value="${prev.image_url}">
-                       </div>` 
-                    : ""}
-                </fieldset>
-              </div>
+    wrap.innerHTML = `
+        <div class="opt-row">
+            <div class="opt-field">
+                <label>Option Name</label>
+                <input type="text"
+                    class="form-control option-name"
+                    name="options[${optionIndex}][name]"
+                    placeholder="e.g. Size, Color, Material">
             </div>
-          </div>
-        </div>
-      </div>
-    `);
-  });
+            <div class="opt-field">
+                <label>Values <small>(comma separated)</small></label>
+                <input type="text"
+                    class="form-control option-values"
+                    name="options[${optionIndex}][value]"
+                    placeholder="e.g. S, M, L  or  Red, Blue, Green">
+            </div>
+            <button type="button" class="btn-remove-opt" title="Remove option"
+                onclick="removeOption(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path>
+                    <path d="M10 11v6M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"></path>
+                </svg>
+            </button>
+        </div>`;
+
+    container.appendChild(wrap);
+    attachOptionListeners(wrap);
+
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    optionIndex++;
+    generateVariants();
 }
 
-// Cartesian product helper
-function cartesian(arr) {
-  return arr.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]]);
+function removeOption(btn) {
+    const wrap = btn.closest('.option-row-wrap');
+    if (wrap) {
+        wrap.remove();
+        updateNoOptionsMsg();
+        generateVariants();
+    }
 }
 
-// --------------------
-// INIT ON PAGE LOAD
-// --------------------
-document.addEventListener("DOMContentLoaded", function () {
-  const productType = document.getElementById("productTypeInput")?.value;
-  if (productType === "variable") {
-    // existing option fields listeners
-    document.querySelectorAll('.option-name, .option-values').forEach(el => {
-      el.addEventListener("input", generateVariants);
+function attachOptionListeners(wrap) {
+    wrap.querySelectorAll('input').forEach(function (el) {
+        el.addEventListener('input', generateVariants);
+    });
+}
+
+function updateNoOptionsMsg() {
+    const emptyMsg = document.getElementById('noOptionsMsg');
+    const rows = document.querySelectorAll('#optionContainer .option-row-wrap');
+    if (emptyMsg) emptyMsg.style.display = rows.length === 0 ? 'block' : 'none';
+}
+
+// ─── Cartesian Product ────────────────────────────────────────────────────────
+function cartesian(arrays) {
+    return arrays.reduce(function (acc, curr) {
+        return acc.flatMap(function (a) {
+            return curr.map(function (b) {
+                return a.concat([b]);
+            });
+        });
+    }, [[]]);
+}
+
+// ─── Generate Variants ────────────────────────────────────────────────────────
+/**
+ * Core function:
+ * 1. Reads all option names + values
+ * 2. Saves existing variant field data (preserves user input on re-render)
+ * 3. Builds cartesian product of all option values
+ * 4. Renders variant cards, restoring saved data
+ */
+function generateVariants() {
+    const nameInputs  = Array.from(document.querySelectorAll('#optionContainer .option-name'));
+    const valueInputs = Array.from(document.querySelectorAll('#optionContainer .option-values'));
+
+    const variantList  = document.getElementById('variantList');
+    const emptyState   = document.getElementById('emptyVariants');
+    const countBadge   = document.getElementById('variantCount');
+    const collapseBtn  = document.getElementById('collapseAllBtn');
+
+    if (!variantList) return;
+
+    // Build valid pairs (name + at least one value)
+    const pairs = [];
+    nameInputs.forEach(function (nameEl, i) {
+        const name   = nameEl.value.trim();
+        const values = valueInputs[i]
+            ? valueInputs[i].value.split(',').map(function (v) { return v.trim(); }).filter(Boolean)
+            : [];
+        if (name && values.length) {
+            pairs.push({ name: name, values: values });
+        }
     });
 
-    // page load par variants regenerate
-    generateVariants();
-  }
-});
+    // ── STEP 1: Snapshot existing user-entered data ──────────────────────────
+    const saved = {};
+    variantList.querySelectorAll('.variant-card').forEach(function (card) {
+        const keyEl = card.querySelector('[data-variant-key]');
+        if (!keyEl) return;
+        const key = keyEl.dataset.variantKey;
 
+        saved[key] = {
+            sku:           card.querySelector('[data-f="sku"]')?.value          || '',
+            stock:         card.querySelector('[data-f="stock"]')?.value        || '',
+            cost_price:    card.querySelector('[data-f="cost_price"]')?.value   || '',
+            regular_price: card.querySelector('[data-f="regular_price"]')?.value|| '',
+            sale_price:    card.querySelector('[data-f="sale_price"]')?.value   || '',
+            points:        card.querySelector('[data-f="points"]')?.value       || '',
+            description:   card.querySelector('[data-f="description"]')?.value  || '',
+            image_url:     card.querySelector('.img-thumb')?.src                || '',
+            expanded:      card.classList.contains('is-open'),
+        };
+    });
+
+    // ── STEP 2: Clear list ────────────────────────────────────────────────────
+    variantList.innerHTML = '';
+
+    if (!pairs.length) {
+        if (emptyState)  emptyState.style.display  = 'flex';
+        if (countBadge)  countBadge.textContent     = '0';
+        if (collapseBtn) collapseBtn.style.display  = 'none';
+        return;
+    }
+
+    // ── STEP 3: Build combos ─────────────────────────────────────────────────
+    const combos    = cartesian(pairs.map(function (p) { return p.values; }));
+    const pairNames = pairs.map(function (p) { return p.name; });
+
+    if (emptyState)  emptyState.style.display  = 'none';
+    if (countBadge)  countBadge.textContent     = combos.length;
+    if (collapseBtn) collapseBtn.style.display  = 'inline-flex';
+
+    // ── STEP 4: Render each variant card ─────────────────────────────────────
+    combos.forEach(function (combo, index) {
+        const key        = combo.join(' / ');
+        const prev       = saved[key] || {};
+        const isOpen     = prev.expanded !== false; // default open for new cards
+        const optionsObj = {};
+        pairNames.forEach(function (n, i) { optionsObj[n] = combo[i]; });
+        const optionsJSON = JSON.stringify(optionsObj).replace(/"/g, '&quot;');
+
+        const tags = combo.map(function (v) {
+            return '<span class="vtag">' + escHtml(v) + '</span>';
+        }).join('');
+
+        const card = document.createElement('div');
+        card.className = 'variant-card' + (isOpen ? ' is-open' : '');
+
+        card.innerHTML = `
+            <div class="vc-header" onclick="toggleVariantCard(this)">
+                <div class="vc-label" data-variant-key="${escAttr(key)}">
+                    <span class="vc-dot"></span>
+                    ${tags}
+                </div>
+                <span class="vc-chevron">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </span>
+            </div>
+
+            <div class="vc-body" style="display:${isOpen ? 'block' : 'none'}">
+                <input type="hidden"
+                    name="variants[${index}][options]"
+                    value="${optionsJSON}">
+
+                <div class="vf-grid">
+                    <div class="vf-col">
+                        <div class="vf-group">
+                            <label>SKU</label>
+                            <input type="text"
+                                name="variants[${index}][sku]"
+                                data-f="sku"
+                                placeholder="SKU-001"
+                                value="${escAttr(prev.sku)}">
+                        </div>
+                    </div>
+                    <div class="vf-col">
+                        <div class="vf-group">
+                            <label>Quantity / Stock</label>
+                            <input type="number"
+                                name="variants[${index}][stock]"
+                                data-f="stock"
+                                placeholder="0"
+                                min="0"
+                                value="${escAttr(prev.stock)}">
+                        </div>
+                    </div>
+                    <div class="vf-col full">
+                        <div class="vf-group">
+                            <label>Cost Price</label>
+                            <input type="text"
+                                name="variants[${index}][cost_price]"
+                                data-f="cost_price"
+                                placeholder="0.00"
+                                value="${escAttr(prev.cost_price)}">
+                        </div>
+                    </div>
+                    <div class="vf-col">
+                        <div class="vf-group">
+                            <label>Regular Price <span class="req">*</span></label>
+                            <input type="text"
+                                name="variants[${index}][regular_price]"
+                                data-f="regular_price"
+                                placeholder="0.00"
+                                required
+                                value="${escAttr(prev.regular_price)}">
+                        </div>
+                    </div>
+                    <div class="vf-col">
+                        <div class="vf-group">
+                            <label>Sale Price</label>
+                            <input type="text"
+                                name="variants[${index}][sale_price]"
+                                data-f="sale_price"
+                                placeholder="0.00"
+                                value="${escAttr(prev.sale_price)}">
+                        </div>
+                    </div>
+                    <div class="vf-col full">
+                        <div class="vf-group">
+                            <label>Reward Points</label>
+                            <input type="number"
+                                name="variants[${index}][points]"
+                                data-f="points"
+                                placeholder="0"
+                                min="0"
+                                value="${escAttr(prev.points)}">
+                        </div>
+                    </div>
+                    <div class="vf-col full">
+                        <div class="vf-group">
+                            <label>Description</label>
+                            <textarea
+                                name="variants[${index}][description]"
+                                data-f="description"
+                                placeholder="Optional variant description..."
+                                rows="3">${escHtml(prev.description)}</textarea>
+                        </div>
+                    </div>
+                    <div class="vf-col full">
+                        <div class="vf-group">
+                            <label>Image</label>
+                            <input type="file"
+                                name="variants[${index}][image]"
+                                accept="image/*"
+                                onchange="previewImage(this)">
+                            ${prev.image_url
+                                ? `<div class="img-preview-wrap">
+                                       <img src="${escAttr(prev.image_url)}" class="img-thumb" alt="variant image">
+                                       <input type="hidden"
+                                           name="variants[${index}][old_image]"
+                                           value="${escAttr(prev.image_url)}">
+                                   </div>`
+                                : '<div class="img-preview-wrap" style="display:none"></div>'}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        variantList.appendChild(card);
+    });
+}
+
+// ─── Collapse / Expand ────────────────────────────────────────────────────────
+function toggleVariantCard(header) {
+    const card = header.closest('.variant-card');
+    const body = card.querySelector('.vc-body');
+    const isOpen = card.classList.contains('is-open');
+
+    if (isOpen) {
+        body.style.display = 'none';
+        card.classList.remove('is-open');
+    } else {
+        body.style.display = 'block';
+        card.classList.add('is-open');
+    }
+}
+
+let _allCollapsed = false;
+function collapseAllVariants() {
+    const cards  = document.querySelectorAll('#variantList .variant-card');
+    const btn    = document.getElementById('collapseAllBtn');
+    _allCollapsed = !_allCollapsed;
+
+    cards.forEach(function (card) {
+        const body = card.querySelector('.vc-body');
+        if (_allCollapsed) {
+            body.style.display = 'none';
+            card.classList.remove('is-open');
+        } else {
+            body.style.display = 'block';
+            card.classList.add('is-open');
+        }
+    });
+
+    if (btn) btn.textContent = _allCollapsed ? 'Expand All' : 'Collapse All';
+}
+
+// ─── Image Preview ────────────────────────────────────────────────────────────
+function previewImage(input) {
+    const wrap = input.nextElementSibling;
+    if (!wrap) return;
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            let img = wrap.querySelector('.img-thumb');
+            if (!img) {
+                img = document.createElement('img');
+                img.className = 'img-thumb';
+                img.alt = 'variant image';
+                wrap.appendChild(img);
+            }
+            img.src = e.target.result;
+            wrap.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function escAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/"/g, '&quot;');
+}
 
 
 
