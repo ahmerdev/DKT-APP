@@ -481,7 +481,10 @@ function generateVariants() {
             sale_price:    card.querySelector('[data-f="sale_price"]')?.value   || '',
             points:        card.querySelector('[data-f="points"]')?.value       || '',
             description:   card.querySelector('[data-f="description"]')?.value  || '',
-            image_url:     card.querySelector('.img-thumb')?.src                || '',
+           image_url:
+                  card.querySelector('.img-thumb')?.getAttribute('src') ||
+                  card.querySelector('input[name*="[old_image]"]')?.value ||
+                  '',
             expanded:      card.classList.contains('is-open'),
         };
     });
