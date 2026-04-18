@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, Redeem, Category, Brand, Banner, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
+from .models import Product, Redeem, Category, Brand, Banner, Rider, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
 from .serializers import CategorySerializer, AppUserRegisterStepOneSerializer, AppUserRegisterStepTwoSerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ReviewSerializer, ContactFormSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
@@ -127,7 +127,8 @@ def complete_profile(request):
             email=serializer.validated_data.get("email"),
             password_hash=make_password(serializer.validated_data.get("password")),
             is_verified=True,
-            api_token=secrets.token_urlsafe(32)
+            api_token=secrets.token_urlsafe(32),
+            points=20   
         )
 
         cache.delete(f"verified_{number}")
@@ -137,6 +138,7 @@ def complete_profile(request):
             "number": user.number,
             "name": user.name,
             "email": user.email,
+            "points": user.points,
             "api_token": user.api_token,
             "created_at": user.created_at,
         }, status=status.HTTP_201_CREATED)
@@ -510,7 +512,7 @@ def create_order(request):
         status=status.HTTP_201_CREATED,
     )
 
-
+from django.db.models import Sum
 @api_view(["PATCH"])
 def update_order_status(request, order_pk):
     try:
@@ -524,6 +526,22 @@ def update_order_status(request, order_pk):
         return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
     order.status = new_status
+    if new_status == "delivered":
+
+        if not hasattr(order, "is_points_added") or not order.is_points_added:
+
+            order_points = order.items.aggregate(
+                total=Sum("pts")
+            )["total"] or 0
+
+            user = order.user
+
+            if user:
+                user.points = (user.points or 0) + order_points
+                user.save(update_fields=["points"])
+
+            order.is_points_added = True 
+
     order.save()
 
     return Response({
@@ -537,126 +555,6 @@ def list_orders(request):
     orders = Order.objects.all().order_by("-created_at")
     serializer = OrderSerializer(orders, many=True)
     return Response(serializer.data)
-
-
-# from decimal import Decimal
-# from django.utils import timezone
-# from rest_framework.decorators import api_view
-# from rest_framework.response import Response
-# from rest_framework import status
-# from .models import Discount
-
-
-# @api_view(['POST'])
-# def validate_discount_api(request):
-#     code = request.data.get("code")
-#     total = request.data.get("total")
-#     product_ids = request.data.get("products", [])  
-#     items = request.data.get("items", [])
-    
-
-#     # Validate code
-#     if not code:
-#         return Response({"valid": False, "message": "Coupon code is required."}, status=400)
-
-#     # Validate total
-#     try:
-#         total = Decimal(str(total or 0))
-#     except Exception:
-#         return Response({"valid": False, "message": "Invalid total amount."}, status=400)
-
-#     # Check if coupon exists
-#     try:
-#         discount = Discount.objects.get(code__iexact=code)
-#     except Discount.DoesNotExist:
-#         return Response({"valid": False, "message": "Invalid coupon code."}, status=404)
-
-#     #  Handle date comparison properly
-#     now = timezone.now()
-#     start_date = discount.start_date
-#     end_date = discount.end_date
-
-#     if start_date and start_date > now:
-#         return Response({"valid": False, "message": "Coupon not active yet."}, status=400)
-#     if end_date and end_date < now:
-#         return Response({"valid": False, "message": "Coupon expired."}, status=400)
-
-#     # Product
-#     if not discount.apply_all_products:
-#         if not product_ids:
-#             return Response({"valid": False, "message": "No products provided for coupon."}, status=400)
-#         allowed_products = discount.products.filter(id__in=product_ids)
-#         if not allowed_products.exists():
-#             return Response({"valid": False, "message": "Coupon not valid for these products."}, status=400)
-
-
-
-#      # ------------------------
-#     # Product eligibility
-#     # ------------------------
-#     applied_product_ids = []
-
-#     if not discount.apply_all_products:
-#         if not product_ids:
-#             return Response({"valid": False, "message": "No products provided for coupon."}, status=400)
-
-#         allowed_products = discount.products.filter(id__in=product_ids)
-#         if not allowed_products.exists():
-#             return Response({"valid": False, "message": "Coupon not valid for these products."}, status=400)
-
-#         allowed_ids = list(allowed_products.values_list("id", flat=True))
-#         applied_product_ids = allowed_ids
-
-#         # eligible and non-eligible totals
-#         eligible_total = sum(
-#             Decimal(str(item.get("price", 0))) * int(item.get("quantity", 1))
-#             for item in items
-#             if item.get("id") in allowed_ids
-#         )
-#         non_eligible_total = sum(
-#             Decimal(str(item.get("price", 0))) * int(item.get("quantity", 1))
-#             for item in items
-#             if item.get("id") not in allowed_ids
-#         )
-
-#         # discount only on eligible products
-#         discount_value = Decimal(discount.value)
-#         if discount.discount_type == "percent":
-#             discount_amount = eligible_total * (discount_value / Decimal(100))
-#         else:
-#             discount_amount = min(discount_value, eligible_total)
-
-#         # final total = non-eligible + (eligible - discount)
-#         final_total = non_eligible_total + (eligible_total - discount_amount)
-
-#     else:
-#         # coupon applies to all products
-#         discount_value = Decimal(discount.value)
-#         if discount.discount_type == "percent":
-#             discount_amount = total * (discount_value / Decimal(100))
-#         else:
-#             discount_amount = min(discount_value, total)
-#         final_total = total - discount_amount
-#         applied_product_ids = product_ids  
-
-#     if final_total < 0:
-#         final_total = Decimal("0.00")
-
-#     # ------------------------
-#     # Response
-#     # ------------------------
-#     response_data = {
-#         "valid": True,
-#         "code": discount.code,
-#         "discount_type": discount.discount_type,
-#         "value": float(discount.value),
-#         "discount_amount": round(float(discount_amount), 2),
-#         "final_total": round(float(final_total), 2),
-#         "applied_product_ids": applied_product_ids,
-#         "message": "Coupon applied successfully!",
-#     }
-
-#     return Response(response_data, status=status.HTTP_200_OK)
 
 
 from decimal import Decimal, ROUND_DOWN
@@ -760,3 +658,31 @@ def validate_discount_api(request):
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def toggle_is_active(request, model_name, pk):
+
+    model_map = {
+        "product": Product,
+        "category": Category,
+        "brand": Brand,
+        "rider": Rider,
+    }
+
+    if model_name not in model_map:
+        return Response({"error": "Invalid model"}, status=400)
+
+    obj = get_object_or_404(model_map[model_name], pk=pk)
+
+    obj.is_active = not obj.is_active
+    obj.save()
+
+    status_text = "Activated" if obj.is_active else "Deactivated"
+
+    return Response({
+        "message": f"{model_name.title()} has been {status_text}",
+        "status": obj.is_active,
+        "status_text": status_text
+    })
