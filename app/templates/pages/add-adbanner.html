@@ -44,7 +44,7 @@
                                                             <option value="">Choose category</option>
                                                             {% for category in categories %}
                                                                 <option value="{{ category.id }}"
-                                                                    {% if product and product.category and product.category.id == category.id %}selected{% endif %}>
+                                                                    {% if ad and ad.category and ad.category.id == category.id %}selected{% endif %}>
                                                                     {{ category.name }}
                                                                 </option>
                                                             {% endfor %}
@@ -60,7 +60,7 @@
                                                         <option value="">Choose Brand</option>
                                                         {% for brand in brands %}
                                                             <option value="{{ brand.id }}"
-                                                                {% if product and product.brand and product.brand.id == brand.id %}selected{% endif %}>
+                                                                {% if ad and ad.brand and ad.brand.id == brand.id %}selected{% endif %}>
                                                                 {{ brand.name }}
                                                             </option>
                                                         {% endfor %}
