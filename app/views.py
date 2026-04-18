@@ -472,63 +472,59 @@ def customer_detail(request, pk):
 
     addresses = Address.objects.filter(user=user)
 
+    # ONLY delivered orders
     orders = Order.objects.filter(user=user, status="delivered")
 
-    normal_orders = orders.filter(type="normal")
-    redeem_orders = orders.filter(type="redeem")
-
     normal_orders_data = []
-    redeem_orders_data = []
+    spent_orders_data = []
 
-    # ✅ NORMAL ORDERS (EARN)
-    for order in normal_orders:
-        items = order.items.all()
-        order_points = sum(item.pts for item in items)
+    earned_points = 0
+    spent_points = 0
 
-        normal_orders_data.append({
-            "order": order,
-            "items": items,
-            "order_points": order_points,
-        })
-
-    # ✅ REDEEM ORDERS (SPENT)
-    for order in redeem_orders:
+    for order in orders:
         items = order.items.all()
 
-        redeem_orders_data.append({
+       
+        order_earned = sum(item.pts for item in items)
+
+       
+        order_spent = order.points_used or 0
+
+        earned_points += order_earned
+        spent_points += order_spent
+
+        data = {
             "order": order,
             "items": items,
-            "order_points": order.points_used or 0,  # 🔥 important
-        })
+            "earned": order_earned,
+            "spent": order_spent,
+            "earned_rs": order_earned * point_value,
+            "spent_rs": order_spent * point_value,
+        }
 
-    # ✅ TOTALS
-    earned_points = sum(i["order_points"] for i in normal_orders_data)
-    spent_points = sum(order.points_used or 0 for order in redeem_orders)
+        normal_orders_data.append(data)
+
+       
+        if order_spent > 0:
+            spent_orders_data.append(data)
 
     available_points = user.points or 0
-
-    # 💰 RUPEES CONVERSION
-    earned_rupees = earned_points * point_value
-    spent_rupees = spent_points * point_value
-    available_rupees = available_points * point_value
+    available_rs = available_points * point_value
 
     context = {
         "user": user,
         "addresses": addresses,
 
-        "normal_orders_data": normal_orders_data,
-        "redeem_orders_data": redeem_orders_data,
-
-        "normal_orders": normal_orders,
-        "redeem_orders": redeem_orders,
+        "orders_data": normal_orders_data,
+        "spent_orders_data": spent_orders_data,
 
         "earned_points": earned_points,
         "spent_points": spent_points,
         "available_points": available_points,
 
-        "earned_rupees": earned_rupees,
-        "spent_rupees": spent_rupees,
-        "available_rupees": available_rupees,
+        "earned_rs": earned_points * point_value,
+        "spent_rs": spent_points * point_value,
+        "available_rs": available_rs,
 
         "point_value": point_value,
     }
