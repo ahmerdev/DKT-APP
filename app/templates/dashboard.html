@@ -83,7 +83,7 @@
       height: 200
     });
   });
-    $(document).ready(function() {
+  $(document).ready(function() {
     $('#privacy-p_text').summernote({
       placeholder: 'Enter Privacy Content...',
       tabsize: 2,
@@ -106,9 +106,41 @@
   });
 </script>
 <script>
-    $(document).ready(function() {
-      $('#myDataTable').DataTable();
-    });
+$(document).ready(function() {
+  const table = $('#myDataTable').DataTable({
+    pageLength: 5,
+    lengthMenu: [5, 10, 25, 50],
+    responsive: true,
+    language: {
+      search: "_INPUT_",
+      searchPlaceholder: "Search records..."
+    }
+  });
+
+  // Select/Deselect All
+  $('#selectAll').on('click', function() {
+    $('.row-checkbox').prop('checked', this.checked);
+  });
+
+  // Delete selected rows
+  $('#deleteSelected').on('click', function() {
+    const selectedIds = $('.row-checkbox:checked').map(function() {
+      return $(this).val();
+    }).get();
+
+    if (selectedIds.length === 0) {
+      alert('Please select at least one record to delete.');
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete ${selectedIds.length} record(s)?`)) {
+      // Example only: remove rows from DataTable (you can call AJAX here)
+      $('.row-checkbox:checked').each(function() {
+        table.row($(this).closest('tr')).remove().draw();
+      });
+    }
+  });
+});
 </script>
 <script>
     $(document).ready(function(){
@@ -249,17 +281,69 @@ function clearNotifications() {
 }
 </script>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function toggleStatus(btn) {
 
+    const url = btn.getAttribute("data-url");
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "Status will be changed",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, change it!",
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            fetch(url, {
+                method: "PUT",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Content-Type": "application/json"
+                },
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                // Status based icon
+                let iconType = data.status ? "success" : "error";
+
+                Swal.fire({
+                    title: data.status_text,
+                    text: data.message,
+                    icon: iconType,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                // optional reload
+                setTimeout(() => location.reload(), 2000);
+
+            });
+
+        }
+
+    });
+
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        document.cookie.split(';').forEach(c => {
+            c = c.trim();
+            if (c.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(c.split('=')[1]);
+            }
+        });
+    }
+    return cookieValue;
+}
+</script>
 
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
