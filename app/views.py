@@ -466,29 +466,25 @@ def delete_appuser_ui(request, pk):
 def customer_detail(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
 
-    # Point value
     point_setting = PointSetting.objects.first()
     point_value = point_setting.point_value if point_setting else 0.50
 
     addresses = Address.objects.filter(user=user)
-
-    # ONLY delivered orders
-    orders = Order.objects.filter(user=user, status="delivered")
+    orders = Order.objects.filter(user=user, status="delivered").order_by('-created_at')
 
     normal_orders_data = []
-    spent_orders_data = []
+    redeem_orders_data = []
 
     earned_points = 0
     spent_points = 0
 
     for order in orders:
         items = order.items.all()
-
-       
         order_earned = sum(item.pts for item in items)
-
-       
         order_spent = order.points_used or 0
+
+        order_total = sum(item.price * item.quantity for item in items)
+        cash_paid = order_total - (order.points_discount or 0)
 
         earned_points += order_earned
         spent_points += order_spent
@@ -500,37 +496,34 @@ def customer_detail(request, pk):
             "spent": order_spent,
             "earned_rs": order_earned * point_value,
             "spent_rs": order_spent * point_value,
+            "cash_paid": cash_paid,       
+            "order_total": order_total,
         }
 
-        normal_orders_data.append(data)
-
-       
-        if order_spent > 0:
-            spent_orders_data.append(data)
+        # Redeem order = sirf points se buy, Normal = cash/mixed
+        if order.type == "redeem":
+            redeem_orders_data.append(data)
+        else:
+            normal_orders_data.append(data)
 
     available_points = user.points or 0
-    available_rs = available_points * point_value
 
     context = {
         "user": user,
         "addresses": addresses,
-        "normal_orders_data": normal_orders_data,  
-        "redeem_orders_data": spent_orders_data, 
-        "orders_data": normal_orders_data,
-        "spent_orders_data": spent_orders_data,
-
+        "normal_orders_data": normal_orders_data,
+        "redeem_orders_data": redeem_orders_data,
         "earned_points": earned_points,
         "spent_points": spent_points,
         "available_points": available_points,
-
         "earned_rs": earned_points * point_value,
         "spent_rs": spent_points * point_value,
-        "available_rs": available_rs,
-
+        "available_rs": available_points * point_value,
         "point_value": point_value,
     }
 
     return render(request, "pages/customer_detail.html", context)
+
 
 
 
