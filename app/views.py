@@ -464,7 +464,7 @@ def delete_appuser_ui(request, pk):
 
 
 def customer_detail(request, pk):
-    user = get_object_or_404(AppUser, pk)
+    user = get_object_or_404(AppUser, pk=pk)
 
     # Safely get point value (Admin dashboard se aata hai ya toh default le lo)
     try:
