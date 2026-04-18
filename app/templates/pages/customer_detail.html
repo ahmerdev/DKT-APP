@@ -129,13 +129,13 @@
                 <button class="nav-link fs-4 active p-4 rounded-pill" id="pills-home-tab"
                  data-bs-toggle="pill" data-bs-target="#pills-home" 
                  type="button" role="tab" aria-controls="pills-home"
-                  aria-selected="true"> Normal Orders ({{ normal_orders|length }})</button>
+                  aria-selected="true"> Normal Orders ({{ normal_orders_data|length }})</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link fs-4 p-4 rounded-pill" id="pills-profile-tab"
                  data-bs-toggle="pill" data-bs-target="#pills-profile"
                   type="button" role="tab" aria-controls="pills-profile"
-                   aria-selected="false"> Redeem Orders ({{ redeem_orders|length }})</button>
+                   aria-selected="false"> Redeem Orders ({{ redeem_orders_data|length }})</button>
             </li>
             </ul>
         </div>
@@ -232,7 +232,7 @@
                                             <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order.points_used }}</span>
                                         </p>
 
-                                        {% include "include/customer-history.html" with orders=redeem_orders %}
+                                        {% include "include/customer-history.html" with entry=entry %}
 
                                     </div>
                                 </div>
