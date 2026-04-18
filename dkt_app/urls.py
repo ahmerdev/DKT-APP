@@ -10,7 +10,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
 # custom login/logout
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+   path('login/', views.user_login, name='login'),
+   path('logout/rider/', views.user_logout, name='user_logout'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
 #App User Route 
@@ -91,6 +92,13 @@ urlpatterns = [
     path("edit-adbanner/<int:pk>/", views.add_or_edit_ad, name="edit_adbanner"),
     path("adbanners/delete/<int:pk>/", views.delete_ad  , name="delete_adbanner"),
 
+# Rider Route
+    path("riders/", views.rider_list, name="rider_list"),
+    path("riders/add/", views.add_or_edit_rider, name="add_rider"),
+    path("riders/edit/<int:pk>/", views.add_or_edit_rider, name="edit_rider"),
+    path("riders/delete/<int:pk>/", views.delete_rider, name="delete_rider"),
+    path("rider/forgot-password/", views.rider_forgot_password, name="rider_forgot_password"),
+    path("rider/reset-password/<uuid:token>/", views.rider_reset_password, name="rider_reset_password"),
 
 # AdBanner Route
     path('add-hero/', views.add_or_edit_hero, name='add_hero'),
@@ -102,6 +110,8 @@ urlpatterns = [
     path('orders/', views.order_list_ui, name="order_list_ui"),
     path('orders/create/', views.create_order_ui, name="create_order_ui"),
     path('orders/update/<int:pk>/', views.update_order_status_ui, name="update_order_status_ui"),
+    path("city-riders/<int:order_id>/<int:city_id>/", views.city_riders_popup, name="city_riders_popup"),
+    path("orders/assign/<int:order_id>/<int:rider_id>/", views.assign_rider, name="assign_rider"),
     path("orders/delete/<int:pk>/", views.delete_order_ui, name="delete_order_ui"),
 
 
@@ -144,6 +154,7 @@ urlpatterns = [
     path("api/reset-password/", api_view.reset_password),
     path('api/app-user-address/<int:pk>/', api_view.create_user_address, name='create_user_address'),
     path('api/deactivate/<int:pk>/', api_view.deactivate_account, name='deactivate-account'),
+    path('api/toggle/<str:model_name>/<int:pk>/', api_view.toggle_is_active, name='toggle-status'),
     path('api/delete-user-address/<int:pk>/', api_view.delete_user_address, name='delete_user_address'),
     path("api/update-user/<int:user_pk>/", api_view.update_profile_view, name="update_profile"),
     path("api/account-delete/<int:pk>/", api_view.account_delete, name="account_delete"),
