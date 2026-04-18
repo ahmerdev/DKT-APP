@@ -2,13 +2,14 @@
     <table id="myDataTable" class="table table-hover no-border align-middle">
         <thead class="table-head text-white text-center">
       <tr class="text-center">
-         <th class="id-col text-center align-middle p-0">#</th>
-        <th class="text-center">ID</th>
-        <th class="text-center">User Number</th>
-        <th class="text-center">Type</th>
-        <th class="text-center">Status</th>
-        <th class="text-center">Date</th>
-        <th class="text-center">Actions</th>
+         <th class="id-col text-center align-middle p-0 text-white">#</th>
+        <th class="text-center text-white">ID</th>
+        <th class="text-center text-white">User Number</th>
+        <th class="text-center text-white">Type</th>
+        <th class="text-center text-white">Sale</th>
+        <th class="text-center text-white">Status</th>
+        <th class="text-center text-white">Date</th>
+        <th class="text-center text-white">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -24,6 +25,53 @@
           <span class="badge shadow rounded-4 py-2 px-3 bg-info">Normal Order</span>
           {% endif %}
         </td>
+        <td class="text-center">
+    {% if order.rider %}
+        <div class="rider-badge assigned">
+            <i class="fas fa-motorcycle rider-icon fs-4 pb-2"></i>
+            <br>
+            <span class="rider-text">
+                {{ order.rider.name }}
+            </span>
+        </div>
+    {% else %}
+        <div class="rider-badge unassigned">
+            <i class="fas fa-motorcycle rider-icon fs-4 pb-2"></i>
+            <br>
+            <span class="rider-text">
+                Not Assigned
+            </span>
+        </div>
+    {% endif %}
+</td>
+<style>
+    .rider-badge {
+    display: block;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+}
+
+/* Assigned */
+.rider-badge.assigned {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Not Assigned */
+.rider-badge.unassigned {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+</style>
         <td class="text-center">
             {% if order.status == "pending" %}
                 <span class="badge shadow rounded-4 py-2 px-3 text-bg-warning">Pending</span>
@@ -41,10 +89,31 @@
         </td>
         <td class="text-center text-muted">{{ order.created_at|date:"M d, Y" }}</td>
         <td class="text-center">
-          <a href="{% url 'update_order_status_ui' order.pk %}" class="btn text-white fs-5 fw-semibold bg-primary shadow"> View <i class="fa-solid fa-eye shadow"></i></a>
-        <a href="{% url 'delete_order_ui' order.pk %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i></a>
-
-        </td>
+                <a data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-2" style="width: 25px;">
+                        <path fill-rule="evenodd" d="M10.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" clip-rule="evenodd" />
+                    </svg>
+                    </a>
+                
+                <ul class="dropdown-menu text-center shadow">
+                    <li><a href="{% url 'update_order_status_ui' order.pk %}"  class="text-secondary fs-5 fw-semibold">
+                        <i class="fa-solid fa-eye"></i> View
+                    </a>
+                    </li>
+                     {% if not request.session.is_rider %}
+                    <li>
+                       
+          <a href="{% url 'delete_order_ui' order.pk %}" 
+                class="fw-semibold text-danger fs-5"
+                data-bs-toggle="modal"
+                  data-bs-target="#globalDeleteModal"
+                  data-name="#{{ order.id }}"
+                  data-url="{% url 'delete_order_ui' order.pk %}">
+                    <i class="fa-solid fa-trash-can"></i> Delete
+                </a></li>
+                 {% endif %}
+                </ul>
+            </td>
       </tr>
       {% empty %}
       <tr>
