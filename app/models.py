@@ -218,6 +218,19 @@ class ProductVariant(models.Model):
 #     def __str__(self):
 #         return self.phone_number
 
+class PointSetting(models.Model):
+    registration_bonus_points = models.IntegerField(default=20, help_text="Points given on new registration")
+    point_value = models.DecimalField(max_digits=5, decimal_places=2, default=0.50, help_text="Currency value of 1 point (e.g., 0.5 means 1 point = Rs 0.50)")
+
+    class Meta:
+        verbose_name = "Point Configuration"
+        verbose_name_plural = "Point Configuration"
+
+    def save(self, *args, **kwargs):
+        if not self.pk and PointSetting.objects.exists():
+            raise ValueError("Only one Point Configuration instance is allowed.")
+        return super().save(*args, **kwargs)
+
 class AppUser(models.Model):
     number = models.CharField(max_length=20, unique=True)   
     name = models.CharField(max_length=100, blank=True, null=True)
@@ -295,7 +308,13 @@ class Order(models.Model):
     city = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
     rider = models.ForeignKey("Rider", on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending") 
+    points_used = models.IntegerField(default=0)
+    points_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    is_points_added = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
     def update_order_type(self):
                 items = self.items.all()
