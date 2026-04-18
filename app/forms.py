@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.text import slugify
 from django.forms.widgets import ClearableFileInput
 from .models import Product, Rider, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, Privacy, About, ContactInfo, AppUser, Discount
 
@@ -65,32 +66,78 @@ class ContactInfoForm(forms.ModelForm):
 
 
 class ProductForm(forms.ModelForm):
-
+ 
     class Meta:
+        image = forms.ImageField(required=False)
         model = Product
         fields = [
             "name", "slug", "category", "brand",
             "short_description", "description",
             "image",
-             "cost_price", "regular_price", "sale_price", "sku", "quantity",
+            "cost_price", "regular_price", "sale_price", "sku", "quantity",
             "stock_status", "points", "product_type"
-            
         ]
-
+ 
+    # ── Slug: auto-unique ─────────────────────────────────────────────────
+    def clean_slug(self):
+        slug = self.cleaned_data.get("slug", "").strip()
+ 
+        # Agar slug empty hai toh name se banao
+        if not slug:
+            slug = slugify(self.cleaned_data.get("name", ""))
+ 
+        base    = slug
+        counter = 1
+        qs      = Product.objects.filter(slug=slug)
+ 
+        # Edit mode mein apne aap ko exclude karo
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+ 
+        while qs.exists():
+            slug = f"{base}-{counter}"
+            counter += 1
+            qs = Product.objects.filter(slug=slug)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+ 
+        return slug
+ 
+    # ── Price fields: comma strip ─────────────────────────────────────────
+    def _clean_price(self, field_name):
+        val = self.cleaned_data.get(field_name)
+        if val is None or val == "":
+            return val
+        try:
+            return float(str(val).replace(",", "").strip())
+        except (ValueError, TypeError):
+            raise forms.ValidationError("Valid price enter karein (e.g. 1500 ya 1,500).")
+ 
+    def clean_regular_price(self):
+        return self._clean_price("regular_price")
+ 
+    def clean_sale_price(self):
+        return self._clean_price("sale_price")
+ 
+    def clean_cost_price(self):
+        return self._clean_price("cost_price")
+ 
+    # ── Main clean ────────────────────────────────────────────────────────
     def clean(self):
         cleaned_data = super().clean()
         product_type = cleaned_data.get("product_type")
-
+ 
         if product_type == "simple":
             if not cleaned_data.get("regular_price"):
                 self.add_error("regular_price", "Regular price is required for simple products.")
             if not cleaned_data.get("sku"):
-                self.add_error("sku", "sku is required for simple products.")
+                self.add_error("sku", "SKU is required for simple products.")
+ 
         elif product_type == "variable":
-            # Remove simple fields (they are not required for variable products)
+            # Simple fields variable products ke liye required nahi
             cleaned_data["regular_price"] = None
             cleaned_data["sku"] = None
-
+ 
         return cleaned_data
 
 
