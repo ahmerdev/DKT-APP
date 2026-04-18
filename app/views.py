@@ -466,6 +466,18 @@ def delete_appuser_ui(request, pk):
 def customer_detail(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
 
+    orders = Order.objects.filter(user=user)
+
+    total_amount = 0
+
+    for order in orders:
+        items = order.items.all()
+        for item in items:
+            price = item.price or 0
+            qty = item.quantity or 0
+            total_amount += price * qty
+
+
     point_setting = PointSetting.objects.first()
     point_value = point_setting.point_value if point_setting else 0.50
 
@@ -520,6 +532,7 @@ def customer_detail(request, pk):
         "spent_rs": spent_points * point_value,
         "available_rs": available_points * point_value,
         "point_value": point_value,
+        "total_amount": total_amount,
     }
 
     return render(request, "pages/customer_detail.html", context)
@@ -965,8 +978,6 @@ def safe_json(value):
 def update_order_status_ui(request, pk):
     order = get_object_or_404(Order, pk=pk)
     cities = City.objects.all()
-    items = order.items.all()
-
     items = order.items.all()
 
     total_amount = 0
