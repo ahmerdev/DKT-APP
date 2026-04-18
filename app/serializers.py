@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Sum, Avg
 import ast
 from .sms import send_sms
-from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
+from .models import Category, Brand, PointSetting, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -202,48 +202,55 @@ class AppUserRegisterStepTwoSerializer(serializers.ModelSerializer):
 class AppUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_hash = serializers.CharField(read_only=True)
-    total_points = serializers.IntegerField(source="points", read_only=True)
-    addresses = AddressSerializer(many=True, required=False) 
+    addresses = AddressSerializer(many=True, required=False)
+
+    # NAYE DYNAMIC FIELDS (YEH ADD KARNA HAI API RESPONSE MEIN)
+    point_value = serializers.SerializerMethodField(read_only=True)
+    points_in_rupees = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = AppUser
-        fields = ["id", "number", "name", "email", "image", "is_active", "password", "password_hash",
-                  "created_at", "api_token", "total_points", "addresses"]
-        read_only_fields = ["id", "created_at", "password_hash", "api_token", "total_points"]
+        fields = [
+            "id", "number", "name", "email", "image", "is_active", 
+            "password", "password_hash", "created_at", "api_token", "addresses",
+            "points", "point_value", "points_in_rupees"  
+        ]
+        read_only_fields = ["id", "created_at", "password_hash", "api_token", "points", "point_value", "points_in_rupees"]
 
-    # phone number validate
     def validate_number(self, value):
         import re
         if not re.fullmatch(r"\+?\d{9,15}", value):
-            raise serializers.ValidationError("Enter a valid phone number (digits only, optional +, 9-15 chars).")
+            raise serializers.ValidationError("Enter a valid phone number.")
         return value
 
-    # create user with password hash
     def create(self, validated_data):
         from django.contrib.auth.hashers import make_password
         addresses_data = validated_data.pop("addresses", None)
         password = validated_data.pop("password")
         validated_data["password_hash"] = make_password(password)
         user = super().create(validated_data)
-
-        # create addresses if provided
         if addresses_data:
             for addr_data in addresses_data:
                 Address.objects.create(user=user, **addr_data)
         return user
 
-    # update user and addresses
     def update(self, instance, validated_data):
         from django.contrib.auth.hashers import make_password
-
-        # Update user fields
         instance.name = validated_data.get("name", instance.name)
         instance.email = validated_data.get("email", instance.email)
         instance.image = validated_data.get("image", instance.image)
         instance.save()
-
-
         return instance
+    
+    def get_point_value(self, obj):
+        from .models import PointSetting
+        setting = PointSetting.objects.first()
+        return float(setting.point_value) if setting else 0.50
+
+    def get_points_in_rupees(self, obj):
+        setting = PointSetting.objects.first()
+        point_val = float(setting.point_value) if setting else 0.50
+        return round((obj.points or 0) * point_val, 2)
 
     # Method to calculate total points
     # def get_total_points(self, obj):
@@ -274,7 +281,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = [ 'id', 'user_detail', 'address', 'shipping', 'status', 'type', 'items', 'payments',
+        fields = [ 'id', 'user_detail', 'address', 'shipping', 'status', 'type', 'items', 'payments',"points_used",       
+            "points_discount", 
             'created_at'
         ]
 
