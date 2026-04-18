@@ -450,6 +450,9 @@ def create_contact(request):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 
+from django.db import transaction
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])   
 def create_order(request): 
@@ -462,76 +465,81 @@ def create_order(request):
     except AppUser.DoesNotExist:
         return Response({"error": "Invalid user_id"}, status=400)
     
-    points_discount = 0.00
-    if applied_points > 0:
-        if applied_points > app_user.points:
-            return Response({"error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."}, status=400)
-        
-        settings = get_point_settings()
-        points_discount = applied_points * settings.point_value
+    with transaction.atomic():
+    
+            points_discount = 0.00
+            if applied_points > 0:
+                if applied_points > app_user.points:
+                    return Response({"error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."}, status=400)
+                
+                settings = get_point_settings()
+                points_discount = applied_points * settings.point_value
 
-    order = Order.objects.create(
-        user=app_user,   
-        address=data.get("address", ""),
-        shipping=data.get("shipping", ""),
-        status=data.get("status", "pending"),
-        points_used=applied_points,
-        points_discount=points_discount
-    )
+                app_user.points = (app_user.points or 0) - applied_points
+                app_user.save(update_fields=["points"])
 
-    for item in data.get("product", []):
-        image_data = item.get("image")
-        image_file = None
+            order = Order.objects.create(
+                user=app_user,   
+                address=data.get("address", ""),
+                shipping=data.get("shipping", ""),
+                status=data.get("status", "pending"),
+                points_used=applied_points,
+                points_discount=points_discount
+            )
 
-        if isinstance(image_data, dict):
-            image_data = image_data.get("uri")
+            for item in data.get("product", []):
+                image_data = item.get("image")
+                image_file = None
 
-        # 1. Base64 image
-        if image_data and isinstance(image_data, str) and image_data.startswith("data:image"):
-            format, imgstr = image_data.split(";base64,")
-            ext = format.split("/")[-1]
-            image_file = ContentFile(base64.b64decode(imgstr), name=f"order_item.{ext}")
+                if isinstance(image_data, dict):
+                    image_data = image_data.get("uri")
 
-        # 2. File object (direct upload)
-        elif image_data and not isinstance(image_data, str):
-            image_file = image_data
+                # 1. Base64 image
+                if image_data and isinstance(image_data, str) and image_data.startswith("data:image"):
+                    format, imgstr = image_data.split(";base64,")
+                    ext = format.split("/")[-1]
+                    image_file = ContentFile(base64.b64decode(imgstr), name=f"order_item.{ext}")
 
-        # 3. Agar URL aaya hai
-        elif image_data and isinstance(image_data, str) and image_data.startswith("http"):
-            try:
-                response = requests.get(image_data)
-                if response.status_code == 200:
-                    ext = image_data.split(".")[-1].split("?")[0]
-                    image_file = ContentFile(response.content, name=f"order_item.{ext}")
-            except Exception as e:
-                print("Image download failed:", e)
+                # 2. File object (direct upload)
+                elif image_data and not isinstance(image_data, str):
+                    image_file = image_data
 
-        OrderItem.objects.create(
-            order=order,
-            image=image_file, 
-            name=item.get("name"),
-            pts=item.get("pts", 0),
-            variants=item.get("variants", ""),
-            price=item.get("price", 0),
-            cost_price=item.get("cost_price", 0),
-            quantity=item.get("quantity", 1),
-        )
+                # 3. Agar URL aaya hai
+                elif image_data and isinstance(image_data, str) and image_data.startswith("http"):
+                    try:
+                        response = requests.get(image_data)
+                        if response.status_code == 200:
+                            ext = image_data.split(".")[-1].split("?")[0]
+                            image_file = ContentFile(response.content, name=f"order_item.{ext}")
+                    except Exception as e:
+                        print("Image download failed:", e)
 
-    # Payment loop
-    for pay in data.get("payment", []):
-        Payment.objects.create(
-            order=order,
-            method=pay.get("method", "Unknown"),
-            status=pay.get("status", "Pending"),
-        )
+                OrderItem.objects.create(
+                    order=order,
+                    image=image_file, 
+                    name=item.get("name"),
+                    pts=item.get("pts", 0),
+                    variants=item.get("variants", ""),
+                    price=item.get("price", 0),
+                    cost_price=item.get("cost_price", 0),
+                    quantity=item.get("quantity", 1),
+                )
 
-    return Response(
-        {
-            "message": "Order created successfully",
-            "order": OrderSerializer(order).data,
-        },
-        status=status.HTTP_201_CREATED,
-    )
+            # Payment loop
+            for pay in data.get("payment", []):
+                Payment.objects.create(
+                    order=order,
+                    method=pay.get("method", "Unknown"),
+                    status=pay.get("status", "Pending"),
+                )
+
+            return Response(
+                {
+                    "message": "Order created successfully",
+                    "order": OrderSerializer(order).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
 
 from django.db.models import Sum
 @api_view(["PATCH"])
