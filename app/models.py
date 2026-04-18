@@ -4,10 +4,12 @@ from django.core.validators import validate_email
 from django.utils import timezone
 from django.db import models
 import random
+from django.contrib.auth.hashers import make_password
 from datetime import timedelta
 
 
 class Category(models.Model):
+    is_active = models.BooleanField(default=True)
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='category/images/', blank=True, null=True)
@@ -21,6 +23,7 @@ class Category(models.Model):
 
 
 class Brand(models.Model):
+    is_active = models.BooleanField(default=True)
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to="brands/images/", blank=True, null=True)
@@ -125,7 +128,7 @@ class Product(models.Model):
         ('simple', 'Simple'),
         ('variable', 'Variable'),
     ]
-
+    is_active = models.BooleanField(default=True)
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
@@ -138,7 +141,7 @@ class Product(models.Model):
     regular_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
-    SKU = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    sku = models.CharField(max_length=100, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=0, null=True, blank=True)
 
     stock_status = models.CharField(max_length=20, choices=STOCK_CHOICES, default="instock")
@@ -164,7 +167,10 @@ class ProductImage(models.Model):
 # Variant Options (e.g. Color, Size)
 class VariantOption(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variant_options")
-    name = models.CharField(max_length=100)  
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ['product', 'name']  
 
     def __str__(self):
         return f"{self.name} - {self.product.name}"
@@ -173,23 +179,30 @@ class VariantOption(models.Model):
 # Variant Values (e.g. Red, Blue, Small, Large)
 class VariantValue(models.Model):
     option = models.ForeignKey(VariantOption, on_delete=models.CASCADE, related_name="values")
-    value = models.CharField(max_length=100)  # Example: "Red", "Large"
+    value = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ['option', 'value']  
 
     def __str__(self):
         return f"{self.value} ({self.option.name})"
 
 
-# Variant Combination (e.g. Size: Large + Color: Red → SKU/Price/Stock)
+# Variant Combination
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
-    sku = models.CharField(max_length=100, unique=True)
+    sku = models.CharField(max_length=100, null=True, blank=True) 
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     attributes = models.JSONField(default=dict)
     image = models.ImageField(upload_to="products/variants/", null=True, blank=True)
+    is_active = models.BooleanField(default=True)  
+
+    class Meta:
+        unique_together = ['product', 'attributes']  
 
     def __str__(self):
-        return f"Variant {self.sku} - {self.product.name}"
+        return f"Variant {self.sku or self.id} - {self.product.name}"
 
 
 # User Login System 
@@ -210,6 +223,7 @@ class AppUser(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(max_length=254,unique=True, null=True, blank=True, validators=[validate_email], db_index=True)   
     image = models.ImageField(upload_to="users/", blank=True, null=True)  
+    points = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     password_hash = models.CharField(max_length=255)  
     api_token = models.CharField(max_length=128, blank=True, null=True)
@@ -278,6 +292,8 @@ class Order(models.Model):
     )
     address = models.TextField()
     shipping = models.CharField(max_length=100)
+    city = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
+    rider = models.ForeignKey("Rider", on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending") 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -376,3 +392,39 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.number} — {self.product.title}"
+    
+class Rider(models.Model):
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=255)
+    designation = models.CharField(max_length=100, default="Delivery Rider")
+    is_active = models.BooleanField(default=True)
+    cities = models.ManyToManyField("City", related_name="riders")
+
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        # auto hash only if not hashed
+        if not self.password.startswith("pbkdf2"):
+            self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+class City(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name    
+import uuid
+class RiderPasswordResetToken(models.Model):
+    rider = models.ForeignKey(Rider, on_delete=models.CASCADE, related_name="reset_tokens")
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        # 1 ghante tak valid rahega
+        return not self.is_used and (timezone.now() - self.created_at).seconds < 3600
+
+    def __str__(self):
+        return f"Reset token for {self.rider.name}"    

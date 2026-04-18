@@ -8,13 +8,13 @@ from .models import Category, Brand, Product, Discount, Redeem, Banner, Hero, Ad
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'image', 'created_at']
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'created_at']
 
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = ['id', 'name', 'slug', 'image', 'created_at']      
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'created_at']      
 
 class PrivacySerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,7 +67,7 @@ class HeroSerializer(serializers.ModelSerializer):
 class ProductVariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductVariant
-        fields = ["id", "sku", "price", "stock", "attributes", "image"]
+        fields = ["id", "sku", "price", "stock", "attributes", "is_active", "image"]
 
 
 
@@ -114,8 +114,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "cost_price",
             "regular_price",
             "sale_price",
-            "SKU",
+            "sku",
             "quantity",
+            "is_active",
             "stock_status",
             "points",
             "product_type",
@@ -201,7 +202,7 @@ class AppUserRegisterStepTwoSerializer(serializers.ModelSerializer):
 class AppUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_hash = serializers.CharField(read_only=True)
-    total_points = serializers.SerializerMethodField()
+    total_points = serializers.IntegerField(source="points", read_only=True)
     addresses = AddressSerializer(many=True, required=False) 
 
     class Meta:
@@ -245,18 +246,18 @@ class AppUserSerializer(serializers.ModelSerializer):
         return instance
 
     # Method to calculate total points
-    def get_total_points(self, obj):
-        normal_pts = (
-            Order.objects.filter(user=obj, type="normal", status="delivered")
-            .aggregate(total=Sum("items__pts"))["total"]
-            or 0
-        )
-        redeem_pts = (
-            Order.objects.filter(user=obj, type="redeem", status="delivered")
-            .aggregate(total=Sum("items__pts"))["total"]
-            or 0
-        )
-        return normal_pts - redeem_pts
+    # def get_total_points(self, obj):
+    #     normal_pts = (
+    #         Order.objects.filter(user=obj, type="normal", status="delivered")
+    #         .aggregate(total=Sum("items__pts"))["total"]
+    #         or 0
+    #     )
+    #     redeem_pts = (
+    #         Order.objects.filter(user=obj, type="redeem", status="delivered")
+    #         .aggregate(total=Sum("items__pts"))["total"]
+    #         or 0
+    #     )
+    #     return normal_pts - redeem_pts
 
 
 # class SimpleUserSerializer(serializers.ModelSerializer):
