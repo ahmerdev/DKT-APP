@@ -3,142 +3,975 @@
 {% block title %}Update Order | Orders{% endblock %}
 {% block content %}
 
-<div class="main-content-inner">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root {
+    --primary: #7d1d27;
+    --primary-light: #a52a3a;
+    --primary-dark: #5c1520;
+    --primary-ultra-dark: #3e0f15;
+    --primary-50: #fdf2f3;
+    --primary-100: #fce7e9;
+    --primary-200: #f9d0d5;
+    --primary-glow: rgba(125, 29, 39, 0.12);
+    --primary-shadow: rgba(125, 29, 39, 0.25);
+    --gold: #c9a84c;
+    --gold-light: #e8d48b;
+}
+
+/* ====== BASE ====== */
+.order-wrapper { font-family: 'Inter', sans-serif; }
+
+/* ====== HEADER BANNER ====== */
+.order-hero {
+    background: linear-gradient(145deg, var(--primary-ultra-dark) 0%, var(--primary) 40%, var(--primary-light) 100%);
+    border-radius: 20px;
+    padding: 32px 36px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.order-hero::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -60px;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.order-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    left: 20%;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.order-hero > * { position: relative; z-index: 2; }
+
+.order-id-badge {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--primary-ultra-dark);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+}
+.type-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(10px);
+}
+.type-badge.redeem {
+    background: rgba(201,168,76,0.2);
+    color: var(--gold-light);
+    border: 1px solid rgba(201,168,76,0.3);
+}
+.type-badge.normal {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.hero-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    margin-top: 18px;
+}
+.hero-breadcrumb a {
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    transition: 0.3s;
+}
+.hero-breadcrumb a:hover { color: var(--gold-light); }
+.hero-breadcrumb .sep { color: rgba(255,255,255,0.25); font-size: 9px; }
+.hero-breadcrumb .current { color: white; font-weight: 600; }
+
+.hero-date {
+    text-align: right;
+}
+.hero-date .lbl {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+.hero-date .val { font-size: 16px; font-weight: 600; }
+.hero-date .sub { font-size: 13px; opacity: 0.65; margin-top: 3px; }
+
+/* ====== STATUS PILL (Hero) ====== */
+.status-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 16px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    backdrop-filter: blur(10px);
+}
+.status-hero.pending { background: rgba(251,191,36,0.18); color: #fde68a; border: 1px solid rgba(251,191,36,0.25); }
+.status-hero.process { background: rgba(96,165,250,0.18); color: #93c5fd; border: 1px solid rgba(96,165,250,0.25); }
+.status-hero.on_the_way { background: rgba(244,114,182,0.18); color: #f9a8d4; border: 1px solid rgba(244,114,182,0.25); }
+.status-hero.delivered { background: rgba(74,222,128,0.18); color: #86efac; border: 1px solid rgba(74,222,128,0.25); }
+.status-hero.cancelled { background: rgba(248,113,113,0.18); color: #fca5a5; border: 1px solid rgba(248,113,113,0.25); }
+.status-hero.default { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); }
+
+/* ====== CARDS ====== */
+.premium-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.04);
+    overflow: hidden;
+    height: 100%;
+    transition: 0.3s;
+}
+.premium-card:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 8px 28px rgba(125,29,39,0.06);
+}
+.pc-head {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f5f5f8;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.pc-head-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.pc-head h5 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.2px;
+}
+.pc-body { padding: 22px 24px; }
+
+/* ====== INFO ROWS ====== */
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px 0;
+    border-bottom: 1px solid #f8f8fc;
+}
+.info-item:last-child { border-bottom: none; padding-bottom: 0; }
+.info-item:first-child { padding-top: 0; }
+.info-ic {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    flex-shrink: 0;
+    font-size: 15px;
+}
+.info-ic.burg { background: var(--primary-50); color: var(--primary); }
+.info-ic.teal { background: #f0fdfa; color: #0d9488; }
+.info-ic.amber { background: #fffbeb; color: #d97706; }
+.info-ic.violet { background: #f5f3ff; color: #7c3aed; }
+.info-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 5px;
+}
+.info-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+/* ====== ADDRESS BLOCK ====== */
+.address-block {
+    background: linear-gradient(145deg, var(--primary-50) 0%, #fff5f6 100%);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 14px;
+    border: 1px solid var(--primary-100);
+    position: relative;
+}
+.address-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--gold));
+    border-radius: 14px 14px 0 0;
+}
+.addr-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--primary-dark);
+    margin-bottom: 7px;
+    line-height: 1.4;
+}
+.addr-row:last-child { margin-bottom: 0; }
+.addr-row i {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(125,29,39,0.08);
+    border-radius: 7px;
+    font-size: 9px;
+    flex-shrink: 0;
+    color: var(--primary);
+}
+.addr-no-data {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 13px;
+    padding: 10px 0;
+}
+
+/* ====== SHIPPING BLOCK ====== */
+.shipping-block {
+    background: linear-gradient(145deg, #f0fdfa 0%, #ecfdf5 100%);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 8px;
+    border: 1px solid #a7f3d0;
+    position: relative;
+}
+.shipping-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0d9488, #14b8a6, #5eead4);
+    border-radius: 14px 14px 0 0;
+}
+.ship-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #065f46;
+    margin-bottom: 7px;
+    line-height: 1.4;
+}
+.ship-row:last-child { margin-bottom: 0; }
+.ship-row i {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(13,148,136,0.08);
+    border-radius: 7px; font-size: 9px; flex-shrink: 0; color: #0d9488;
+}
+
+/* ====== PAYMENT CARD ====== */
+.pay-card {
+    background: linear-gradient(145deg, #fafbff 0%, #f5f3ff 100%);
+    border-radius: 16px;
+    padding: 22px;
+    border: 1px solid #e9e5ff;
+}
+.pay-icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 20px;
+    box-shadow: 0 6px 18px var(--primary-shadow);
+}
+.pay-method { font-weight: 800; color: #1f2937; font-size: 16px; }
+.pay-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+/* Status pill small */
+.sp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.sp.pending { background: #fef3c7; color: #92400e; }
+.sp.process { background: #dbeafe; color: #1e40af; }
+.sp.paid { background: #d1fae5; color: #065f46; }
+.sp.unpaid { background: #fee2e2; color: #991b1b; }
+
+/* Empty */
+.empty-box {
+    text-align: center;
+    padding: 36px 20px;
+}
+.empty-circle {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+}
+.empty-circle i { font-size: 26px; color: #d1d5db; }
+.empty-box p { color: #9ca3af; font-size: 13px; margin: 0; }
+
+/* ====== FORM ====== */
+.fl { display: block; font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+.fs {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    background: #f9fafb;
+    transition: 0.3s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px 12px;
+    cursor: pointer;
+}
+.fs:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: white;
+    box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+/* Current status visual */
+.current-status-visual {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+}
+.csv-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.csv-icon.pending { background: #fef3c7; color: #f59e0b; }
+.csv-icon.process { background: #dbeafe; color: #3b82f6; }
+.csv-icon.on_the_way { background: #fce7f3; color: #ec4899; }
+.csv-icon.delivered { background: #d1fae5; color: #10b981; }
+.csv-icon.cancelled { background: #fee2e2; color: #ef4444; }
+.csv-icon.default { background: #f3f4f6; color: #9ca3af; }
+.csv-text .csv-label { font-size: 11px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.csv-text .csv-value { font-size: 15px; font-weight: 800; color: #1f2937; margin-top: 2px; }
+
+/* Buttons */
+.btn-burg {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border: none; color: white;
+    padding: 15px 28px; border-radius: 14px;
+    font-size: 14px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: 0.3s;
+    box-shadow: 0 6px 20px var(--primary-shadow);
+    flex: 1;
+    letter-spacing: 0.3px;
+}
+.btn-burg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(125,29,39,0.35);
+    color: white;
+}
+.btn-ghost {
+    background: white; border: 2px solid #e5e7eb; color: #6b7280;
+    padding: 15px 28px; border-radius: 14px;
+    font-size: 14px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: 0.3s; flex: 1;
+}
+.btn-ghost:hover { background: #f9fafb; border-color: #d1d5db; color: #374151; }
+.btn-row { display: flex; gap: 12px; margin-bottom: 20px; }
+
+.btn-rider {
+    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+    border: none; color: white;
+    padding: 15px 24px; border-radius: 14px;
+    font-size: 14px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; transition: 0.3s;
+    box-shadow: 0 6px 20px rgba(13,148,136,0.3);
+}
+.btn-rider:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(13,148,136,0.4);
+    color: white;
+}
+
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+    margin: 8px 0 20px;
+}
+
+/* ====== ITEMS TABLE ====== */
+.table-card {
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.04);
+}
+.table-card-head {
+    padding: 22px 26px;
+    border-bottom: 1px solid #f5f5f8;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.table-card-head h5 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+}
+.item-count {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 3px 12px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.items-tbl { margin: 0; }
+.items-tbl thead {
+    background: linear-gradient(135deg, var(--primary-ultra-dark) 0%, var(--primary) 100%);
+}
+.items-tbl thead th {
+    padding: 16px 22px;
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.85);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+    text-align: center;
+}
+.items-tbl tbody td {
+    padding: 20px 22px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f5f5f8;
+    text-align: center;
+}
+.items-tbl tbody tr:last-child td { border-bottom: none; }
+.items-tbl tbody tr { transition: 0.2s; }
+.items-tbl tbody tr:hover { background: var(--primary-50); }
+
+.img-wrap {
+    width: 60px; height: 60px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid #f0f0f5;
+    display: inline-block;
+}
+.img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.img-placeholder {
+    width: 60px; height: 60px;
+    border-radius: 14px;
+    background: #f3f4f6;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #d1d5db; font-size: 20px;
+}
+.item-name { font-weight: 700; color: #1f2937; font-size: 14px; }
+.pts-pill {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.variant-text { color: #6b7280; font-size: 13px; font-weight: 500; }
+.qty-box {
+    font-weight: 900; color: #1f2937; font-size: 16px;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.price-val { font-weight: 800; color: #059669; font-size: 15px; }
+.free-pill {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: white;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ====== RIDER SECTION NOTE ====== */
+.rider-note {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #92400e;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 991px) {
+    .order-hero { padding: 24px 20px; }
+    .hero-date { text-align: left !important; margin-top: 14px; }
+}
+</style>
+
+<div class="main-content-inner order-wrapper">
     <div class="main-content-wrap">
-        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
-            <h3>Order #{{ order.id }}</h3>
-            <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
-                <li>
-                    <a href="{% url 'order_list_ui' %}">
-                        <div class="text-tiny">Orders</div>
-                    </a>
-                </li>
-                
-                <li><i class="icon-chevron-right"></i></li>
-                <li>
-                    <div class="text-tiny">Update Status</div>
-                </li>
-            </ul>
+
+        <!-- ====== HERO HEADER ====== -->
+        <div class="order-hero">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-3 flex-wrap mb-2">
+                        <span class="order-id-badge">
+                            <i class="fas fa-receipt"></i> #{{ order.id }}
+                        </span>
+                        {% if order.type == "redeem" %}
+                            <span class="type-badge redeem">
+                                <i class="fas fa-gift"></i> Redeem Order
+                            </span>
+                        {% else %}
+                            <span class="type-badge normal">
+                                <i class="fas fa-shopping-bag"></i> Normal Order
+                            </span>
+                        {% endif %}
+                        {% if order.status == "pending" %}
+                            <span class="status-hero pending"><i class="fas fa-clock"></i> {{ order.get_status_display }}</span>
+                        {% elif order.status == "inprocess" or order.status == "process" %}
+                            <span class="status-hero process"><i class="fas fa-gear fa-spin"></i> {{ order.get_status_display }}</span>
+                        {% elif order.status == "delivered" %}
+                            <span class="status-hero delivered"><i class="fas fa-circle-check"></i> {{ order.get_status_display }}</span>
+                        {% elif order.status == "on_the_way" %}
+                            <span class="status-hero on_the_way"><i class="fas fa-truck-fast"></i> {{ order.get_status_display }}</span>
+                        {% elif order.status == "cancelled" %}
+                            <span class="status-hero cancelled"><i class="fas fa-circle-xmark"></i> {{ order.get_status_display }}</span>
+                        {% else %}
+                            <span class="status-hero default"><i class="fas fa-circle-question"></i> {{ order.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <nav class="hero-breadcrumb">
+                        <a href="{% url 'order_list_ui' %}"><i class="fas fa-house"></i> Orders</a>
+                        <span class="sep"><i class="fas fa-chevron-right"></i></span>
+                        <span class="current">Update Status</span>
+                    </nav>
+                </div>
+                <div class="hero-date">
+                    <div class="lbl">Order Placed</div>
+                    <div class="val"><i class="far fa-calendar me-2" style="opacity:.6"></i>{{ order.created_at|date:"M d, Y" }}</div>
+                    <div class="sub"><i class="far fa-clock me-1"></i>{{ order.created_at|date:"h:i A" }}</div>
+                </div>
+            </div>
         </div>
-        <div class="container-fluid">
-            <div class="row row-cols-1 row-cols-lg-3 g-3">
+
+        <!-- ====== 3-COLUMN GRID ====== -->
+        <div class="container-fluid p-0">
+            <div class="row row-cols-1 row-cols-lg-3 g-4">
+
+                <!-- ===== ORDER DETAILS ===== -->
                 <div class="col">
-                     <!-- Order Detail Box -->
-                    <div class="wg-box h-100">
-                        <h4 class="mb-3">Order Details</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p><strong>Order ID:</strong> {{ order.id }}</p>
-                                <p><strong>User:</strong> {{ order.user }}</p>
-                                <p><strong>Shipping:</strong> {{ order.shipping }}</p>
+                    <div class="premium-card">
+                        <div class="pc-head">
+                            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
+                                <i class="fas fa-file-invoice"></i>
                             </div>
-                            <div>
-                                <p><strong>Order Type:</strong>
-                                    {% if order.type == "redeem" %}
-                                        <span class="badge bg-primary">Redeem Order</span>
-                                    {% else %}
-                                        <span class="badge bg-info">Normal Order</span>
-                                    {% endif %}
-                                    </p>
+                            <h5>Order Details</h5>
+                        </div>
+                        <div class="pc-body">
+                            <!-- Customer -->
+                            <div class="info-item">
+                                <div class="info-ic burg"><i class="fas fa-user"></i></div>
+                                <div>
+                                    <div class="info-lbl">Customer</div>
+                                    <div class="info-val">{{ order.user }}</div>
+                                </div>
+                            </div>
 
-                                <p><strong>Address:</strong> {{ order.address }}</p>
-                                
-                                <p><strong>Status:</strong>
-                                    {% if order.status == "pending" %}
-                                        <span class="badge text-bg-warning">{{ order.get_status_display }}</span>
-                                    {% elif order.status == "inprocess" %}
-                                        <span class="badge text-bg-info">{{ order.get_status_display }}</span>
-                                    {% elif order.status == "delivered" %}
-                                        <span class="badge text-bg-success">{{ order.get_status_display }}</span>
-                                    {% elif order.status == "on_the_way" %}
-                                        <span class="badge text-bg-danger">{{ order.get_status_display }}</span>
-                                    {% elif order.status == "cancelled" %}
-                                        <span class="badge text-bg-danger">{{ order.get_status_display }}</span>    
-                                    {% else %}
-                                        <span class="badge text-bg-secondary">{{ order.get_status_display }}</span>
-                                    {% endif %}
-                                </p>
+                            <!-- Shipping Info -->
+                            <div class="info-item" style="flex-direction:column;">
+                                <div style="display:flex;align-items:center;width:100%;">
+                                    <div class="info-ic teal" style="margin-right:14px;"><i class="fas fa-truck"></i></div>
+                                    <div class="info-lbl" style="margin-bottom:0;">Shipping Info</div>
+                                </div>
+                                {% if shipping %}
+                                <div class="shipping-block" style="width:100%;margin-top:12px;">
 
-                                <p><strong>Date:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+                                    {% if shipping.label %}
+                                    <div class="ship-row">
+                                        <i class="fas fa-box"></i>
+                                        <span><strong>Method:</strong> {{ shipping.label }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if shipping.desc %}
+                                    <div class="ship-row">
+                                        <i class="fas fa-clock"></i>
+                                        <span>{{ shipping.desc }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if shipping.id %}
+                                    <div class="ship-row">
+                                        <i class="fas fa-id-badge"></i>
+                                        <span>{{ shipping.id }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                </div>
+                                {% else %}
+                                <p>No shipping data</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Address -->
+                            <div class="info-item" style="flex-direction:column;">
+                                <div style="display:flex;align-items:center;width:100%;">
+                                    <div class="info-ic violet" style="margin-right:14px;"><i class="fas fa-location-dot"></i></div>
+                                    <div class="info-lbl" style="margin-bottom:0;">Delivery Address</div>
+                                </div>
+                                {% if address %}
+                                <div class="address-block" style="width:100%;margin-top:12px;">
+
+                                    {% if address.street %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-road"></i>
+                                        <span>{{ address.street }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if address.block %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-building"></i>
+                                        <span>{{ address.block }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if address.city %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-city"></i>
+                                        <span>{{ address.city }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if address.state %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-map"></i>
+                                        <span>{{ address.state }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if address.country %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-globe"></i>
+                                        <span>{{ address.country }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if address.postal_code %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>{{ address.postal_code }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                </div>
+                                {% else %}
+                                <p class="addr-no-data">No address provided</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- ===== PAYMENTS ===== -->
                 <div class="col">
-                    <!-- Payments Table -->
-                    <div class="wg-box mb-4">
-                        <h4 class="mb-3">Payments</h4>
+                    <div class="premium-card">
+                        <div class="pc-head">
+                            <div class="pc-head-icon" style="background:#ecfdf5;color:#059669;">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <h5>Payments</h5>
+                        </div>
+                        <div class="pc-body">
+                            {% for pay in order.payments.all %}
+                            <div class="pay-card mb-3">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="pay-icon-wrap">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <div>
+                                        <div class="pay-method">{{ pay.method }}</div>
+                                        <div class="pay-sub">Payment Method</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span style="font-size:12px;color:#9ca3af;font-weight:600;">Status</span>
+                                    {% if pay.status|lower == "paid" or pay.status|lower == "completed" or pay.status|lower == "success" %}
+                                        <span class="sp paid"><i class="fas fa-circle-check"></i> {{ pay.status }}</span>
+                                    {% elif pay.status|lower == "unpaid" or pay.status|lower == "failed" %}
+                                        <span class="sp unpaid"><i class="fas fa-circle-xmark"></i> {{ pay.status }}</span>
+                                    {% else %}
+                                        <span class="sp pending"><i class="fas fa-hourglass-half"></i> {{ pay.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="empty-box">
+                                <div class="empty-circle"><i class="fas fa-wallet"></i></div>
+                                <p>No payments found for this order</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== UPDATE STATUS ===== -->
+                <div class="col">
+                    <div class="premium-card">
+                        <div class="pc-head">
+                            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
+                                <i class="fas fa-pen-to-square"></i>
+                            </div>
+                            <h5>Update Status</h5>
+                        </div>
+                        <div class="pc-body">
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <!-- Current Status Visual -->
+                                {% if order.status == "pending" %}
+                                <div class="current-status-visual" style="background:#fffbeb;">
+                                    <div class="csv-icon pending"><i class="fas fa-clock"></i></div>
+                                    <div class="csv-text">
+                                        <div class="csv-label">Current Status</div>
+                                        <div class="csv-value" style="color:#92400e;">Pending</div>
+                                    </div>
+                                </div>
+                                {% elif order.status == "inprocess" or order.status == "process" %}
+                                <div class="current-status-visual" style="background:#eff6ff;">
+                                    <div class="csv-icon process"><i class="fas fa-gear fa-spin"></i></div>
+                                    <div class="csv-text">
+                                        <div class="csv-label">Current Status</div>
+                                        <div class="csv-value" style="color:#1e40af;">In Process</div>
+                                    </div>
+                                </div>
+                                {% elif order.status == "on_the_way" %}
+                                <div class="current-status-visual" style="background:#fdf2f8;">
+                                    <div class="csv-icon on_the_way"><i class="fas fa-truck-fast"></i></div>
+                                    <div class="csv-text">
+                                        <div class="csv-label">Current Status</div>
+                                        <div class="csv-value" style="color:#be185d;">On The Way</div>
+                                    </div>
+                                </div>
+                                {% elif order.status == "delivered" %}
+                                <div class="current-status-visual" style="background:#ecfdf5;">
+                                    <div class="csv-icon delivered"><i class="fas fa-circle-check"></i></div>
+                                    <div class="csv-text">
+                                        <div class="csv-label">Current Status</div>
+                                        <div class="csv-value" style="color:#065f46;">Delivered</div>
+                                    </div>
+                                </div>
+                                {% elif order.status == "cancelled" %}
+                                <div class="current-status-visual" style="background:#fef2f2;">
+                                    <div class="csv-icon cancelled"><i class="fas fa-circle-xmark"></i></div>
+                                    <div class="csv-text">
+                                        <div class="csv-label">Current Status</div>
+                                        <div class="csv-value" style="color:#991b1b;">Cancelled</div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="current-status-visual" style="background:#f9fafb;">
+                                    <div class="csv-icon default"><i class="fas fa-circle-question"></i></div>
+                                    <div class="csv-text">
+                                        <div class="csv-label">Current Status</div>
+                                        <div class="csv-value">{{ order.get_status_display }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <label class="fl"><i class="fas fa-arrows-rotate me-1"></i> Change To</label>
+                                <select name="status" class="fs mb-4">
+                                    <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                                    <option value="process" {% if order.status == "process" or order.status == "inprocess" %}selected{% endif %}>In Process</option>
+                                    <option value="on_the_way" {% if order.status == "on_the_way" %}selected{% endif %}>On The Way</option>
+                                    <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
+                                    <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+                                </select>
+
+                                <div class="btn-row">
+                                    <button type="submit" class="btn-burg">
+                                        <i class="fas fa-check"></i> Update
+                                    </button>
+                                    <a href="{% url 'order_list_ui' %}" class="btn-ghost">
+                                        <i class="fas fa-arrow-left"></i> Back
+                                    </a>
+                                </div>
+
+                                {% if not request.session.is_rider %}
+                                <div class="divider"></div>
+
+                                <label class="fl" style="margin-top:4px;"><i class="fas fa-motorcycle me-1"></i> Assign Rider</label>
+                                <select id="citySelect" name="city" class="fs mb-3">
+                                    {% for city in cities %}
+                                     {% if order_city_id == city.id %}
+                                         <option value="{{ city.id }}" selected>{{ city.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                                </select>
+                                <button type="button" onclick="loadRiders({{ order.pk }})" class="btn-rider">
+                                    <i class="fas fa-users"></i> View Available Riders
+                                </button>
+                                <div class="rider-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    Riders are filtered by the order's delivery city automatically.
+                                </div>
+                                {% endif %}
+
+                                <div class="modal fade" id="riderModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content" id="riderModalContent">
+                                            <!-- AJAX data yahan ayega -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ====== ORDER ITEMS ====== -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="table-card">
+                        <div class="table-card-head">
+                            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
+                                <i class="fas fa-boxes-stacked"></i>
+                            </div>
+                            <h5>Order Items</h5>
+                            <span class="item-count">{{ order.items.all|length }}</span>
+                        </div>
                         <div class="table-responsive card-body p-0">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-head text-white text-center">
+                                <table class="table table-hover no-border align-middle">
+                                <thead class="table-head text-center">
                                     <tr>
-                                        <th class="text-center fs-4 fw-bold">Method</th>
-                                        <th class="text-center fs-4 fw-bold">Status</th>
+                                        <th scope="col" class="text-center text-white" style="width:90px;"><i class="fas fa-image me-2"></i>Image</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-tag me-2"></i>Product</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-star me-2"></i>Points</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-layer-group me-2"></i>Variants</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-hashtag me-2"></i>Qty</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-coins me-2"></i>Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for pay in order.payments.all %}
+                                    {% for item in order.items.all %}
                                     <tr>
-                                        <td class="text-center fs-4 fw-bold">{{ pay.method }}</td>
-                                        <td class="text-center fs-4 fw-bold"><span class="badge bg-warning fs-5">{{ pay.status }}</span></td>
+                                        <td class="text-center">
+                                            {% if item.image %}
+                                                <div class="img-wrap">
+                                                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                                                </div>
+                                            {% else %}
+                                                <div class="img-placeholder"><i class="fas fa-image"></i></div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center"><span class="item-name">{{ item.name }}</span></td>
+                                        <td class="text-center">
+                                            <span class="pts-pill">
+                                                <i class="fas fa-star" style="font-size:9px;"></i> {{ item.pts }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center"><span class="variant-text">{{ item.variants|default:"—" }}</span></td>
+                                        <td class="text-center"><span class="qty-box">{{ item.quantity }}</span></td>
+                                        <td class="text-center">
+                                            {% if item.price > 0 %}
+                                                <span class="price-val"><i class="fas fa-rupee-sign" style="font-size:11px;"></i> {{ item.price }}</span>
+                                            {% else %}
+                                                <span class="free-pill"><i class="fas fa-gift" style="font-size:9px;"></i> Redeem</span>
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="2" class="text-center">No payments found.</td>
+                                        <td colspan="6">
+                                            <div class="empty-box">
+                                                <div class="empty-circle"><i class="fas fa-box-open"></i></div>
+                                                <p>No items found for this order</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                     {% endfor %}
+                                    <tr style="background:#f8fafc; font-weight:700;">
+                                        <td colspan="5" class="text-end">
+                                            <i class="fa-solid fa-calculator"></i> Grand Total
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="price-val">
+                                                <i class="fas fa-rupee-sign" style="font-size:11px;"></i>
+                                                {{ total_amount }}
+                                            </span>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <div class="col">
-                     <!-- Update Form -->
-                    <div class="wg-box h-100">
-                        <h4 class="mb-3">Update Status</h4>
-                        <form method="post" class="flex items-center gap20">
-                            {% csrf_token %}
-                            <fieldset class="name">
-                            <div class="select">
-                            <select name="status">
-                                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
-                                <option value="process" {% if order.status == "process" %}selected{% endif %}>In Process</option>
-                                <option value="on_the_way" {% if order.status == "on_the_way" %}selected{% endif %}>On The Way</option>
-                                <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
-                                <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
-                            </select>
-                            </div>
-                        </fieldset>
-                        <div class="btn-up d-flex gap-2">
-                            <button type="submit" class="tf-button style-1">Update</button>
-                            <a href="{% url 'order_list_ui' %}" class="tf-button style-2">Back</a>
-                        </div>
-                        {% if not request.session.is_rider %}
-                        <div class="city">
-                        <!-- CITY SELECT -->
-                            <select id="citySelect" name="city" class="form-control">
-                            <option value="">Select City</option>
-                            {% for city in cities %}
-                                {% if order_city_id == city.id %}
-                                    <option value="{{ city.id }}" selected>{{ city.name }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
+            </div>
 
-                        <!-- OPEN POPUP BUTTON -->
-                        <button type="button"
-                            onclick="loadRiders({{ order.pk }})"
-                            class="btn text-white fs-4 fw-semibold bg-primary shadow px-4 py-2">
-                            Available Riders
-                        </button>
-                        </div>
-                        {% endif %}
-                        <div class="modal fade" id="riderModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content" id="riderModalContent">
-        <!-- AJAX data yahan ayega -->
+        </div>
     </div>
-  </div>
 </div>
 <script>
 function loadRiders(orderId) {
@@ -159,78 +992,4 @@ function loadRiders(orderId) {
         });
 }
 </script>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div class="row pt-3">
-                <div class="col-md-12">
-                    <!-- Items Table -->
-        <div class="wg-box mb-4">
-            <h4 class="mb-3">Order Items</h4>
-            <div class="table-responsive card-body p-0">
-                <table class="table table-hover  align-middle">
-                    <thead class="table-head text-white text-center">
-                        <tr>
-                            <th class="text-center fs-4 fw-bold">Image</th>
-                            <th class="text-center fs-4 fw-bold">Name</th>
-                            <th class="text-center fs-4 fw-bold">PTS</th>
-                            <th class="text-center fs-4 fw-bold">Variants</th>
-                            <th class="text-center fs-4 fw-bold">Quantity</th>
-                            <th class="text-center fs-4 fw-bold">Price</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border border-1">
-                        {% for item in order.items.all %}
-                            <tr>
-                                <td class="text-center fs-4 fw-bold">
-                                    {% if item.image %}
-                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" width="80" height="80">
-                                    {% else %}
-                                        No Image
-                                    {% endif %}
-                                </td>
-                                <td class="text-center fs-4 fw-bold">{{ item.name }}</td>
-                                <td class="text-center"><span class="badge bg-danger fs-5">{{ item.pts }}</span></td>
-                                <td class="text-center fs-4 fw-bold">{{ item.variants }}</td>
-                                <td class="text-center fs-4 fw-bold">{{ item.quantity }}</td>
-                                <td class="text-center fs-4 fw-bold">
-                                    {% if item.price > 0 %}
-                                        Rs {{ item.price }}
-                                    {% else %}
-                                        Redeem 
-                                    {% endif %}       
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">No items found.</td>
-                            </tr>
-                            {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-           
-        </div>
-        
-                </div>
-                </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
