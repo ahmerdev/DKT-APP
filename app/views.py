@@ -940,6 +940,28 @@ def create_order_ui(request):
     return render(request, "pages/create_order.html", {"users": users})
 
 
+def safe_json(value):
+    if not value:
+        return {}
+
+    if isinstance(value, dict):
+        return value
+
+    if isinstance(value, str):
+        try:
+            # first try real JSON
+            return json.loads(value)
+        except:
+            try:
+                # fallback for Python-style dict string
+                return eval(value)
+            except:
+                return {}
+
+    return {}
+
+
+
 def update_order_status_ui(request, pk):
     order = get_object_or_404(Order, pk=pk)
     cities = City.objects.all()
@@ -947,6 +969,9 @@ def update_order_status_ui(request, pk):
     # City from address
     order_city_name = get_city_from_address(order.address)
     order_city_id = None
+
+    shipping = safe_json(order.shipping)
+    address = safe_json(order.address)
 
     if order.city:
         order_city_name = order.city.name
@@ -1000,6 +1025,8 @@ def update_order_status_ui(request, pk):
         "cities": cities,
         "order_city_name": order_city_name,
         "order_city_id": order_city_id,
+        "shipping": shipping,
+        "address": address,
     })
 
 
