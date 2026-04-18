@@ -4,7 +4,7 @@
 {% block content %}
 
 
-  <div class="main-content-inner">
+                <div class="main-content-inner">
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-27">
                                     <h3>Categories</h3>
@@ -42,13 +42,14 @@
                                     </div>
                                     <div class="table-responsive card-body p-0">
                                         <table id="myDataTable" class="table table-hover no-border align-middle">
-                                        <thead class="table-head text-white text-center">
+                                        <thead class="table-head text-center">
                                      <tr>
-                                        <th class="id-col text-center align-middle p-0">#</th>
-                                            <th scope="col" class="text-center">Image</th>
-                                            <th scope="col" class="text-center">Name</th>
-                                            <th scope="col" class="text-center">Date</th>
-                                            <th scope="col" class="text-center">Action</th>
+                                        <th class="id-col text-center align-middle p-0 text-white">#</th>
+                                            <th scope="col" class="text-center text-white">Image</th>
+                                            <th scope="col" class="text-center text-white">Name</th>
+                                            <th scope="col" class="text-center text-white">Status</th>
+                                            <th scope="col" class="text-center text-white">Date</th>
+                                            <th scope="col" class="text-center text-white">Action</th>
                                         </tr>
                                     </thead>
                                    <tbody id="user-table-body">
@@ -63,14 +64,46 @@
                                             {% endif %}
                                         </td>
                                         <td class="text-center">{{ category.name }}</td>
+                                        <td class="text-center">{% if category.is_active %}
+                                            <span class="badge bg-success">Active <i class="fa-solid fa-eye"></i></span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Draft <i class="fa-solid fa-eye-slash"></i></span>
+                                        {% endif %}  </td>
                                         <td class="text-center">{{ category.created_at|date:"m/d/Y" }}</td>
                                         <td class="text-center">
+                                        <a data-bs-toggle="dropdown" aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-2" style="width: 25px;">
+                                        <path fill-rule="evenodd" d="M10.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" clip-rule="evenodd" />
+                                    </svg>
+                                    </a>
+                                
+                                <ul class="dropdown-menu text-center shadow">
+                                    <li><a href="{% url 'edit_category' category.pk %}" class="text-secondary fs-5 fw-semibold"> 
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </a>
+                                    </li>
+                                    <li><a href="{% url 'delete_category' category.pk %}" 
+                                            class="fw-semibold text-danger fs-5"
+                                                data-bs-toggle="modal"
+                                                    data-bs-target="#globalDeleteModal"
+                                                    data-name="{{ category.name }}"
+                                                    data-url="{% url 'delete_category' category.pk %}">
+                                                <i class="fa-solid fa-trash-can"></i> Delete 
+                                                </a></li>
+                                <li>
+                                   <a class="btn fw-semibold fs-5 {% if category.is_active %}text-warning{% else %}text-success{% endif %}"
+                                        data-url="{% url 'toggle-status' 'category' category.id %}"
+                                        onclick="toggleStatus(this)">
 
-                                                <a href="{% url 'edit_category' category.pk %}" class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit
-                                        <i class="fa-solid fa-pen"></i></a>
-                                                <a href="{% url 'delete_category' category.pk %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i></a>
-                                            
-                                        </td>
+                                        {% if category.is_active %}
+                                        <i class="fa-solid fa-eye-slash"></i> Draft
+                                        {% else %}
+                                         <i class="fa-solid fa-eye"></i> Active
+                                        {% endif %}
+                                </a>
+                                </li>
+                                </ul>
+                            </td>
                                     </tr>
                                     {% empty %}
                                     <tr>

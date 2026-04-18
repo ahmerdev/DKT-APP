@@ -35,14 +35,15 @@
             </div>
 
           <div class="table-responsive card-body p-0">
-                <table id="myDataTable" class="table table-hover no-border align-middle">
-            <thead class="table-head text-white text-center">
+            <table id="myDataTable" class="table table-hover no-border align-middle">
+            <thead class="table-head text-center">
             <tr>
-               <th class="id-col text-center align-middle p-0">#</th>
-                <th scope="col" class="text-center">Image</th>
-                <th scope="col" class="text-center">Name</th>
-                <th scope="col" class="text-center">Date</th>
-                <th scope="col" class="text-center">Action</th>
+               <th class="id-col text-center align-middle p-0 text-white">#</th>
+                <th scope="col" class="text-center text-white">Image</th>
+                <th scope="col" class="text-center text-white">Name</th>
+                <th scope="col" class="text-center text-white">Status</th>
+                <th scope="col" class="text-center text-white">Date</th>
+                <th scope="col" class="text-center text-white">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -57,40 +58,46 @@
                     {% endif %}
                 </td>
                 <td class="fw-bold text-dark text-center">{{ brand.name }}</td>
+                <td class="text-center">{% if brand.is_active %}
+                    <span class="badge bg-success">Active <i class="fa-solid fa-eye"></i></span>
+                {% else %}
+                    <span class="badge bg-danger">Draft <i class="fa-solid fa-eye-slash"></i></span>
+                {% endif %}  </td>
                 <td class="text-muted text-center">{{ brand.created_at|date:"M d, Y" }}</td>
                 <td class="text-center">
-                        <a href="{% url 'edit_brand' brand.pk %}"class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit <i class="fa-solid fa-pen"></i>
-                        </a>
-                        <!-- Delete Button -->
-                                <a href="{% url 'delete_brand' brand.pk %}" 
-                               class="btn text-white fw-semibold bg-danger fs-5 shadow"
-                                data-bs-toggle="modal" 
-                                data-bs-target="#deleteModal{{ brand.pk }}">
-                                  Delete <i class="fa-solid fa-trash-can shadow"></i>
-                                </a>
+                    <a data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-2" style="width: 25px;">
+                    <path fill-rule="evenodd" d="M10.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" clip-rule="evenodd" />
+                     </svg>
+                    </a>
                                 
-                                <div class="modal fade" id="deleteModal{{ brand.pk }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="staticBackdropLabel">Confirm Delete</h1>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                          <i class="bi bi-exclamation-triangle text-danger fs-1 mb-3"></i>
-                                        <p class="fw-semibold">Are you sure you want to delete <br><span class="text-danger">"{{ brand.name }}"</span>?</p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{% url 'delete_brand' brand.pk %}" class="btn btn-danger px-4">Yes, Delete</a>
-                                        </div>
-                                        </div>
-                                    </div>
-                                    </div>
+                                <ul class="dropdown-menu text-center shadow">
+                                    <li> <a href="{% url 'edit_brand' brand.pk %}" class="text-secondary fs-5 fw-semibold">
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </a>
+                                    </li>
+                                    <li><a href="{% url 'delete_brand' brand.pk %}" 
+                               class="fw-semibold text-danger fs-5"
+                                data-bs-toggle="modal"
+                                    data-bs-target="#globalDeleteModal"
+                                    data-name="{{ brand.name }}"
+                                    data-url="{% url 'delete_brand' brand.pk %}">
+                                  <i class="fa-solid fa-trash-can"></i> Delete 
+                                </a></li>
+                                <li>
+                                   <a class="btn fw-semibold fs-5 {% if brand.is_active %}text-warning{% else %}text-success{% endif %}"
+                                        data-url="{% url 'toggle-status' 'brand' brand.id %}"
+                                        onclick="toggleStatus(this)">
 
-
-                    </div>
-                </td>
+                                        {% if brand.is_active %}
+                                        <i class="fa-solid fa-eye-slash"></i> Draft
+                                        {% else %}
+                                         <i class="fa-solid fa-eye"></i> Active
+                                        {% endif %}
+                                </a>
+                                </li>
+                                </ul>
+                            </td>
             </tr>
             {% empty %}
             <tr>
