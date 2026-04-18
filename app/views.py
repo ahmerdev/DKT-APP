@@ -514,7 +514,8 @@ def customer_detail(request, pk):
     context = {
         "user": user,
         "addresses": addresses,
-
+        "normal_orders_data": normal_orders_data,  
+        "redeem_orders_data": spent_orders_data, 
         "orders_data": normal_orders_data,
         "spent_orders_data": spent_orders_data,
 
