@@ -1,0 +1,89 @@
+{% extends 'dashboard.html' %}
+{% block content %}
+
+<style>
+  .setup-card {
+    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-top: 20px;
+  }
+  .setup-input {
+    width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    font-size: 15px; font-weight: 500; transition: all 0.2s; background: #f8fafc;
+  }
+  .setup-input:focus { outline: none; background: #fff; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+  .setup-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+  .setup-label span { color: #ef4444; }
+  .setup-hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+  .preview-box { background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px 20px; margin-top: 24px; }
+</style>
+
+<div class="main-content-inner">
+  <div class="main-content-wrap">
+    <div class="flex items-center flex-wrap justify-between gap20 mb-27">
+      <div>
+        <h3 style="font-size: 22px; font-weight: 800; color: #0f172a; margin:0 0 4px 0;"><i class="fa-solid fa-sliders me-2" style="color: #6366f1;"></i>Point Configuration</h3>
+        <p style="margin:0; color: #94a3b8; font-size: 14px;">Define how points are calculated in the system.</p>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="alert alert-success d-flex align-items-center" style="padding: 12px 16px; border-radius: 10px; border: none; background: #dcfce7; color: #15803d;">
+      {% for message in messages %}<i class="fa-solid fa-circle-check me-2"></i> {{ message }}{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="setup-card">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="setup-label">Registration Bonus Points <span>*</span></label>
+            <input type="number" name="registration_bonus_points" class="setup-input" value="{{ setting.registration_bonus_points }}" required min="0">
+            <p class="setup-hint"><i class="fa-solid fa-circle-info me-1"></i>Points given on App registration (Default: 20)</p>
+          </div>
+          <div class="col-md-6">
+            <label class="setup-label">Point Value (Rs) <span>*</span></label>
+            <input type="number" name="point_value" class="setup-input" value="{{ setting.point_value }}" required min="0" step="0.01" id="pointValueInput">
+            <p class="setup-hint"><i class="fa-solid fa-circle-info me-1"></i>Value of 1 point (e.g., 0.50 means 100 pts = Rs 50)</p>
+          </div>
+        </div>
+
+        <div class="preview-box">
+          <div style="font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-calculator me-2"></i> Live Preview
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">1 Point Value</div>
+              <div style="font-size: 16px; font-weight: 700; color: #0f172a;">Rs. <span id="preview1">0.50</span></div>
+            </div>
+            <div style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">100 Points Value</div>
+              <div style="font-size: 16px; font-weight: 700; color: #0f172a;">Rs. <span id="preview100">50.00</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+          <button type="submit" style="background: #6366f1; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;">
+            <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pointInput = document.getElementById('pointValueInput');
+  const preview1 = document.getElementById('preview1');
+  const preview100 = document.getElementById('preview100');
+  if(pointInput) {
+      pointInput.addEventListener('input', function() {
+          const val = parseFloat(this.value) || 0;
+          preview1.innerText = val.toFixed(2);
+          preview100.innerText = (val * 100).toFixed(2);
+      });
+  }
+</script>
+{% endblock %}
