@@ -965,6 +965,15 @@ def safe_json(value):
 def update_order_status_ui(request, pk):
     order = get_object_or_404(Order, pk=pk)
     cities = City.objects.all()
+    items = order.items.all()
+
+    items = order.items.all()
+
+    total_amount = 0
+    for item in items:
+        price = item.price or 0
+        qty = item.quantity or 0
+        total_amount += price * qty
 
     # City from address
     order_city_name = get_city_from_address(order.address)
@@ -1022,12 +1031,15 @@ def update_order_status_ui(request, pk):
 
     return render(request, "pages/update_order.html", {
         "order": order,
+        "items": items,
+        "total_amount": total_amount,
         "cities": cities,
         "order_city_name": order_city_name,
         "order_city_id": order_city_id,
         "shipping": shipping,
         "address": address,
     })
+
 
 
 import ast
