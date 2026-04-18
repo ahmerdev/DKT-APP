@@ -171,7 +171,7 @@
                                             <!-- <strong>Earned Points:</strong>
                                             <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order_points }}</span> -->
                                          <!-- 🔥 EARNED -->
-                    {% if order.type == "normal" %}
+                    {% if entry.order.type == "normal" %}
                         <span class="badge bg-success p-2">
                             +{{ order.items.all|length }} items pts
                         </span>
@@ -191,7 +191,7 @@
                     </small>
                                         </p>
 
-                                             {% include "include/customer-history.html" with orders=normal_orders %}
+                                             {% include "include/customer-history.html" with entry=entry %}
                                     </div>
                                 </div>
                             </div>
@@ -229,7 +229,7 @@
                                     <div class="accordion-body pt-5">
                                         <p class="d-inline-block p-3 rounded-pill bg-danger text-white">
                                             <strong>Spent Points:</strong>
-                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ spent_points }}</span>
+                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order.points_used }}</span>
                                         </p>
 
                                         {% include "include/customer-history.html" with orders=redeem_orders %}
