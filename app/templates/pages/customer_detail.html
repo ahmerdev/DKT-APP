@@ -4,249 +4,629 @@
 {% block title %}Customer Detail{% endblock %}
 
 {% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
-    
-    .accordion-item.mb-2 {
-    border: 2px solid #990000;
-    padding: 15px;
-    margin: 20px;
-    border-radius: 20px;
-}
+  :root {
+    --crimson: #8B0000;
+    --crimson-light: #a81010;
+    --crimson-pale: #fff0f0;
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --dark: #1a1a1a;
+    --mid: #444;
+    --muted: #888;
+    --bg: #f7f4f0;
+    --card-bg: #ffffff;
+    --success: #1a6b3a;
+    --success-bg: #e8f5ee;
+    --warning: #7a5c00;
+    --warning-bg: #fff8e0;
+    --info-bg: #e8f0ff;
+    --info: #1a3a8b;
+    --radius: 18px;
+    --shadow: 0 4px 24px rgba(139,0,0,0.08);
+    --shadow-hover: 0 8px 36px rgba(139,0,0,0.14);
+  }
+
+  body { background: var(--bg); }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 32px;
+  }
+  .page-header .icon-wrap {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--crimson); display: grid; place-items: center;
+  }
+  .page-header .icon-wrap i { color: #fff; font-size: 20px; }
+  .page-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px; font-weight: 800;
+    color: var(--dark); margin: 0;
+    letter-spacing: -0.5px;
+  }
+
+  /* ─── PROFILE CARD ─── */
+  .profile-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .profile-card .card-header-bar {
+    background: linear-gradient(135deg, var(--crimson) 0%, #3a0000 100%);
+    padding: 20px 28px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .profile-card .card-header-bar h5 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: #fff; margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-action {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    padding: 9px 18px; border-radius: 10px;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-action:hover { transform: translateY(-1px); }
+  .btn-action.primary { background: #fff; color: var(--crimson); }
+  .btn-action.danger  { background: rgba(255,255,255,0.15); color: #fff; border: 1.5px solid rgba(255,255,255,0.35); }
+  .btn-action.secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1.5px solid rgba(255,255,255,0.2); }
+
+  /* profile body layout */
+  .profile-body {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+  }
+  .profile-left {
+    background: linear-gradient(180deg, #f9f0f0 0%, #fff 100%);
+    padding: 36px 24px;
+    display: flex; flex-direction: column; align-items: center;
+    border-right: 1px solid #f0e0e0;
+  }
+  .avatar-wrap {
+    position: relative; margin-bottom: 16px;
+  }
+  .avatar-wrap img {
+    width: 120px; height: 120px;
+    border-radius: 50%; object-fit: cover;
+    border: 4px solid var(--crimson);
+    box-shadow: 0 4px 20px rgba(139,0,0,0.18);
+  }
+  .avatar-badge {
+    position: absolute; bottom: 4px; right: 4px;
+    background: var(--crimson); color: #fff;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 11px;
+    border: 2px solid #fff;
+  }
+  .profile-left h5 {
+    font-family: 'Syne', sans-serif; font-size: 17px;
+    font-weight: 700; color: var(--dark); margin: 0 0 4px;
+    text-align: center;
+  }
+  .profile-left .uid {
+    font-size: 12px; color: var(--muted);
+    background: #f2f2f2; padding: 4px 12px;
+    border-radius: 20px; font-family: 'DM Sans', sans-serif;
+  }
+
+  /* stats row in profile-left */
+  .stat-pills { margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .stat-pill {
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .stat-pill.earned  { background: var(--success-bg); }
+  .stat-pill.spent   { background: #fff0f0; }
+  .stat-pill.avail   { background: #f5f0ff; }
+  .stat-pill .label  { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .stat-pill .val    { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+  .stat-pill.earned .val { color: var(--success); }
+  .stat-pill.spent .val  { color: var(--crimson); }
+  .stat-pill.avail .val  { color: #5b2d8b; }
+  .stat-pill .sub    { font-size: 11px; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+
+  /* profile right */
+  .profile-right { padding: 32px 36px; }
+  .profile-right .section-title {
+    font-family: 'Syne', sans-serif; font-size: 20px;
+    font-weight: 800; color: var(--dark);
+    margin-bottom: 20px; padding-bottom: 12px;
+    border-bottom: 2px solid #f0e0e0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .info-item {
+    background: var(--bg); border-radius: 12px; padding: 14px 18px;
+    border-left: 3px solid var(--crimson);
+  }
+  .info-item .lbl {
+    font-family: 'DM Sans', sans-serif; font-size: 11px;
+    font-weight: 500; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+  }
+  .info-item .val {
+    font-family: 'Syne', sans-serif; font-size: 15px;
+    font-weight: 700; color: var(--dark);
+  }
+  .points-hero {
+    margin-top: 20px;
+    background: linear-gradient(135deg, var(--crimson) 0%, #3a0000 100%);
+    border-radius: 14px; padding: 18px 24px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .points-hero .ph-label {
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: rgba(255,255,255,0.75);
+  }
+  .points-hero .ph-val {
+    font-family: 'Syne', sans-serif; font-size: 28px;
+    font-weight: 800; color: #fff;
+  }
+  .points-hero .ph-sub { font-size: 12px; color: rgba(255,255,255,0.6); }
+  .points-hero .ph-badge {
+    background: var(--gold);
+    color: #3a2000; font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    padding: 8px 16px; border-radius: 20px;
+  }
+
+  /* ─── ORDERS SECTION ─── */
+  .orders-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .orders-header {
+    padding: 20px 28px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    border-bottom: 1px solid #f0e0e0;
+  }
+  .orders-header h5 {
+    font-family: 'Syne', sans-serif; font-size: 18px;
+    font-weight: 800; color: var(--dark); margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .orders-header h5 i { color: var(--crimson); }
+
+  /* custom pills */
+  .order-tabs { display: flex; gap: 8px; }
+  .order-tab-btn {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 9px 20px; border-radius: 20px; border: 2px solid transparent;
+    cursor: pointer; transition: all 0.2s; background: var(--bg); color: var(--mid);
+  }
+  .order-tab-btn.active {
+    background: var(--crimson); color: #fff; border-color: var(--crimson);
+    box-shadow: 0 4px 14px rgba(139,0,0,0.25);
+  }
+  .order-tab-btn .count {
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px; padding: 1px 8px; margin-left: 6px;
+    font-size: 11px;
+  }
+  .order-tab-btn:not(.active) .count {
+    background: #e0e0e0; color: var(--muted);
+  }
+
+  .orders-body { padding: 24px 28px; }
+
+  /* accordion */
+  .acc-item {
+    border: 1.5px solid #efe0e0;
+    border-radius: 14px; margin-bottom: 12px;
+    overflow: hidden; transition: box-shadow 0.2s;
+  }
+  .acc-item:hover { box-shadow: var(--shadow-hover); }
+  .acc-btn {
+    width: 100%; background: #fff; border: none; cursor: pointer;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    font-family: 'DM Sans', sans-serif; transition: background 0.2s;
+    text-align: left;
+  }
+  .acc-btn:hover { background: #fdf5f5; }
+  .acc-btn.open { background: #fdf5f5; border-bottom: 1.5px solid #efe0e0; }
+
+  .acc-num {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--crimson); color: #fff;
+    display: grid; place-items: center;
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .acc-oid {
+    font-family: 'Syne', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--dark); flex-shrink: 0;
+  }
+  .acc-sep { color: #ddd; flex-shrink: 0; }
+  .acc-status { flex-shrink: 0; }
+  .badge-status {
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px;
+  }
+  .bs-delivered { background: var(--success-bg); color: var(--success); }
+  .bs-pending   { background: var(--warning-bg); color: var(--warning); }
+  .bs-cancelled { background: #fff0f0; color: var(--crimson); }
+  .bs-inprocess { background: var(--info-bg); color: var(--info); }
+
+  .acc-pts-row { display: flex; gap: 8px; margin-left: auto; flex-shrink: 0; flex-wrap: wrap; align-items: center; }
+  .pt-chip {
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .pt-earned { background: var(--success-bg); color: var(--success); }
+  .pt-spent  { background: #fff0f0; color: var(--crimson); }
+  .pt-cash   { background: var(--warning-bg); color: var(--warning); }
+
+  .acc-date {
+    font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--muted);
+    flex-shrink: 0;
+  }
+  .acc-arrow {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--bg); display: grid; place-items: center;
+    color: var(--muted); font-size: 13px; flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .acc-btn.open .acc-arrow { transform: rotate(180deg); }
+
+  .acc-body {
+    display: none; padding: 20px; background: #fdf9f9;
+  }
+  .acc-body.open { display: block; }
+
+  /* inside accordion body */
+  .order-summary-row {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .os-chip {
+    flex: 1; min-width: 140px;
+    border-radius: 12px; padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .os-chip .os-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+  .os-chip .os-val   { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+  .os-chip .os-sub   { font-size: 11px; color: var(--muted); }
+  .osc-earned { background: var(--success-bg); }
+  .osc-earned .os-val { color: var(--success); }
+  .osc-spent  { background: #fff0f0; }
+  .osc-spent .os-val  { color: var(--crimson); }
+  .osc-cash   { background: var(--warning-bg); }
+  .osc-cash .os-val   { color: var(--warning); }
+
+  /* items table inside accordion */
+  .items-label {
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--dark); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .items-label i { color: var(--crimson); }
+  .items-table {
+    width: 100%; border-collapse: collapse; font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+  }
+  .items-table th {
+    background: var(--crimson); color: #fff;
+    padding: 10px 14px; text-align: left; font-weight: 500;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .items-table th:first-child { border-radius: 8px 0 0 8px; }
+  .items-table th:last-child  { border-radius: 0 8px 8px 0; }
+  .items-table td {
+    padding: 10px 14px; border-bottom: 1px solid #f0e8e8;
+    color: var(--dark);
+  }
+  .items-table tr:last-child td { border-bottom: none; }
+  .items-table tr:hover td { background: #fdf0f0; }
+  .items-table .pts-cell { color: var(--success); font-weight: 600; }
+
+  /* empty state */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    font-family: 'DM Sans', sans-serif; color: var(--muted);
+  }
+  .empty-state i { font-size: 40px; color: #ddd; margin-bottom: 12px; display: block; }
+  .empty-state p { font-size: 15px; margin: 0; }
+
+  /* redeem special styling */
+  .redeem-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #5b2d8b, #3a1060);
+    color: #fff; padding: 5px 14px; border-radius: 20px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+  }
+
+  @media(max-width: 768px) {
+    .profile-body { grid-template-columns: 1fr; }
+    .profile-left { border-right: none; border-bottom: 1px solid #f0e0e0; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
 </style>
+
 <div class="main-content-inner">
-    <div class="main-content-wrap">
-        <h3 class="mb-4"> Customer Detail</h3>
+  <div class="main-content-wrap">
 
-        <!-- User Info Card -->
-    <div class="card shadow-sm mb-5 px-2 py-4 rounded-5">
-         <div class="card-body">
-        <div class="profile d-flex justify-content-between">
-             <h5 class="card-title mb-3"><i class="fas fa-user"></i> User Info</h5>
-             <div class="profile-btn">
-         <a href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop"
-        class="btn text-white fs-4 fw-semibold bg-primary shadow px-4 py-2">View User Address  <i class="fa-solid fa-eye"></i></a>
-        <a href="#" data-bs-toggle="modal" data-bs-target="#addaddress"
-        class="btn text-white fs-4 fw-semibold bg-danger shadow px-4 py-2">
-        <i class="fa-solid fa-plus fs-4"></i> Add User Address</a>
-        <a href="{% url 'create_appuser' user.pk %}" 
-        class="btn text-white fs-4 fw-semibold bg-secondary shadow px-4 py-2">Edit Profile  <i class="fa-solid fa-pen"></i></a>
-             </div>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="icon-wrap"><i class="fas fa-user"></i></div>
+      <h3>Customer Detail</h3>
+    </div>
 
-             <!-- Button trigger modal -->
-            {% include 'include/view-address.html' %} 
-            {% include 'include/add-user-address.html' %} 
-            <!-- Modal -->
-
-        </div>
-       <div class="container py-5">
-        <div class="card  border-0 overflow-hidden">
-            <div class="row g-0 align-items-center justify-content-center py-4">
-
-      <!-- Left: User Profile -->
-      <div class="col-md-3 shadow-sm rounded-4 text-white text-center py-5" style="background-color: #7d1d27;">
-        <div class="user-profile d-inline-block">
-        {% if user.image %}
-        <img src="{{ user.image.url }}" 
-            alt="{{ user.name }}" 
-            class="img-fluid rounded-circle shadow" 
-            style="width: 180px; height: 180px; object-fit: cover;">
-        {% else %}
-        <img src="{% static 'images/avatar/user-1.png' %}" 
-            alt="profile" 
-            class="img-fluid rounded-circle shadow" 
-            style="width: 180px; height: 180px; object-fit: cover;">
-        {% endif %} 
-            <h5 class="fw-semibold mb-1 pt-3 text-white">{{ user.name }}</h5>
-          <small class="fw-semibold fs-4 d-block">User ID: {{ user.id }}</small>
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="card-header-bar">
+        <h5><i class="fas fa-id-card"></i> User Profile</h5>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop" class="btn-action primary">
+            <i class="fa-solid fa-location-dot"></i> View Address
+          </a>
+          <a href="#" data-bs-toggle="modal" data-bs-target="#addaddress" class="btn-action danger">
+            <i class="fa-solid fa-plus"></i> Add Address
+          </a>
+          <a href="{% url 'create_appuser' user.pk %}" class="btn-action secondary">
+            <i class="fa-solid fa-pen"></i> Edit Profile
+          </a>
         </div>
       </div>
 
-      <!-- Right: User Info -->
-      <div class="col-md-8 bg-white shadow-sm rounded-4 ms-3 py-3">
-        <div class="card-body p-5">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="card-title mb-0 text-black fs-1">User Information :</h4>
-            <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
-                <strong>Available Total Points:</strong>
-                <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ available_points }} </span>
-            </p>
-             <div class="p-3 bg-success text-white rounded">
-        <strong>Earned</strong><br>
-        {{ earned_points }} pts <br>
-        Rs. {{ earned_rs }}
-    </div>
+      {% include 'include/view-address.html' %}
+      {% include 'include/add-user-address.html' %}
 
-    <div class="p-3 bg-danger text-white rounded">
-        <strong>Spent</strong><br>
-        {{ spent_points }} pts <br>
-        Rs. {{ spent_rs }}
-    </div>
+      <div class="profile-body">
+        <!-- Left -->
+        <div class="profile-left">
+          <div class="avatar-wrap">
+            {% if user.image %}
+              <img src="{{ user.image.url }}" alt="{{ user.name }}">
+            {% else %}
+              <img src="{% static 'images/avatar/user-1.png' %}" alt="profile">
+            {% endif %}
+            <div class="avatar-badge"><i class="fa-solid fa-check"></i></div>
+          </div>
+          <h5>{{ user.name }}</h5>
+          <span class="uid">ID: {{ user.id }}</span>
 
-    <div class="p-3 bg-dark text-white rounded">
-        <strong>Available</strong><br>
-        {{ available_points }} pts <br>
-        Rs. {{ available_rs }}
-    </div>
+          <div class="stat-pills">
+            <div class="stat-pill earned">
+              <div>
+                <div class="label">Earned Points</div>
+                <div class="sub">Rs. {{ earned_rs }}</div>
+              </div>
+              <div class="val">+{{ earned_points }}</div>
+            </div>
+            <div class="stat-pill spent">
+              <div>
+                <div class="label">Spent Points</div>
+                <div class="sub">Rs. {{ spent_rs }}</div>
+              </div>
+              <div class="val">-{{ spent_points }}</div>
+            </div>
+            <div class="stat-pill avail">
+              <div>
+                <div class="label">Available Points</div>
+                <div class="sub">Rs. {{ available_rs }}</div>
+              </div>
+              <div class="val">{{ available_points }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div class="profile-right">
+          <div class="section-title">
+            <i class="fa-solid fa-circle-info" style="color:var(--crimson);font-size:18px;"></i>
+            User Information
           </div>
 
-          <ul class="list-group list-group-flush lh-lg">
-            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
-              <span class="fw-bold fs-4">Name:</span>
-              <strong class="fs-4">{{ user.name }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
-              <span class="fw-bold fs-4">Email:</span>
-              <strong class="fs-4">{{ user.email }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
-              <span class="fw-bold fs-4">Phone Number:</span>
-              <strong class="fs-4">{{ user.number }}</strong>
-            </li>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="lbl">Full Name</div>
+              <div class="val">{{ user.name }}</div>
+            </div>
+            <div class="info-item">
+              <div class="lbl">Email</div>
+              <div class="val">{{ user.email }}</div>
+            </div>
+            <div class="info-item">
+              <div class="lbl">Phone Number</div>
+              <div class="val">{{ user.number }}</div>
+            </div>
+            <div class="info-item">
+              <div class="lbl">Account Created</div>
+              <div class="val">{{ user.created_at|date:"M d, Y" }}</div>
+            </div>
+          </div>
 
-            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
-              <span class="fw-bold fs-4">Account Created:</span>
-              <strong class="fs-4">{{ user.created_at|date:"M d, Y H:i" }}</strong>
-            </li>
-          </ul>
+          <div class="points-hero">
+            <div>
+              <div class="ph-label">Available Balance</div>
+              <div class="ph-val">{{ available_points }} pts</div>
+              <div class="ph-sub">Rs. {{ available_rs }}</div>
+            </div>
+            <div class="ph-badge"><i class="fa-solid fa-star"></i> Loyalty Points</div>
+          </div>
         </div>
       </div>
-    </div>
+    </div><!-- /profile-card -->
+
+    <!-- Orders Card -->
+    <div class="orders-card">
+      <div class="orders-header">
+        <h5><i class="fa-solid fa-box-open"></i> Order History</h5>
+        <div class="order-tabs">
+          <button class="order-tab-btn active" onclick="switchTab('normal', this)">
+            Normal Orders <span class="count">{{ normal_orders_data|length }}</span>
+          </button>
+          <button class="order-tab-btn" onclick="switchTab('redeem', this)">
+            Redeem Orders <span class="count">{{ redeem_orders_data|length }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="orders-body">
+
+        <!-- Normal Orders Tab -->
+        <div id="tab-normal">
+          {% if normal_orders_data %}
+            {% for entry in normal_orders_data %}
+            <div class="acc-item">
+              <button class="acc-btn" onclick="toggleAcc(this)">
+                <div class="acc-num">{{ forloop.counter }}</div>
+                <div class="acc-oid">#{{ entry.order.id }}</div>
+                <div class="acc-sep">|</div>
+                <div class="acc-status">
+                  {% if entry.order.status == "delivered" %}
+                    <span class="badge-status bs-delivered"><i class="fa-solid fa-circle-check"></i> Delivered</span>
+                  {% elif entry.order.status == "pending" %}
+                    <span class="badge-status bs-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+                  {% elif entry.order.status == "cancelled" %}
+                    <span class="badge-status bs-cancelled"><i class="fa-solid fa-xmark"></i> Cancelled</span>
+                  {% elif entry.order.status == "inprocess" %}
+                    <span class="badge-status bs-inprocess"><i class="fa-solid fa-gear"></i> In Process</span>
+                  {% else %}
+                    <span class="badge-status bs-inprocess">{{ entry.order.status|title }}</span>
+                  {% endif %}
+                </div>
+                <div class="acc-pts-row">
+                  {% if entry.earned > 0 %}
+                    <span class="pt-chip pt-earned"><i class="fa-solid fa-arrow-up"></i> +{{ entry.earned }} pts</span>
+                  {% endif %}
+                  {% if entry.spent > 0 %}
+                    <span class="pt-chip pt-spent"><i class="fa-solid fa-arrow-down"></i> -{{ entry.spent }} pts</span>
+                  {% endif %}
+                  {% if entry.cash_paid and entry.cash_paid > 0 %}
+                    <span class="pt-chip pt-cash"><i class="fa-solid fa-money-bill"></i> Rs. {{ entry.cash_paid|floatformat:0 }}</span>
+                  {% endif %}
+                </div>
+                <div class="acc-date"><i class="fa-regular fa-calendar"></i> {{ entry.order.created_at|date:"M d, Y" }}</div>
+                <div class="acc-arrow"><i class="fa-solid fa-chevron-down"></i></div>
+              </button>
+              <div class="acc-body">
+                <!-- Summary chips -->
+                <div class="order-summary-row">
+                  <div class="os-chip osc-earned">
+                    <div class="os-label">Points Earned</div>
+                    <div class="os-val">+{{ entry.earned }}</div>
+                    <div class="os-sub">Rs. {{ entry.earned_rs }}</div>
+                  </div>
+                  {% if entry.spent > 0 %}
+                  <div class="os-chip osc-spent">
+                    <div class="os-label">Points Used</div>
+                    <div class="os-val">-{{ entry.spent }}</div>
+                    <div class="os-sub">Rs. {{ entry.spent_rs }}</div>
+                  </div>
+                  {% endif %}
+                  {% if entry.cash_paid and entry.cash_paid > 0 %}
+                  <div class="os-chip osc-cash">
+                    <div class="os-label">Cash Paid</div>
+                    <div class="os-val">Rs. {{ entry.cash_paid|floatformat:0 }}</div>
+                    <div class="os-sub">After points discount</div>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <!-- Items table -->
+                <div class="items-label"><i class="fa-solid fa-list"></i> Order Items</div>
+                {% include "include/customer-history.html" with entry=entry %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fa-solid fa-box-open"></i>
+              <p>No normal orders found for this customer.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Redeem Orders Tab -->
+        <div id="tab-redeem" style="display:none;">
+          {% if redeem_orders_data %}
+            {% for entry in redeem_orders_data %}
+            <div class="acc-item">
+              <button class="acc-btn" onclick="toggleAcc(this)" style="border-left: 4px solid #7c3aed;">
+                <div class="acc-num" style="background:#7c3aed;">{{ forloop.counter }}</div>
+                <div class="acc-oid">#{{ entry.order.id }}</div>
+                <div class="acc-sep">|</div>
+                <span class="redeem-badge"><i class="fa-solid fa-gem"></i> Redeem Order</span>
+                <div class="acc-status" style="margin-left:4px;">
+                  {% if entry.order.status == "delivered" %}
+                    <span class="badge-status bs-delivered">Delivered</span>
+                  {% else %}
+                    <span class="badge-status bs-inprocess">{{ entry.order.status|title }}</span>
+                  {% endif %}
+                </div>
+                <div class="acc-pts-row">
+                  <span class="pt-chip pt-spent"><i class="fa-solid fa-gem"></i> {{ entry.spent }} pts used</span>
+                  <span class="pt-chip pt-cash" style="background:#f0e8ff;color:#5b2d8b;">Rs. {{ entry.spent_rs }}</span>
+                </div>
+                <div class="acc-date"><i class="fa-regular fa-calendar"></i> {{ entry.order.created_at|date:"M d, Y" }}</div>
+                <div class="acc-arrow"><i class="fa-solid fa-chevron-down"></i></div>
+              </button>
+              <div class="acc-body" style="background:#faf5ff;">
+                <div class="order-summary-row">
+                  <div class="os-chip" style="background:#f0e8ff;">
+                    <div class="os-label">Points Redeemed</div>
+                    <div class="os-val" style="color:#5b2d8b;">{{ entry.spent }}</div>
+                    <div class="os-sub">Rs. {{ entry.spent_rs }}</div>
+                  </div>
+                </div>
+                <div class="items-label"><i class="fa-solid fa-gem" style="color:#7c3aed;"></i> Redeemed Items</div>
+                {% include "include/customer-history.html" with entry=entry %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fa-solid fa-gem" style="color:#c4b5fd;"></i>
+              <p>No redeem orders found for this customer.</p>
+            </div>
+          {% endif %}
+        </div>
+
+      </div><!-- /orders-body -->
+    </div><!-- /orders-card -->
+
   </div>
 </div>
-</div>
-</div>
-</div>
 
+<script>
+  function switchTab(tab, btn) {
+    document.getElementById('tab-normal').style.display = tab === 'normal' ? 'block' : 'none';
+    document.getElementById('tab-redeem').style.display = tab === 'redeem' ? 'block' : 'none';
+    document.querySelectorAll('.order-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
 
-        <!-- Orders History -->
-        <div class="card shadow-sm mt-5 px-2 py-4 rounded-5">
-            <div class="card-body">
-                <div class="history d-flex justify-content-between">
-                    <h5 class="card-title"><i class="fa-solid fa-box-open"></i> Order History</h5>
-                 <div class="tabs">
-            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link fs-4 active p-4 rounded-pill" id="pills-home-tab"
-                 data-bs-toggle="pill" data-bs-target="#pills-home" 
-                 type="button" role="tab" aria-controls="pills-home"
-                  aria-selected="true"> Normal Orders ({{ normal_orders_data|length }})</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link fs-4 p-4 rounded-pill" id="pills-profile-tab"
-                 data-bs-toggle="pill" data-bs-target="#pills-profile"
-                  type="button" role="tab" aria-controls="pills-profile"
-                   aria-selected="false"> Redeem Orders ({{ redeem_orders_data|length }})</button>
-            </li>
-            </ul>
-        </div>
-                </div>
-                
+  function toggleAcc(btn) {
+    const body = btn.nextElementSibling;
+    const isOpen = btn.classList.contains('open');
+    // close all in same section
+    btn.closest('#tab-normal, #tab-redeem')
+      .querySelectorAll('.acc-btn').forEach(b => {
+        b.classList.remove('open');
+        b.nextElementSibling.classList.remove('open');
+      });
+    if (!isOpen) {
+      btn.classList.add('open');
+      body.classList.add('open');
+    }
+  }
+</script>
 
-       <!-- Normal Orders -->
-                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
-                    {% if normal_orders_data %}
-                        <div class="accordion" id="ordersAccordionNormal">
-                            {% for entry in normal_orders_data %}
-                            <div class="accordion-item mb-2">
-                                <h2 class="accordion-header" id="headingNormal{{ entry.order.id }}">
-                                    <button class="accordion-button collapsed" type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#collapseNormal{{ entry.order.id }}"
-                                        aria-expanded="false"
-                                        aria-controls="collapseNormal{{ entry.order.id }}">
-                                        <span class="me-3 fs-4">#{{ forloop.counter }}</span>
-                                        <strong class="me-3 fs-4">Order ID:</strong> {{ entry.order.id }} |
-                                        <strong class="me-3 fs-4">Status:</strong>
-                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-success">
-                                            {{ entry.order.status|title }}
-                                        </span>
-                                        <span class="ms-auto fs-4">{{ entry.order.created_at|date:"m/d/Y H:i" }}</span>
-                                    </button>
-                                </h2>
-                                <div id="collapseNormal{{ entry.order.id }}" class="accordion-collapse collapse"
-                                    aria-labelledby="headingNormal{{ entry.order.id }}"
-                                    data-bs-parent="#ordersAccordionNormal">
-                                    <div class="accordion-body pt-3">
-                                        <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
-                                            <!-- <strong>Earned Points:</strong>
-                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order_points }}</span> -->
-                                         <!-- 🔥 EARNED -->
-                    {% if entry.order.type == "normal" %}
-                        <span class="badge bg-success p-2">
-                            +{{ order.items.all|length }} items pts
-                        </span>
-                    {% endif %}
-
-                    <!--  SPENT -->
-                    {% if order.points_used > 0 %}
-                        <span class="badge bg-danger p-2">
-                            -{{ order.points_used }} pts
-                        </span>
-                    {% endif %}
-
-                    <!-- 💵 RUPEES -->
-                    <br>
-                    <small class="text-muted">
-                        Rs. {{ order.points_discount }}
-                    </small>
-                                        </p>
-
-                                             {% include "include/customer-history.html" with entry=entry %}
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No normal orders found for this customer.</p>
-                    {% endif %}
-                </div>
-
-                <!-- Redeem Orders -->
-                <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
-                    {% if redeem_orders_data %}
-                        <div class="accordion" id="ordersAccordionRedeem">
-                            {% for entry in redeem_orders_data %}
-                            <div class="accordion-item mb-2">
-                                <h2 class="accordion-header" id="headingRedeem{{ entry.order.id }}">
-                                    <button class="accordion-button collapsed" type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#collapseRedeem{{ entry.order.id }}"
-                                        aria-expanded="false"
-                                        aria-controls="collapseRedeem{{ entry.order.id }}">
-                                        <span class="me-3 fs-4">#{{ forloop.counter }}</span>
-                                        <strong class="me-3 fs-4">Order ID:</strong> {{ entry.order.id }} |
-                                        <strong class="me-3 fs-4">Status:</strong> 
-                                        <span class="badge shadow rounded-4 py-2 px-3 text-bg-success">
-                                            {{ entry.order.status|title }}
-                                        </span>
-                                        <span class="ms-auto fs-4">{{ entry.order.created_at|date:"m/d/Y H:i" }}</span>
-                                    </button>
-                                </h2>
-                                <div id="collapseRedeem{{ entry.order.id }}" class="accordion-collapse collapse"
-                                    aria-labelledby="headingRedeem{{ entry.order.id }}"
-                                    data-bs-parent="#ordersAccordionRedeem">
-                                    <div class="accordion-body pt-5">
-                                        <p class="d-inline-block p-3 rounded-pill bg-danger text-white">
-                                            <strong>Spent Points:</strong>
-                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order.points_used }}</span>
-                                        </p>
-
-                                        {% include "include/customer-history.html" with entry=entry %}
-
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No redeem orders found for this customer.</p>
-                    {% endif %}
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-</div>
 {% endblock %}
