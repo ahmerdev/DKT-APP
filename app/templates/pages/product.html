@@ -36,9 +36,9 @@
                     <i class="icon-plus"></i>Add new
                 </a>
             </div>
-
+            
             <div class="table-responsive card-body p-0">
-                <table id="myDataTable" class="table table-hover no-border align-middle table-striped">
+                <table id="myDataTable" class="table table-hover no-border align-middle">
                 <thead class="table-head text-center">
                         <tr>
                             <th class="id-col text-center align-middle p-0 text-white">#</th>
@@ -48,6 +48,7 @@
                             <th scope="col" class="text-center text-white">Sale Price</th>
                             <th scope="col" class="text-center text-white">Category</th>
                             <th scope="col" class="text-center text-white">Brand</th>
+                            <th scope="col" class="text-center text-white">Status</th>
                             <th scope="col" class="text-center text-white">Action</th>
                         </tr>
                     </thead>
@@ -74,25 +75,51 @@
 
                             <td class="text-center">
                                 {% if product.variants.exists %}
-                                    Rs: {{ product.variants.first.sale_price }}
+                                    Rs: {{ product.variants.2nd.sale_price }}
                                 {% else %}
                                         Rs: {{ product.sale_price }}
                                 {% endif %}
                             </td>
                             <td class="text-center">{{ product.category.name }}</td>
                             <td class="text-center">{{ product.brand.name }}</td>
+                             <td class="text-center">{% if product.is_active %}
+                                    <span class="badge bg-success">Active <i class="fa-solid fa-eye"></i></span>
+                                {% else %}
+                                    <span class="badge bg-danger">Draft <i class="fa-solid fa-eye-slash"></i></span>
+                                {% endif %}  </td>
                             <td class="text-center">
-                                    <a href="{% url 'edit_product' product.id %}"  class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit
-                                        <i class="fa-solid fa-pen"></i>
+                                <a data-bs-toggle="dropdown" aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-2" style="width: 25px;">
+                                        <path fill-rule="evenodd" d="M10.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" clip-rule="evenodd" />
+                                    </svg>
                                     </a>
-                                    <a href="{% url 'delete_product' product.id %}" 
-                               class="btn text-white fw-semibold bg-danger fs-5 shadow"
+                                
+                                <ul class="dropdown-menu text-center shadow">
+                                    <li><a href="{% url 'edit_product' product.id %}"  class="text-secondary fs-5 fw-semibold">
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </a>
+                                    </li>
+                                    <li><a href="{% url 'delete_product' product.id %}" 
+                               class="fw-semibold text-danger fs-5"
                                 data-bs-toggle="modal"
                                     data-bs-target="#globalDeleteModal"
                                     data-name="{{ product.name }}"
                                     data-url="{% url 'delete_product' product.id %}">
-                                  Delete <i class="fa-solid fa-trash-can shadow"></i>
+                                  <i class="fa-solid fa-trash-can"></i> Delete
+                                </a></li>
+                                <li>
+                                   <a class="btn fw-semibold fs-5 {% if product.is_active %}text-warning{% else %}text-success{% endif %}"
+                                        data-url="{% url 'toggle-status' 'product' product.id %}"
+                                        onclick="toggleStatus(this)">
+
+                                        {% if product.is_active %}
+                                        <i class="fa-solid fa-eye-slash"></i> Draft
+                                        {% else %}
+                                         <i class="fa-solid fa-eye"></i> Active
+                                        {% endif %}
                                 </a>
+                                </li>
+                                </ul>
                             </td>
                         </tr>
                         {% empty %}
@@ -106,6 +133,5 @@
         </div>
     </div>
 </div>
-
 
 {% endblock %}
