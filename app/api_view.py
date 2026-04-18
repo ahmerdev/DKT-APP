@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, Redeem, Category, Brand, Banner, Rider, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
+from .models import Product, PointSetting, Redeem, Category, Brand, Banner, Rider, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
 from .serializers import CategorySerializer, AppUserRegisterStepOneSerializer, AppUserRegisterStepTwoSerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ReviewSerializer, ContactFormSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
@@ -108,6 +108,13 @@ def create_app_user(request):
     return Response(serializer.errors, status=400)
 
 
+# Helper function (Top par rakh do)
+def get_point_settings():
+    setting = PointSetting.objects.first()
+    if not setting:
+        setting = PointSetting(registration_bonus_points=settings.REGISTRATION_BONUS, point_value=settings.POINT_VALUE)
+    return setting
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def complete_profile(request):
@@ -121,6 +128,8 @@ def complete_profile(request):
     serializer = AppUserRegisterStepTwoSerializer(data=request.data)
     if serializer.is_valid():
         from django.contrib.auth.hashers import make_password
+
+        points_to_add = get_point_settings().registration_bonus_points
         user = AppUser.objects.create(
             number=number,
             name=serializer.validated_data.get("name"),
@@ -128,7 +137,7 @@ def complete_profile(request):
             password_hash=make_password(serializer.validated_data.get("password")),
             is_verified=True,
             api_token=secrets.token_urlsafe(32),
-            points=20   
+            points=points_to_add  
         )
 
         cache.delete(f"verified_{number}")
@@ -446,16 +455,28 @@ def create_contact(request):
 def create_order(request): 
     data = request.data
     user_id = data.get("user_id")
+    applied_points = int(data.get("applied_points", 0)) 
+
     try:
         app_user = AppUser.objects.get(id=user_id)
     except AppUser.DoesNotExist:
         return Response({"error": "Invalid user_id"}, status=400)
+    
+    points_discount = 0.00
+    if applied_points > 0:
+        if applied_points > app_user.points:
+            return Response({"error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."}, status=400)
+        
+        settings = get_point_settings()
+        points_discount = applied_points * settings.point_value
 
     order = Order.objects.create(
         user=app_user,   
         address=data.get("address", ""),
         shipping=data.get("shipping", ""),
         status=data.get("status", "pending"),
+        points_used=applied_points,
+        points_discount=points_discount
     )
 
     for item in data.get("product", []):
@@ -528,18 +549,11 @@ def update_order_status(request, order_pk):
     order.status = new_status
     if new_status == "delivered":
 
-        if not hasattr(order, "is_points_added") or not order.is_points_added:
-
-            order_points = order.items.aggregate(
-                total=Sum("pts")
-            )["total"] or 0
-
-            user = order.user
-
-            if user:
-                user.points = (user.points or 0) + order_points
-                user.save(update_fields=["points"])
-
+        if not order.is_points_added:
+            order_points = order.items.aggregate(total=Sum("pts"))["total"] or 0
+            if order.user:
+                order.user.points = (order.user.points or 0) + order_points
+                order.user.save(update_fields=["points"])
             order.is_points_added = True 
 
     order.save()
