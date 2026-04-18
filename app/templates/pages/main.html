@@ -188,6 +188,7 @@
                             <th class="text-center text-white">User</th>
                             <th class="text-center text-white">Date</th>
                             <th class="text-center text-white">Type</th>
+                             <th class="text-center text-white">Sale</th>
                             <th class="text-center text-white">Status</th>
                         </tr>
                         </thead>
@@ -204,6 +205,53 @@
                                 <span class="badge shadow rounded-4 py-2 px-3 bg-info">Normal Order</span>
                                 {% endif %}
                                 </td>
+                                <td class="text-center">
+    {% if order.rider %}
+        <div class="rider-badge assigned">
+            <i class="fas fa-motorcycle rider-icon fs-4 pb-2"></i>
+            <br>
+            <span class="rider-text">
+                {{ order.rider.name }}
+            </span>
+        </div>
+    {% else %}
+        <div class="rider-badge unassigned">
+            <i class="fas fa-motorcycle rider-icon fs-4 pb-2"></i>
+            <br>
+            <span class="rider-text">
+                Not Assigned
+            </span>
+        </div>
+    {% endif %}
+</td>
+<style>
+    .rider-badge {
+    display: block;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+}
+
+/* Assigned */
+.rider-badge.assigned {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Not Assigned */
+.rider-badge.unassigned {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+</style>
                             <td class="text-center">
                                     {% if order.status == "pending" %}
                                         <span class="badge shadow rounded-4 py-2 px-3 text-bg-warning">Pending</span>
