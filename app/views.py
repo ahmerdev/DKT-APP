@@ -466,57 +466,71 @@ def delete_appuser_ui(request, pk):
 def customer_detail(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
 
-    # Safely get point value (Admin dashboard se aata hai ya toh default le lo)
-    try:
-        point_value = PointSetting.objects.first().point_value
-    except:
-        point_value = 0.50
+    # Point value
+    point_setting = PointSetting.objects.first()
+    point_value = point_setting.point_value if point_setting else 0.50
 
-    # Details orders
     addresses = Address.objects.filter(user=user)
-    orders = Order.objects.filter(status="delivered", user=user)
+
+    orders = Order.objects.filter(user=user, status="delivered")
+
     normal_orders = orders.filter(type="normal")
     redeem_orders = orders.filter(type="redeem")
 
     normal_orders_data = []
     redeem_orders_data = []
 
-    # Normal orders - FIXED (int() lagakar string ko integer mein convert karta hai)
+    # ✅ NORMAL ORDERS (EARN)
     for order in normal_orders:
         items = order.items.all()
         order_points = sum(item.pts for item in items)
+
         normal_orders_data.append({
             "order": order,
             "items": items,
             "order_points": order_points,
         })
 
-    # Redeem orders - FIXED
+    # ✅ REDEEM ORDERS (SPENT)
     for order in redeem_orders:
         items = order.items.all()
-        order_points = sum(item.pts for item in items) 
+
         redeem_orders_data.append({
             "order": order,
             "items": items,
-            "order_points": order_points,
+            "order_points": order.points_used or 0,  # 🔥 important
         })
 
-    # Calculate points (Use "or 0" taaki None na aaye)
+    # ✅ TOTALS
     earned_points = sum(i["order_points"] for i in normal_orders_data)
-    spent_points = sum(i["order_points"] for i in redeem_orders_data)
-    available_points = earned_points - spent_points
+    spent_points = sum(order.points_used or 0 for order in redeem_orders)
+
+    available_points = user.points or 0
+
+    # 💰 RUPEES CONVERSION
+    earned_rupees = earned_points * point_value
+    spent_rupees = spent_points * point_value
+    available_rupees = available_points * point_value
 
     context = {
         "user": user,
+        "addresses": addresses,
+
         "normal_orders_data": normal_orders_data,
         "redeem_orders_data": redeem_orders_data,
+
         "normal_orders": normal_orders,
         "redeem_orders": redeem_orders,
+
         "earned_points": earned_points,
         "spent_points": spent_points,
         "available_points": available_points,
+
+        "earned_rupees": earned_rupees,
+        "spent_rupees": spent_rupees,
+        "available_rupees": available_rupees,
+
         "point_value": point_value,
-        "addresses": addresses  
     }
 
     return render(request, "pages/customer_detail.html", context)
