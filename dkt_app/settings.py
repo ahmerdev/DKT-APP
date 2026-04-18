@@ -164,7 +164,8 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 APPEND_SLASH = True
-
+POINT_VALUE = 0.50          
+REGISTRATION_BONUS = 20 
 
 
 

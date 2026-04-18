@@ -23,6 +23,7 @@ urlpatterns = [
     path('customers-address/<int:pk>/', views.customer_address, name='customer_address'),
     path('customers-address-delete/<int:pk>/', views.customer_address_delete, name='customer_address_delete'),
     path("appusers/delete/<int:pk>/", views.delete_appuser_ui, name="delete_appuser"),
+    path('settings/points/', views.point_settings_view, name='point_settings'),
 
 # Dashboard 
     path('', views.home, name='home'),

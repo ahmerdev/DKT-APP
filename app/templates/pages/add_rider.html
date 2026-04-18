@@ -1,0 +1,101 @@
+{% extends 'dashboard.html' %}
+{% block content %}
+
+<div class="main-content-inner">
+<div class="main-content-wrap">
+
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-4">
+    <h3>{% if rider %}Edit Rider{% else %}Add Rider{% endif %}</h3>
+</div>
+
+<div class="wg-box p-4">
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+
+        <!-- NAME -->
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label>Name</label>
+                <input type="text" name="name" class="form-control"
+                       value="{{ rider.name|default:'' }}" required>
+            </div>
+        </div>
+
+        <!-- PHONE -->
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label>Phone</label>
+                <input type="text" name="phone" class="form-control"
+                       value="{{ rider.phone|default:'' }}" required>
+            </div>
+        </div>
+
+        <!-- EMAIL -->
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control"
+                       value="{{ rider.email|default:'' }}" required>
+            </div>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label>Password</label>
+                <input type="password" name="password" class="form-control"
+                       {% if not rider %}required{% endif %}>
+            </div>
+        </div>
+
+        <!-- DESIGNATION -->
+        <div class="col-md-12">
+            <div class="form-group mb-3">
+                <label>Designation</label>
+                <input type="text" name="designation" class="form-control"
+                       value="{{ rider.designation|default:'Delivery Rider' }}">
+            </div>
+        </div>
+
+        <!-- CITIES (FIXED MANY-TO-MANY) -->
+        <div class="col-md-12">
+            <fieldset>
+        <div class="body-title mb-10">Select Cities</div>
+
+        <select class="form-multi-select" name="cities" multiple data-coreui-search="true">
+            {% for city in cities %}
+            <option value="{{ city.id }}"
+                {% if rider and city in rider.cities.all %}
+                    selected
+                {% endif %}>
+                {{ city.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+    </fieldset>
+
+        </div>
+
+    </div>
+
+    <!-- BUTTON -->
+    <div class="mt-3">
+        <button type="submit" class="tf-button style-1">
+            {% if rider %}Update Rider{% else %}Add Rider{% endif %}
+        </button>
+
+    </div>
+
+</form>
+
+</div>
+
+</div>
+</div>
+
+{% endblock %}

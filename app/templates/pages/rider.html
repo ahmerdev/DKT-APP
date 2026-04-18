@@ -1,0 +1,74 @@
+{% extends 'dashboard.html' %}
+{% block content %}
+
+<div class="main-content-inner">
+<div class="main-content-wrap">
+
+<div class="flex justify-between mb-20">
+    <h3>Riders</h3>
+    <a href="{% url 'add_rider' %}" class="tf-button style-1">+ Add Rider</a>
+</div>
+
+<div class="wg-box">
+    <div class="table-responsive card-body p-0">
+                <table id="myDataTable" class="table table-hover no-border align-middle">
+                <thead class="table-head text-center">
+                <tr>
+                    <th class="id-col text-center align-middle p-0 text-white">#</th>
+                    <th scope="col" class="text-center text-white">Name</th>
+                    <th scope="col" class="text-center text-white">Phone</th>
+                    <th scope="col" class="text-center text-white">Designation</th>
+                    <th scope="col" class="text-center text-white">Status</th>
+                    <th scope="col" class="text-center text-white">Cities</th>
+                    <th scope="col" class="text-center text-white">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="user-table-body">
+                {% for r in riders %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td class="text-center">{{ r.name }}</td>
+                    <td class="text-center">{{ r.phone }}</td>
+                    <td class="text-center">{{ r.designation }}</td>
+                    <td class="text-center">{% if r.is_active %}
+                                    <span class="badge bg-success">Active <i class="fa-solid fa-eye"></i></span>
+                                {% else %}
+                                    <span class="badge bg-danger">Draft <i class="fa-solid fa-eye-slash"></i></span>
+                                {% endif %}  </td>
+                    <td class="text-center">
+                        {% for c in r.cities.all %}
+                            <span class="badge bg-info">{{ c.name }}</span>
+                        {% endfor %}
+                    </td>
+
+                    <td class="text-center">
+                        <a href="{% url 'edit_rider' r.id %}" class="btn btn-primary btn-sm">Edit</a>
+                        <a href="{% url 'delete_rider' r.id %}" class="btn btn-danger btn-sm">Delete</a>
+                        <a class="btn fw-semibold fs-5 {% if r.is_active %}text-warning{% else %}text-success{% endif %}"
+                        data-url="{% url 'toggle-status' 'rider' r.id %}"
+                        onclick="toggleStatus(this)">
+
+                            {% if r.is_active %}
+                                <i class="fa-solid fa-eye-slash"></i> Draft
+                            {% else %}
+                                <i class="fa-solid fa-eye"></i> Active
+                            {% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No riders found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+</div>
+</div>
+
+{% endblock %}

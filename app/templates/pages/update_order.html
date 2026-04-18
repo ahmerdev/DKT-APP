@@ -113,6 +113,52 @@
                             <button type="submit" class="tf-button style-1">Update</button>
                             <a href="{% url 'order_list_ui' %}" class="tf-button style-2">Back</a>
                         </div>
+                        {% if not request.session.is_rider %}
+                        <div class="city">
+                        <!-- CITY SELECT -->
+                            <select id="citySelect" name="city" class="form-control">
+                            <option value="">Select City</option>
+                            {% for city in cities %}
+                                {% if order_city_id == city.id %}
+                                    <option value="{{ city.id }}" selected>{{ city.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+
+                        <!-- OPEN POPUP BUTTON -->
+                        <button type="button"
+                            onclick="loadRiders({{ order.pk }})"
+                            class="btn text-white fs-4 fw-semibold bg-primary shadow px-4 py-2">
+                            Available Riders
+                        </button>
+                        </div>
+                        {% endif %}
+                        <div class="modal fade" id="riderModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" id="riderModalContent">
+        <!-- AJAX data yahan ayega -->
+    </div>
+  </div>
+</div>
+<script>
+function loadRiders(orderId) {
+    let cityId = document.getElementById("citySelect").value;
+
+    if (!cityId) {
+        alert("Please select city first");
+        return;
+    }
+
+    fetch(`/city-riders/${orderId}/${cityId}/`)
+        .then(res => res.text())
+        .then(data => {
+            document.getElementById("riderModalContent").innerHTML = data;
+
+            let modal = new bootstrap.Modal(document.getElementById('riderModal'));
+            modal.show();
+        });
+}
+</script>
                         </form>
                     </div>
                 </div>

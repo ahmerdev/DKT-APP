@@ -18,7 +18,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .reports import get_sales_report, get_profit_report, get_customer_potentials, get_product_report, get_product_profit_report
 from .forms import CategoryForm, RiderForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, PrivacyForm, DiscountForm, AboutForm, ContactInfoForm
-from .models import Product, VariantOption, VariantValue, Redeem, ProductVariant, City, Rider, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, Review, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
+from .models import Product, PointSetting, VariantOption, VariantValue, Redeem, ProductVariant, City, Rider, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, Review, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -409,8 +409,68 @@ def delete_appuser_ui(request, pk):
 
 
 # Admin App Customer Details
+# def customer_detail(request, pk):
+#     user = get_object_or_404(AppUser, pk=pk)
+
+#     # Details orders
+#     addresses = Address.objects.filter(user=user)
+#     orders = Order.objects.filter(status="delivered", user=user)
+#     normal_orders = orders.filter(type="normal")
+#     redeem_orders = orders.filter(type="redeem")
+
+#     normal_orders_data = []
+#     redeem_orders_data = []
+
+#     # Normal orders
+#     for order in normal_orders:
+#         items = order.items.all()
+#         order_points = sum(item.pts for item in items)
+#         normal_orders_data.append({
+#             "order": order,
+#             "items": items,
+#             "order_points": order_points,
+#         })
+
+#     # Redeem orders
+#     for order in redeem_orders:
+#         items = order.items.all()
+#         order_points = sum(item.pts for item in items)
+#         redeem_orders_data.append({
+#             "order": order,
+#             "items": items,
+#             "order_points": order_points,
+#         })
+
+#     # Calculate points
+#     earned_points = sum(i["order_points"] for i in normal_orders_data)
+#     spent_points = sum(i["order_points"] for i in redeem_orders_data)
+#     available_points = earned_points - spent_points
+
+#     context = {
+#         "user": user,
+#         "normal_orders_data": normal_orders_data,
+#         "redeem_orders_data": redeem_orders_data,
+#         "normal_orders": normal_orders,
+#         "redeem_orders": redeem_orders,
+#         "earned_points": earned_points,
+#         "spent_points": spent_points,
+#         "available_points": available_points,
+#         "addresses": addresses  
+#     }
+
+#     return render(request, "pages/customer_detail.html", context)
+
+
+
+
 def customer_detail(request, pk):
-    user = get_object_or_404(AppUser, pk=pk)
+    user = get_object_or_404(AppUser, pk)
+
+    # Safely get point value (Admin dashboard se aata hai ya toh default le lo)
+    try:
+        point_value = PointSetting.objects.first().point_value
+    except:
+        point_value = 0.50
 
     # Details orders
     addresses = Address.objects.filter(user=user)
@@ -421,7 +481,7 @@ def customer_detail(request, pk):
     normal_orders_data = []
     redeem_orders_data = []
 
-    # Normal orders
+    # Normal orders - FIXED (int() lagakar string ko integer mein convert karta hai)
     for order in normal_orders:
         items = order.items.all()
         order_points = sum(item.pts for item in items)
@@ -431,17 +491,17 @@ def customer_detail(request, pk):
             "order_points": order_points,
         })
 
-    # Redeem orders
+    # Redeem orders - FIXED
     for order in redeem_orders:
         items = order.items.all()
-        order_points = sum(item.pts for item in items)
+        order_points = sum(item.pts for item in items) 
         redeem_orders_data.append({
             "order": order,
             "items": items,
             "order_points": order_points,
         })
 
-    # Calculate points
+    # Calculate points (Use "or 0" taaki None na aaye)
     earned_points = sum(i["order_points"] for i in normal_orders_data)
     spent_points = sum(i["order_points"] for i in redeem_orders_data)
     available_points = earned_points - spent_points
@@ -455,10 +515,13 @@ def customer_detail(request, pk):
         "earned_points": earned_points,
         "spent_points": spent_points,
         "available_points": available_points,
+        "point_value": point_value,
         "addresses": addresses  
     }
 
     return render(request, "pages/customer_detail.html", context)
+
+
 
 
 
@@ -1163,7 +1226,7 @@ def add_or_edit_product(request, pk=None):
 
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=product_obj)
-
+        print(form.errors)
         if form.is_valid():
             with transaction.atomic():
                 product_obj = form.save()
@@ -1238,6 +1301,32 @@ def product(request):
         "products": products,
         "categories": categories,
     })
+
+
+def get_point_settings():
+    setting = PointSetting.objects.first()
+    if not setting:
+        setting = PointSetting(registration_bonus_points=settings.REGISTRATION_BONUS, point_value=settings.POINT_VALUE)
+    return setting
+
+
+@login_required(login_url='login')
+def point_settings_view(request):
+    setting, created = PointSetting.objects.get_or_create(
+        defaults={'registration_bonus_points': settings.REGISTRATION_BONUS, 'point_value': settings.POINT_VALUE}
+    )
+
+    if request.method == 'POST':
+        setting.registration_bonus_points = request.POST.get('registration_bonus_points', setting.registration_bonus_points)
+        setting.point_value = request.POST.get('point_value', setting.point_value)
+        setting.save()
+        messages.success(request, "Point settings updated successfully!")
+        return redirect('point_settings')
+
+    context = {'setting': setting}
+    return render(request, 'pages/point-settings.html', context)
+
+
 
 # Redeem
 @login_required(login_url='login')
