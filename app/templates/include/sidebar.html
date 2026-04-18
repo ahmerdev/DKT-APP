@@ -11,6 +11,28 @@
                         </div>
                     </div>
                     <div class="center">
+                         {% if request.session.is_rider %}
+                        <div class="center-item">
+                            <div class="center-heading">Rider Panel</div>
+                            <ul class="menu-list">
+                                <li class="menu-item">
+                                    <a href="{% url 'order_list_ui' %}">
+                                        <div class="icon"><i class="icon-box"></i></div>
+                                        <div class="text">My Orders</div>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{% url 'user_logout' %}">
+                                        <div class="icon"><i class="icon-log-out"></i></div>
+                                        <div class="text">Logout ({{ request.session.rider_name }})</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {% else %}
+
+
                         <div class="center-item">
                             <div class="center-heading">Main Home</div>
                             <ul class="menu-list">
@@ -219,14 +241,33 @@
                                         <div class="text">Sales Reports</div>
                                     </a>
                                 </li>
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-zap-off"></i></div>
+                                        <div class="text">Rider</div>
+                                    </a>
+                                     <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'add_rider' %}" class="">
+                                                <div class="text">Add Riders</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'rider_list' %}" class="">
+                                                <div class="text">Rider List</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
                                 <li class="menu-item">
-                                    <a href="settings.html" class="">
+                                    <a href="{% url 'point_settings' %}" class="">
                                         <div class="icon"><i class="icon-settings"></i></div>
                                         <div class="text">Settings</div>
                                     </a>
                                 </li>
                             </ul>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="section-content-right">
@@ -306,72 +347,82 @@
                                     </div>
 
                                 <div class="popup-wrap user type-header">
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary dropdown-toggle" type="button"
-                                            id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <span class="header-user wg-user">
-                                        <span class="image">
-                                            {% if request.user.is_authenticated %}
-                                                {% if request.user.profile.image %}
-                                                    <img src="{{ request.user.profile.image.url }}" alt="{{ request.user.get_full_name }}">
-                                                {% else %}
-                                                    <!-- Agar image nahi hai to user ke naam ka pehla letter -->
-                                                    <span class="avatar-initial">
-                                                        {{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}
-                                                    </span>
-                                                {% endif %}
-                                            {% else %}
-                                                <!-- Guest ke liye "G" -->
-                                                <span class="avatar-initial">G</span>
-                                            {% endif %}
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button"
+                            id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="header-user wg-user">
+                                <span class="image">
+                                    {% if request.session.is_rider %}
+                                        <span class="avatar-initial">
+                                            {{ request.session.rider_name|slice:":1"|upper }}
                                         </span>
-                                        <span class="flex flex-column">
-                                            {% if request.user.is_authenticated %}
-                                                <span class="body-title mb-2">{{ request.user.get_full_name|default:request.user.username }}</span>
-                                                <span class="text-tiny">User</span>
-                                            {% else %}
-                                                <span class="body-title mb-2">Guest</span>
-                                            {% endif %}
-                                        </span>
-                                    </span>
-<style>
-    .avatar-initial {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #7d1d27; 
-    color: #fff;
-    font-weight: bold;
-    font-size: 18px;
-    text-transform: uppercase;
-}
-</style>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end has-content"
-            aria-labelledby="dropdownMenuButton3">
-            {% if request.user.is_authenticated %}
-                <li>
-                    <form action="{% url 'logout' %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn body-title-2"><i class="icon-log-out"></i> Logout</button>
-                    </form>
-                </li>
-            {% else %}
-                <li>
-                    <a href="{% url 'login' %}" class="user-item">
-                        <div class="icon">
-                            <i class="icon-user"></i>
-                        </div>
-                        <div class="body-title-2">Login</div>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </div>
-</div>
+                                    {% elif request.user.is_authenticated %}
+                                        {% if request.user.profile.image %}
+                                            <img src="{{ request.user.profile.image.url }}" alt="{{ request.user.get_full_name }}">
+                                        {% else %}
+                                            <span class="avatar-initial">
+                                                {{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="avatar-initial">G</span>
+                                    {% endif %}
+                                </span>
+                                <span class="flex flex-column">
+                                    {% if request.session.is_rider %}
+                                        <span class="body-title mb-2">{{ request.session.rider_name }}</span>
+                                        <span class="text-tiny">Rider</span>
+                                    {% elif request.user.is_authenticated %}
+                                        <span class="body-title mb-2">{{ request.user.get_full_name|default:request.user.username }}</span>
+                                        <span class="text-tiny">Admin</span>
+                                    {% else %}
+                                        <span class="body-title mb-2">Guest</span>
+                                    {% endif %}
+                                </span>
+                            </span>
+                            <style>
+                                .avatar-initial {
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    width: 40px;
+                                    height: 40px;
+                                    border-radius: 50%;
+                                    background: #7d1d27;
+                                    color: #fff;
+                                    font-weight: bold;
+                                    font-size: 18px;
+                                    text-transform: uppercase;
+                                }
+                            </style>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end has-content" aria-labelledby="dropdownMenuButton3">
+                            {% if request.session.is_rider %}
+                                <li>
+                                    <a href="{% url 'user_logout' %}" class="btn body-title-2">
+                                        <i class="icon-log-out"></i> Logout
+                                    </a>
+                                </li>
+                            {% elif request.user.is_authenticated %}
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn body-title-2">
+                                            <i class="icon-log-out"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a href="{% url 'login' %}" class="user-item">
+                                        <div class="icon"><i class="icon-user"></i></div>
+                                        <div class="body-title-2">Login</div>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
 
 
     </div>
