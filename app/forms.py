@@ -1,12 +1,21 @@
 from django import forms
 from django.forms.widgets import ClearableFileInput
-from .models import Product, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, AppUser, Discount, Privacy, About, ContactInfo
+from .models import Product, Rider, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, Privacy, About, ContactInfo, AppUser, Discount
 
 
 # pehle widget define karo
 class MultiFileInput(ClearableFileInput):
     allow_multiple_selected = True
 
+class RiderForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = Rider
+        fields = ["name", "phone", "email", "password", "designation", "cities"]
+        widgets = {
+            "cities": forms.SelectMultiple(attrs={"class": "form-control"})
+        }
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -53,6 +62,8 @@ class ContactInfoForm(forms.ModelForm):
         model = ContactInfo
         fields = ['title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text']
 
+
+
 class ProductForm(forms.ModelForm):
 
     class Meta:
@@ -61,7 +72,7 @@ class ProductForm(forms.ModelForm):
             "name", "slug", "category", "brand",
             "short_description", "description",
             "image",
-            "cost_price", "regular_price", "sale_price", "SKU", "quantity",
+             "cost_price", "regular_price", "sale_price", "sku", "quantity",
             "stock_status", "points", "product_type"
             
         ]
@@ -73,12 +84,12 @@ class ProductForm(forms.ModelForm):
         if product_type == "simple":
             if not cleaned_data.get("regular_price"):
                 self.add_error("regular_price", "Regular price is required for simple products.")
-            if not cleaned_data.get("SKU"):
-                self.add_error("SKU", "SKU is required for simple products.")
+            if not cleaned_data.get("sku"):
+                self.add_error("sku", "sku is required for simple products.")
         elif product_type == "variable":
             # Remove simple fields (they are not required for variable products)
             cleaned_data["regular_price"] = None
-            cleaned_data["SKU"] = None
+            cleaned_data["sku"] = None
 
         return cleaned_data
 
