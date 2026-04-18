@@ -322,3 +322,33 @@
   table-layout: auto;
 }
 }
+
+
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff !important;
+    background-color: #990000 !important;
+    border-color: #990000 !important;
+}
+
+.page-link {
+    color: #990000 !important;
+}
+
+.dropdown-menu {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: .5rem 0;
+    margin: 7px !important;
+    font-size: 1rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: 10px;
+    line-height: 30px !important;
+}
