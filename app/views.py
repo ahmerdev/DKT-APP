@@ -17,8 +17,8 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .reports import get_sales_report, get_profit_report, get_customer_potentials, get_product_report, get_product_profit_report
-from .forms import CategoryForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, PrivacyForm, DiscountForm, AboutForm, ContactInfoForm
-from .models import Product, Redeem, ProductVariant, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, Review, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
+from .forms import CategoryForm, RiderForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, PrivacyForm, DiscountForm, AboutForm, ContactInfoForm
+from .models import Product, VariantOption, VariantValue, Redeem, ProductVariant, City, Rider, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, Review, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -146,22 +146,147 @@ def clear_notifications(request):
     return JsonResponse({"success": False}, status=400)
 
 
+
+# views.py
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import make_password
+from app.models import RiderPasswordResetToken  # apna app name
+
+# ----------------------------
+# STEP 1: Forget Password Page
+# ----------------------------
+def rider_forgot_password(request):
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
+
+        try:
+            rider = Rider.objects.get(email__iexact=email)
+
+            # Purane tokens delete karo
+            RiderPasswordResetToken.objects.filter(rider=rider).delete()
+
+            # Naya token banao
+            token_obj = RiderPasswordResetToken.objects.create(rider=rider)
+
+            # Reset link banao
+            reset_link = request.build_absolute_uri(
+                f"/rider/reset-password/{token_obj.token}/"
+            )
+
+            # Email bhejo
+            send_mail(
+                subject="Password Reset Request",
+                message=f"Hi {rider.name},\n\nYour password reset link:\n{reset_link}\n\nThis link will expire in 1 hour.\n\nIf you did not request this, ignore this email.",
+                from_email=None,  # settings.py wala use hoga
+                recipient_list=[rider.email],
+                fail_silently=False,
+            )
+
+            messages.success(request, "Reset link sent to your email!")
+            return redirect("rider_forgot_password")
+
+        except Rider.DoesNotExist:
+            messages.error(request, "No rider found with this email")
+            return redirect("rider_forgot_password")
+
+    return render(request, "rider_forgot_password.html")
+
+
+# ----------------------------
+# STEP 2: Reset Password Page
+# ----------------------------
+def rider_reset_password(request, token):
+    try:
+        token_obj = RiderPasswordResetToken.objects.get(token=token)
+    except RiderPasswordResetToken.DoesNotExist:
+        messages.error(request, "Invalid reset link")
+        return redirect("login")
+
+    if not token_obj.is_valid():
+        messages.error(request, "Reset link expired. Please request again.")
+        return redirect("rider_forgot_password")
+
+    if request.method == "POST":
+        password = request.POST.get("password", "").strip()
+        confirm_password = request.POST.get("confirm_password", "").strip()
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return render(request, "rider_reset_password.html", {"token": token})
+
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters")
+            return render(request, "rider_reset_password.html", {"token": token})
+
+        # Password update karo
+        rider = token_obj.rider
+        rider.password = make_password(password)
+        rider.save()
+
+        # Token use ho gaya
+        token_obj.is_used = True
+        token_obj.save()
+
+        messages.success(request, "Password reset successful! Please login.")
+        return redirect("login")
+
+    return render(request, "rider_reset_password.html", {"token": token})          
+
+
+
 # Dashborad Admin Panel User Login
 def user_login(request):
-    success_message = "User Login Successfully"
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
 
+    username = ""
+    password = ""
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
+
+        # ----------------------
+        # ADMIN LOGIN
+        # ----------------------
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
+            if not user.is_active:
+                messages.error(request, "Admin account is inactive")
+                return redirect("login")
+
             login(request, user)
-            success_message = f"Welcome back, {user.username}!"
-            messages.success(request, success_message)
+            request.session["is_rider"] = False
+            messages.success(request, "Admin login successful")
             return redirect("dashboard")
-        else:
-            messages.error(request, "Invalid username or password")
+
+        # ----------------------
+        # RIDER LOGIN
+        # ----------------------
+        try:
+            rider = Rider.objects.get(email__iexact=username)
+
+            # ❌ BLOCK inactive rider
+            if not rider.is_active:
+                messages.error(request, "Your account is inactive")
+                return redirect("login")
+
+            if rider.password.startswith("pbkdf2"):
+                login_success = check_password(password, rider.password)
+            else:
+                login_success = (password == rider.password)
+
+            if login_success:
+                request.session["rider_id"] = rider.id
+                request.session["is_rider"] = True
+                messages.success(request, f"Welcome {rider.name}")
+                return redirect("order_list_ui")
+            else:
+                messages.error(request, "Wrong password")
+                return redirect("login")
+
+        except Rider.DoesNotExist:
+            messages.error(request, "Rider not found")
+            return redirect("login")
 
     return render(request, "login.html")
 
@@ -604,8 +729,17 @@ def delete_contactform(request, pk):
 
 # List Orders UI
 def order_list_ui(request):
-    normal_orders = Order.objects.filter(type="normal").order_by("-created_at")
-    redeem_orders = Order.objects.filter(type="redeem").order_by("-created_at")
+    is_rider = request.session.get("is_rider", False)
+    rider_id = request.session.get("rider_id")
+
+    if is_rider and rider_id:
+        # Rider sirf apne assigned orders dekhe
+        normal_orders = Order.objects.filter(type="normal", rider_id=rider_id).order_by("-created_at")
+        redeem_orders = Order.objects.filter(type="redeem", rider_id=rider_id).order_by("-created_at")
+    else:
+        # Admin sab dekhe
+        normal_orders = Order.objects.filter(type="normal").order_by("-created_at")
+        redeem_orders = Order.objects.filter(type="redeem").order_by("-created_at")
 
     return render(request, "pages/order_list.html", {
         "normal_orders": normal_orders,
@@ -739,17 +873,108 @@ def create_order_ui(request):
     return render(request, "pages/create_order.html", {"users": users})
 
 
-# Update Status UI
 def update_order_status_ui(request, pk):
     order = get_object_or_404(Order, pk=pk)
+    cities = City.objects.all()
+
+    # City from address
+    order_city_name = get_city_from_address(order.address)
+    order_city_id = None
+
+    if order.city:
+        order_city_name = order.city.name
+        order_city_id = order.city.id
+    elif order_city_name:
+        try:
+            city_obj = City.objects.get(name__iexact=order_city_name)
+            order.city = city_obj
+            order.save(update_fields=["city"])
+            order_city_id = city_obj.id
+        except City.DoesNotExist:
+            pass
 
     if request.method == "POST":
         new_status = request.POST.get("status")
-        order.status = new_status
+        city_id = request.POST.get("city")
+        rider_id = request.POST.get("rider")
+
+        if new_status:
+            order.status = new_status
+
+        if city_id:
+            try:
+                city_obj = City.objects.get(id=city_id)
+                order.city = city_obj
+            except City.DoesNotExist:
+                pass
+
+        if rider_id:
+            try:
+                rider = Rider.objects.get(id=rider_id)
+
+                print(f"Order City: {order.city}")
+                print(f"Rider Cities: {list(rider.cities.all())}")
+
+                if order.city and order.city in rider.cities.all():
+                    order.rider = rider
+                    order.status = "on_the_way"
+                else:
+                    messages.error(request, "Rider not available in this city")
+                    return redirect("update_order_status_ui", pk=pk)
+            except Rider.DoesNotExist:
+                pass
+
         order.save()
+        messages.success(request, "Order updated successfully")
         return redirect("order_list_ui")
 
-    return render(request, "pages/update_order.html", {"order": order})
+    return render(request, "pages/update_order.html", {
+        "order": order,
+        "cities": cities,
+        "order_city_name": order_city_name,
+        "order_city_id": order_city_id,
+    })
+
+
+import ast
+import json
+
+def get_city_from_address(address):
+    if not address:
+        return ""
+    
+    # Already dict hai
+    if isinstance(address, dict):
+        return address.get("city", "")
+    
+    if isinstance(address, str):
+        # Try ast.literal_eval - single quote wale strings ke liye
+        try:
+            data = ast.literal_eval(address)
+            return data.get("city", "")
+        except:
+            pass
+        
+        # Try json.loads - double quote wale strings ke liye
+        try:
+            data = json.loads(address)
+            return data.get("city", "")
+        except:
+            pass
+    
+    return ""
+
+
+# def update_order_status_ui(request, pk):
+#     order = get_object_or_404(Order, pk=pk)
+
+#     if request.method == "POST":
+#         new_status = request.POST.get("status")
+#         order.status = new_status
+#         order.save()
+#         return redirect("order_list_ui")
+
+#     return render(request, "pages/update_order.html", {"order": order})
 
 @login_required(login_url='login')
 def delete_order_ui(request, pk):
@@ -760,120 +985,237 @@ def delete_order_ui(request, pk):
 
 
 
-def handle_product_variants(product, request, pk=None):
-    """Save product variants if product_type == variable"""
-    if request.POST.get("product_type") != "variable":
-        return
+import json
+from itertools import product as itertools_product
+from collections import defaultdict
+from django.db import IntegrityError, transaction
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
-    # Purge old variants on edit
-    if pk:
-        product.variants.all().delete()
+from .models import Product, ProductImage, VariantOption, VariantValue, ProductVariant
+from .forms import ProductForm
 
+
+
+def _parse_variants_from_post(request):
+    """
+    Parse variants[N][field] = value  from POST / FILES.
+    Returns list of dicts ordered by index.
+    """
     variants = defaultdict(dict)
 
-    # collect POST fields
     for key, value in request.POST.items():
-        if key.startswith("variants["):
-            idx = key.split("[")[1].split("]")[0]
+        if not key.startswith("variants["):
+            continue
+        try:
+            idx   = key.split("[")[1].split("]")[0]
             field = key.split("[")[2].split("]")[0]
             variants[idx][field] = value
+        except (IndexError, ValueError):
+            pass
 
-    # collect FILES (images)
     for key, file in request.FILES.items():
-        if key.startswith("variants["):
-            idx = key.split("[")[1].split("]")[0]
+        if not key.startswith("variants["):
+            continue
+        try:
+            idx   = key.split("[")[1].split("]")[0]
             field = key.split("[")[2].split("]")[0]
             variants[idx][field] = file
+        except (IndexError, ValueError):
+            pass
 
-    # save each variant
-    for idx, data in variants.items():
-        # parse options json if present
-        options = {}
-        if "options" in data:
-            try:
-                options = json.loads(data["options"])
-            except Exception:
-                options = {}
+    # Sort by numeric index so order is stable
+    return [variants[k] for k in sorted(variants.keys(), key=lambda x: int(x))]
 
-        attributes = {
-            "options": options,
-            "cost_price": data.get("cost_price"),
-            "sale_price": data.get("sale_price"),
-            "points": data.get("points"),
-            "description": data.get("description"),
-        }
+
+def _handle_product_variants(product_obj, request, is_edit=False):
+    """
+    Full variant pipeline:
+      1. Parse options from opt_name[] / opt_values[]
+      2. Save VariantOption + VariantValue
+      3. Parse submitted variant rows
+      4. Save / update ProductVariant rows
+    """
+
+    # ── 1. CLEAR OLD (edit mode) ──────────────────────────────────────────
+    if is_edit:
+        product_obj.variants.all().delete()
+        product_obj.variant_options.all().delete()
+
+    # ── 2. PARSE & SAVE OPTIONS ───────────────────────────────────────────
+    opt_names  = request.POST.getlist("opt_name[]")
+    opt_values = request.POST.getlist("opt_values[]")
+
+    option_value_map = {}   # option_name → list of value strings
+
+    for name, raw_vals in zip(opt_names, opt_values):
+        name = name.strip()
+        if not name:
+            continue
+        values = [v.strip() for v in raw_vals.split(",") if v.strip()]
+        if not values:
+            continue
 
         try:
+            opt_obj = VariantOption.objects.create(product=product_obj, name=name)
+        except Exception:
+            opt_obj, _ = VariantOption.objects.get_or_create(product=product_obj, name=name)
+
+        for val in values:
+            try:
+                VariantValue.objects.create(option=opt_obj, value=val)
+            except Exception:
+                pass
+
+        option_value_map[name] = values
+
+    # ── 3. PARSE VARIANT ROWS FROM FORM ──────────────────────────────────
+    variant_rows = _parse_variants_from_post(request)
+
+    # ── 4. SAVE VARIANTS ─────────────────────────────────────────────────
+    used_skus = set()
+
+    for idx, data in enumerate(variant_rows):
+        # Parse attributes JSON
+        attributes = {}
+        raw_attrs = data.get("attributes", "")
+        if raw_attrs:
+            try:
+                attributes = json.loads(raw_attrs)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        # Skip if no option attributes (means it's an empty row)
+        if not attributes:
+            continue
+
+        regular_price = data.get("regular_price", "").strip()
+        if not regular_price:
+            continue  # Price is mandatory
+
+        sale_price  = data.get("sale_price", "").strip()
+        stock       = data.get("stock", "0").strip() or "0"
+        points      = data.get("points", "").strip()
+        description = data.get("description", "").strip()
+        is_active   = data.get("is_active", "1") == "1"
+
+        # Embed extra fields into attributes dict
+        full_attributes = dict(attributes)  # copy
+        if sale_price:
+            full_attributes["sale_price"] = sale_price
+        if points:
+            full_attributes["points"] = points
+        if description:
+            full_attributes["description"] = description
+
+        # ── SKU generation / uniqueness ──
+        sku = data.get("sku", "").strip()
+        if not sku:
+            base     = (product_obj.name[:3] if product_obj.name else "VAR").upper()
+            attr_str = "".join(str(v)[:2].upper() for v in attributes.values())
+            sku      = f"{base}-{attr_str}-{idx}"
+
+        # Ensure global uniqueness
+        final_sku = sku
+        counter   = 1
+        while (
+            final_sku in used_skus
+            or ProductVariant.objects.filter(sku=final_sku).exists()
+        ):
+            final_sku = f"{sku}-{counter}"
+            counter  += 1
+        used_skus.add(final_sku)
+
+        # ── Create variant ──
+        try:
             variant = ProductVariant.objects.create(
-                product=product,
-                sku=data.get("sku") or None,
-                price=data.get("regular_price") or 0,
-                stock=data.get("stock") or 0,
-                attributes=attributes,
+                product    = product_obj,
+                sku        = final_sku,
+                price      = float(regular_price),
+                stock      = int(stock),
+                attributes = full_attributes,
+                is_active  = is_active,
             )
-
-            uploaded_image = request.FILES.get(f"variants[{idx}][image]")
-            if uploaded_image:
-                variant.image = uploaded_image
-            else:
-                existing_image = request.POST.get(f"variants[{idx}][existing_image]")
-                if existing_image:
-                    variant.image.name = existing_image
-
-            variant.save()
         except IntegrityError:
-            messages.error(request, f"Duplicate SKU: {data.get('sku')}. Please use a unique SKU.")
-            raise
+            # attributes combination already exists — skip silently
+            continue
+
+        # ── Image (new upload takes priority, else keep existing) ──
+        image_file = data.get("image")
+        if image_file and hasattr(image_file, "read"):
+            variant.image = image_file
+            variant.save()
+        else:
+            existing_img = data.get("existing_image", "").strip()
+            if existing_img:
+                variant.image.name = existing_img
+                variant.save()
 
 
-# ----------------------------
-#  Main View
-# ----------------------------
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN VIEW
+# ─────────────────────────────────────────────────────────────────────────────
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 def add_or_edit_product(request, pk=None):
-    product = get_object_or_404(Product, pk=pk) if pk else None
+    product_obj = get_object_or_404(Product, pk=pk) if pk else None
 
     if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product_obj)
+
         if form.is_valid():
             with transaction.atomic():
-                product = form.save()
+                product_obj = form.save()
 
-                 # Save gallery images
+                # Gallery images
                 gallery_images = request.FILES.getlist("gallery_images")
-                print("DEBUG → request.FILES keys:", request.FILES.keys())
-                print("DEBUG → gallery_images list:", request.FILES.getlist("gallery_images"))
                 if gallery_images:
-                        for img in gallery_images:
-                            ProductImage.objects.create(product=product, image=img)
+                    for img in gallery_images:
+                        ProductImage.objects.create(product=product_obj, image=img)
 
+                product_type = request.POST.get("product_type", "simple")
 
-                # Handle variants
-                handle_product_variants(product, request, pk)
+                if product_type == "variable":
+                    _handle_product_variants(product_obj, request, is_edit=bool(pk))
+                else:
+                    # Switched back to simple → clear variants
+                    if pk:
+                        product_obj.variants.all().delete()
+                        product_obj.variant_options.all().delete()
 
-                #  Success message
-                messages.success(
-                    request,
-                    f"Product '{product.name}' {'updated' if pk else 'created'} successfully!"
-                )
-                return redirect("product")
+            messages.success(
+                request,
+                f"Product '{product_obj.name}' {'updated' if pk else 'created'} successfully!"
+            )
+            return redirect("product")
+
         else:
             messages.error(request, "Please correct the errors below.")
+
     else:
-        form = ProductForm(instance=product)
+        form = ProductForm(instance=product_obj)
 
+    # ── Context ──
+    from .models import Category, Brand  # local import to avoid circular
     categories = Category.objects.all()
-    brands = Brand.objects.all()
+    brands     = Brand.objects.all()
+
+    variant_options   = []
+    existing_variants = []
+
+    if product_obj and product_obj.product_type == "variable":
+        variant_options   = product_obj.variant_options.all().prefetch_related("values")
+        existing_variants = product_obj.variants.all()
+
     return render(request, "pages/add-product.html", {
-        "form": form,
-        "product": product,
-        "categories": categories,
-        "brands": brands,
+        "form"             : form,
+        "product"          : product_obj,
+        "categories"       : categories,
+        "brands"           : brands,
+        "variant_options"  : variant_options,
+        "existing_variants": existing_variants,
     })
-
-
-
    
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -1034,7 +1376,7 @@ def ad(request):
     return render(request, "pages/adbanner.html", {"ads": ads})
 
 
-# 🔹 Delete Category
+#  Delete Category
 @login_required(login_url='login')
 def delete_ad(request, pk):
     ad = get_object_or_404(Ad, pk=pk)
@@ -1186,5 +1528,121 @@ def send_discount_email(discount):
             msg.send()
         except Exception as e:
             print(f"Failed to send to {user.email}: {e}")
+
+
+def add_or_edit_rider(request, pk=None):
+    rider = None
+    cities = City.objects.all()
+
+    if pk:
+        rider = get_object_or_404(Rider, pk=pk)
+        success_message = "Rider updated successfully"
+    else:
+        success_message = "Rider created successfully"
+
+    if request.method == "POST":
+        form = RiderForm(request.POST, instance=rider)
+
+        if form.is_valid():
+            rider = form.save(commit=False)
+
+            # 🔥 PASSWORD FIX (IMPORTANT)
+            raw_password = form.cleaned_data.get("password")
+            if raw_password:
+                if not raw_password.startswith("pbkdf2"):
+                    rider.password = make_password(raw_password)
+
+            rider.save()
+
+            # 🔥 MANY TO MANY FIX (CITIES)
+            form.save_m2m()
+
+            messages.success(request, success_message)
+            return redirect("rider_list")
+
+        else:
+            print(form.errors)
+            messages.error(request, "Something went wrong, please try again ⚠️")
+
+    else:
+        form = RiderForm(instance=rider)
+
+    return render(request, "pages/add_rider.html", {
+        "form": form,
+        "rider": rider,
+        "cities": cities
+    })
+
+def rider_list(request):
+    riders = Rider.objects.all().order_by("-id")
+
+    return render(request, "pages/rider.html", {
+        "riders": riders
+    })
+
+def delete_rider(request, pk):
+    rider = get_object_or_404(Rider, pk=pk)
+    rider.delete()
+
+    messages.warning(request, "Rider deleted successfully")
+    return redirect("rider_list")
+
+
+def assign_rider(request, order_id, rider_id):
+    order = get_object_or_404(Order, id=order_id)
+    rider = get_object_or_404(Rider, id=rider_id)
+
+    # City set nahi toh address se nikalo
+    if not order.city:
+        city_name = get_city_from_address(order.address)
+        if city_name:
+            try:
+                city_obj = City.objects.get(name__iexact=city_name)
+                order.city = city_obj
+                order.save(update_fields=["city"])
+            except City.DoesNotExist:
+                pass
+
+    if not order.city:
+        messages.error(request, "Order City is not match")
+        return redirect("order_list_ui")
+
+    if order.city not in rider.cities.all():
+        messages.error(request, f"Rider '{rider}' is not available in '{order.city.name}'")
+        return redirect("order_list_ui")
+
+    order.rider = rider
+    order.status = "pending"
+    order.save()
+
+    messages.success(request, f"Rider assigned successfully")
+    return redirect("order_list_ui")
+
+def city_riders_popup(request, order_id, city_id):
+    order = get_object_or_404(Order, id=order_id)
+    city = get_object_or_404(City, id=city_id)
+
+    riders = Rider.objects.filter(cities=city)
+
+    return render(request, "include/rider_popup.html", {
+        "order": order,
+        "city": city,
+        "riders": riders
+    })
+
+
+
+from django.contrib.auth.hashers import check_password
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import Rider
+
+
+
+
+
+
+
+
 
 
