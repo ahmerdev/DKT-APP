@@ -644,33 +644,33 @@
                                     <div class="info-lbl" style="margin-bottom:0;">Shipping Info</div>
                                 </div>
                                 {% if shipping %}
-<div class="shipping-block" style="width:100%;margin-top:12px;">
+                                <div class="shipping-block" style="width:100%;margin-top:12px;">
 
-    {% if shipping.label %}
-    <div class="ship-row">
-        <i class="fas fa-box"></i>
-        <span><strong>Method:</strong> {{ shipping.label }}</span>
-    </div>
-    {% endif %}
+                                    {% if shipping.label %}
+                                    <div class="ship-row">
+                                        <i class="fas fa-box"></i>
+                                        <span><strong>Method:</strong> {{ shipping.label }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if shipping.desc %}
-    <div class="ship-row">
-        <i class="fas fa-clock"></i>
-        <span>{{ shipping.desc }}</span>
-    </div>
-    {% endif %}
+                                    {% if shipping.desc %}
+                                    <div class="ship-row">
+                                        <i class="fas fa-clock"></i>
+                                        <span>{{ shipping.desc }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if shipping.id %}
-    <div class="ship-row">
-        <i class="fas fa-id-badge"></i>
-        <span>{{ shipping.id }}</span>
-    </div>
-    {% endif %}
+                                    {% if shipping.id %}
+                                    <div class="ship-row">
+                                        <i class="fas fa-id-badge"></i>
+                                        <span>{{ shipping.id }}</span>
+                                    </div>
+                                    {% endif %}
 
-</div>
-{% else %}
-<p>No shipping data</p>
-{% endif %}
+                                </div>
+                                {% else %}
+                                <p>No shipping data</p>
+                                {% endif %}
                             </div>
 
                             <!-- Address -->
@@ -680,54 +680,54 @@
                                     <div class="info-lbl" style="margin-bottom:0;">Delivery Address</div>
                                 </div>
                                 {% if address %}
-<div class="address-block" style="width:100%;margin-top:12px;">
+                                <div class="address-block" style="width:100%;margin-top:12px;">
 
-    {% if address.street %}
-    <div class="addr-row">
-        <i class="fas fa-road"></i>
-        <span>{{ address.street }}</span>
-    </div>
-    {% endif %}
+                                    {% if address.street %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-road"></i>
+                                        <span>{{ address.street }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if address.block %}
-    <div class="addr-row">
-        <i class="fas fa-building"></i>
-        <span>{{ address.block }}</span>
-    </div>
-    {% endif %}
+                                    {% if address.block %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-building"></i>
+                                        <span>{{ address.block }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if address.city %}
-    <div class="addr-row">
-        <i class="fas fa-city"></i>
-        <span>{{ address.city }}</span>
-    </div>
-    {% endif %}
+                                    {% if address.city %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-city"></i>
+                                        <span>{{ address.city }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if address.state %}
-    <div class="addr-row">
-        <i class="fas fa-map"></i>
-        <span>{{ address.state }}</span>
-    </div>
-    {% endif %}
+                                    {% if address.state %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-map"></i>
+                                        <span>{{ address.state }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if address.country %}
-    <div class="addr-row">
-        <i class="fas fa-globe"></i>
-        <span>{{ address.country }}</span>
-    </div>
-    {% endif %}
+                                    {% if address.country %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-globe"></i>
+                                        <span>{{ address.country }}</span>
+                                    </div>
+                                    {% endif %}
 
-    {% if address.postal_code %}
-    <div class="addr-row">
-        <i class="fas fa-envelope"></i>
-        <span>{{ address.postal_code }}</span>
-    </div>
-    {% endif %}
+                                    {% if address.postal_code %}
+                                    <div class="addr-row">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>{{ address.postal_code }}</span>
+                                    </div>
+                                    {% endif %}
 
-</div>
-{% else %}
-<p class="addr-no-data">No address provided</p>
-{% endif %}
+                                </div>
+                                {% else %}
+                                <p class="addr-no-data">No address provided</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -884,6 +884,95 @@
                                         </div>
                                     </div>
                                 </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ====== ORDER ITEMS ====== -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="table-card">
+                        <div class="table-card-head">
+                            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
+                                <i class="fas fa-boxes-stacked"></i>
+                            </div>
+                            <h5>Order Items</h5>
+                            <span class="item-count">{{ order.items.all|length }}</span>
+                        </div>
+                        <div class="table-responsive card-body p-0">
+                                <table class="table table-hover no-border align-middle">
+                                <thead class="table-head text-center">
+                                    <tr>
+                                        <th scope="col" class="text-center text-white" style="width:90px;"><i class="fas fa-image me-2"></i>Image</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-tag me-2"></i>Product</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-star me-2"></i>Points</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-layer-group me-2"></i>Variants</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-hashtag me-2"></i>Qty</th>
+                                        <th scope="col" class="text-center text-white"><i class="fas fa-coins me-2"></i>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td class="text-center">
+                                            {% if item.image %}
+                                                <div class="img-wrap">
+                                                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                                                </div>
+                                            {% else %}
+                                                <div class="img-placeholder"><i class="fas fa-image"></i></div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center"><span class="item-name">{{ item.name }}</span></td>
+                                        <td class="text-center">
+                                            <span class="pts-pill">
+                                                <i class="fas fa-star" style="font-size:9px;"></i> {{ item.pts }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center"><span class="variant-text">{{ item.variants|default:"—" }}</span></td>
+                                        <td class="text-center"><span class="qty-box">{{ item.quantity }}</span></td>
+                                        <td class="text-center">
+                                            {% if item.price > 0 %}
+                                                <span class="price-val"><i class="fas fa-rupee-sign" style="font-size:11px;"></i> {{ item.price }}</span>
+                                            {% else %}
+                                                <span class="free-pill"><i class="fas fa-gift" style="font-size:9px;"></i> Redeem</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="empty-box">
+                                                <div class="empty-circle"><i class="fas fa-box-open"></i></div>
+                                                <p>No items found for this order</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr style="background:#f8fafc; font-weight:700;">
+                                        <td colspan="5" class="text-end">
+                                            <i class="fa-solid fa-calculator"></i> Grand Total
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="price-val">
+                                                <i class="fas fa-rupee-sign" style="font-size:11px;"></i>
+                                                {{ total_amount }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 <script>
 function loadRiders(orderId) {
     let cityId = document.getElementById("citySelect").value;
@@ -903,83 +992,4 @@ function loadRiders(orderId) {
         });
 }
 </script>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ====== ORDER ITEMS ====== -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="table-card">
-                        <div class="table-card-head">
-                            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
-                                <i class="fas fa-boxes-stacked"></i>
-                            </div>
-                            <h5>Order Items</h5>
-                            <span class="item-count">{{ order.items.all|length }}</span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table items-tbl">
-                                <thead>
-                                    <tr>
-                                        <th style="width:90px;"><i class="fas fa-image me-2"></i>Image</th>
-                                        <th><i class="fas fa-tag me-2"></i>Product</th>
-                                        <th><i class="fas fa-star me-2"></i>Points</th>
-                                        <th><i class="fas fa-layer-group me-2"></i>Variants</th>
-                                        <th><i class="fas fa-hashtag me-2"></i>Qty</th>
-                                        <th><i class="fas fa-coins me-2"></i>Price</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in order.items.all %}
-                                    <tr>
-                                        <td>
-                                            {% if item.image %}
-                                                <div class="img-wrap">
-                                                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
-                                                </div>
-                                            {% else %}
-                                                <div class="img-placeholder"><i class="fas fa-image"></i></div>
-                                            {% endif %}
-                                        </td>
-                                        <td><span class="item-name">{{ item.name }}</span></td>
-                                        <td>
-                                            <span class="pts-pill">
-                                                <i class="fas fa-star" style="font-size:9px;"></i> {{ item.pts }}
-                                            </span>
-                                        </td>
-                                        <td><span class="variant-text">{{ item.variants|default:"—" }}</span></td>
-                                        <td><span class="qty-box">{{ item.quantity }}</span></td>
-                                        <td>
-                                            {% if item.price > 0 %}
-                                                <span class="price-val"><i class="fas fa-rupee-sign" style="font-size:11px;"></i> {{ item.price }}</span>
-                                            {% else %}
-                                                <span class="free-pill"><i class="fas fa-gift" style="font-size:9px;"></i> Redeem</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="6">
-                                            <div class="empty-box">
-                                                <div class="empty-circle"><i class="fas fa-box-open"></i></div>
-                                                <p>No items found for this order</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
 {% endblock %}
