@@ -18,51 +18,61 @@
 
         <!-- NAME -->
         <div class="col-md-6">
-            <div class="form-group mb-3">
-                <label>Name</label>
+            <fieldset>
+                <div class="body-title mb-10">Name</div>
+                <div class="form-group mb-3">
                 <input type="text" name="name" class="form-control"
                        value="{{ rider.name|default:'' }}" required>
             </div>
+            </fieldset>
         </div>
 
         <!-- PHONE -->
         <div class="col-md-6">
-            <div class="form-group mb-3">
-                <label>Phone</label>
+            <fieldset>
+                <div class="body-title mb-10">Number</div>
+                <div class="form-group mb-3">
                 <input type="text" name="phone" class="form-control"
                        value="{{ rider.phone|default:'' }}" required>
             </div>
+            </fieldset>
         </div>
 
         <!-- EMAIL -->
         <div class="col-md-6">
-            <div class="form-group mb-3">
-                <label>Email</label>
+           <fieldset>
+                <div class="body-title mb-10">Email</div>
+                <div class="form-group mb-3">
                 <input type="email" name="email" class="form-control"
                        value="{{ rider.email|default:'' }}" required>
             </div>
+           </fieldset>
         </div>
 
         <!-- PASSWORD -->
         <div class="col-md-6">
-            <div class="form-group mb-3">
-                <label>Password</label>
+                <fieldset>
+                <div class="body-title mb-10">Password</div>
+                <div class="form-group mb-3">
                 <input type="password" name="password" class="form-control"
                        {% if not rider %}required{% endif %}>
             </div>
+             </fieldset>
         </div>
 
         <!-- DESIGNATION -->
-        <div class="col-md-12">
-            <div class="form-group mb-3">
-                <label>Designation</label>
+        <div class="col-md-6">
+            <fieldset>
+                <div class="body-title mb-10">Designation</div>
+                <div class="form-group mb-3">
                 <input type="text" name="designation" class="form-control"
                        value="{{ rider.designation|default:'Delivery Rider' }}">
             </div>
+            </fieldset>
         </div>
 
         <!-- CITIES (FIXED MANY-TO-MANY) -->
-        <div class="col-md-12">
+        <div class="col-md-6">
             <fieldset>
         <div class="body-title mb-10">Select Cities</div>
 
