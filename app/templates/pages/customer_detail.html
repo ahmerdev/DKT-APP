@@ -66,26 +66,26 @@
         <div class="card-body p-5">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="card-title mb-0 text-black fs-1">User Information :</h4>
-            <!-- <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
+            <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
                 <strong>Available Total Points:</strong>
                 <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ available_points }} </span>
-            </p> -->
-               <div class="p-3 bg-success text-white rounded">
-        <strong>Earned:</strong><br>
+            </p>
+             <div class="p-3 bg-success text-white rounded">
+        <strong>Earned</strong><br>
         {{ earned_points }} pts <br>
-        Rs. {{ earned_rupees }}
+        Rs. {{ earned_rs }}
     </div>
 
     <div class="p-3 bg-danger text-white rounded">
-        <strong>Spent:</strong><br>
+        <strong>Spent</strong><br>
         {{ spent_points }} pts <br>
-        Rs. {{ spent_rupees }}
+        Rs. {{ spent_rs }}
     </div>
 
     <div class="p-3 bg-dark text-white rounded">
-        <strong>Available:</strong><br>
+        <strong>Available</strong><br>
         {{ available_points }} pts <br>
-        Rs. {{ available_rupees }}
+        Rs. {{ available_rs }}
     </div>
           </div>
 
@@ -168,8 +168,27 @@
                                     data-bs-parent="#ordersAccordionNormal">
                                     <div class="accordion-body pt-3">
                                         <p class="d-inline-block p-3 rounded-pill text-white bg-danger">
-                                            <strong>Earned Points:</strong>
-                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order_points }}</span>
+                                            <!-- <strong>Earned Points:</strong>
+                                            <span class="badge bg-white text-black" style="padding: 10px; border-radius: 50%; font-size: 14px;">{{ entry.order_points }}</span> -->
+                                         <!-- 🔥 EARNED -->
+                    {% if order.type == "normal" %}
+                        <span class="badge bg-success p-2">
+                            +{{ order.items.all|length }} items pts
+                        </span>
+                    {% endif %}
+
+                    <!--  SPENT -->
+                    {% if order.points_used > 0 %}
+                        <span class="badge bg-danger p-2">
+                            -{{ order.points_used }} pts
+                        </span>
+                    {% endif %}
+
+                    <!-- 💵 RUPEES -->
+                    <br>
+                    <small class="text-muted">
+                        Rs. {{ order.points_discount }}
+                    </small>
                                         </p>
 
                                              {% include "include/customer-history.html" with orders=normal_orders %}
