@@ -1047,11 +1047,23 @@ def update_order_status_ui(request, pk):
 
         if order.status == "delivered" and not order.is_points_added:
             from django.db.models import Sum, F
-            earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
-            if order.user and earned > 0:
-                AppUser.objects.filter(pk=order.user.pk).update(
-                    points=F("points") + earned
-                )
+            points_used = order.points_used or 0
+
+            if order.user:
+                if order.type == "redeem":
+                    # Redeem order — deduct
+                    if points_used > 0:
+                        AppUser.objects.filter(pk=order.user.pk).update(
+                            points=F("points") - points_used
+                        )
+                else:
+                    # Normal order —  earned add
+                    earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
+                    if earned > 0:
+                        AppUser.objects.filter(pk=order.user.pk).update(
+                            points=F("points") + earned
+                        )
+
             order.is_points_added = True
 
             order.save()
@@ -1073,7 +1085,6 @@ def update_order_status_ui(request, pk):
         "point_value": point_value,
         "points_spent_rs": points_spent * point_value,
     })
-
 
 
 import ast
