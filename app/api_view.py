@@ -589,12 +589,7 @@ def update_order_status(request, order_pk):
         if new_status == "delivered" and not order.is_points_added:
             if order.user:
                 if order.type == "redeem":
-                    #  Redeem —  deduct
-                    points_used = order.points_used or 0
-                    if points_used > 0:
-                        AppUser.objects.filter(pk=order.user.pk).update(
-                            points=F("points") - points_used
-                        )
+                    pass
                 else:
                     #  Normal —  earned add
                     earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
