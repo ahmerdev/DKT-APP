@@ -1048,9 +1048,18 @@ def update_order_status_ui(request, pk):
             except Rider.DoesNotExist:
                 pass
 
-        order.save()
-        messages.success(request, "Order updated successfully")
-        return redirect("order_list_ui")
+        if order.status == "delivered" and not order.is_points_added:
+            from django.db.models import Sum, F
+            earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
+            if order.user and earned > 0:
+                AppUser.objects.filter(pk=order.user.pk).update(
+                    points=F("points") + earned
+                )
+            order.is_points_added = True
+
+            order.save()
+            messages.success(request, "Order updated successfully")
+            return redirect("order_list_ui")
 
     return render(request, "pages/update_order.html", {
         "order": order,
