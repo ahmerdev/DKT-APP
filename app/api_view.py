@@ -434,13 +434,13 @@ def create_contact(request):
 
 
 @api_view(['POST'])
-def create_contact(request):
-    serializer = ContactFormSerializer(data=request.data)
+def create_review(request):
+    serializer = ReviewSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response({
             "success": True,
-            "message": "Contact form submitted successfully!",
+            "message": "Review submitted successfully!",
             "data": serializer.data
         }, status=status.HTTP_201_CREATED)
 
@@ -448,8 +448,6 @@ def create_contact(request):
         "success": False,
         "errors": serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
-
-
 from django.db import transaction
 
 
