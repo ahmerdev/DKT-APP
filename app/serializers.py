@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from django.db.models import Sum, Avg
+from django.db.models import Sum, Avg, Q
 import ast
 from .sms import send_sms
 from .models import Category, Brand, PointSetting, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
@@ -132,21 +132,25 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_reviews(self, obj):
-        # Product ke related order items
-        order_items = OrderItem.objects.filter(product=obj)
-        # Un order items ke reviews
+        order_items = OrderItem.objects.filter(
+            Q(product=obj) | Q(name=obj.name)
+        )
         reviews_qs = Review.objects.filter(item__in=order_items).order_by('-created_at')
         return ReviewSerializer(reviews_qs, many=True).data
 
     def get_avg_rating(self, obj):
-        order_items = OrderItem.objects.filter(product=obj)
+        order_items = OrderItem.objects.filter(
+            Q(product=obj) | Q(name=obj.name)
+        )
         reviews_qs = Review.objects.filter(item__in=order_items)
         if reviews_qs.exists():
             return round(reviews_qs.aggregate(avg=Avg('rating'))['avg'], 2)
         return 0
 
     def get_total_reviews(self, obj):
-        order_items = OrderItem.objects.filter(product=obj)
+        order_items = OrderItem.objects.filter(
+            Q(product=obj) | Q(name=obj.name)
+        )
         return Review.objects.filter(item__in=order_items).count()
 
 
