@@ -963,6 +963,30 @@
                                             </span>
                                         </td>
                                     </tr>
+                                    {% if points_spent %}
+                                    <tr style="background:#fff7ed; font-weight:700;">
+                                        <td colspan="5" class="text-end" style="color:#c2410c;">
+                                            <i class="fas fa-star" style="font-size:11px;"></i> Points Used
+                                        </td>
+                                        <td class="text-center" style="color:#c2410c;">
+                                            {{ points_spent }} pts
+                                            <span style="font-size:11px;color:#9ca3af;display:block;">
+                                                (- <i class="fas fa-rupee-sign" style="font-size:10px;"></i> {{ points_discount }})
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr style="background:#ecfdf5; font-weight:800;">
+                                        <td colspan="5" class="text-end" style="color:#065f46;">
+                                            <i class="fas fa-money-bill-wave"></i> Cash Paid
+                                        </td>
+                                        <td class="text-center">
+                                            <span style="color:#059669; font-size:16px;">
+                                                <i class="fas fa-rupee-sign" style="font-size:11px;"></i>
+                                                {{ cash_paid }}
+                                            </span>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
