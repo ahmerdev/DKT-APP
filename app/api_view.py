@@ -419,21 +419,23 @@ def redeem_list_api(request):
 @api_view(['POST'])
 def create_review(request):
     item_id = request.data.get("item")
+    product_id = request.data.get("product")   # 👈 ADD THIS
 
-    if not item_id:
-        return Response({"error": "item required"}, status=400)
+    if not item_id or not product_id:
+        return Response({"error": "item & product required"}, status=400)
 
     try:
-        item = OrderItem.objects.get(id=item_id)
+        item = OrderItem.objects.get(id=item_id, product_id=product_id)
     except OrderItem.DoesNotExist:
-        return Response({"error": "Invalid item"}, status=400)
+        return Response({"error": "Item does not belong to this product"}, status=400)
 
     serializer = ReviewSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(item=item)   # 🔥 YAHI MISSING THA
+        serializer.save(item=item)
         return Response({"success": True, "data": serializer.data})
 
     return Response(serializer.errors, status=400)
+
 
 @api_view(['POST'])
 def create_contact(request):
