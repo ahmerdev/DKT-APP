@@ -1042,7 +1042,7 @@ def update_order_status_ui(request, pk):
 
                 if order.city and order.city in rider.cities.all():
                     order.rider = rider
-                    order.status = "on_the_way"
+                    order.status = "pending"
                 else:
                     messages.error(request, "Rider not available in this city")
                     return redirect("update_order_status_ui", pk=pk)
@@ -1055,11 +1055,7 @@ def update_order_status_ui(request, pk):
 
             if order.user:
                 if order.type == "redeem":
-                    # Redeem order — deduct
-                    if points_used > 0:
-                        AppUser.objects.filter(pk=order.user.pk).update(
-                            points=F("points") - points_used
-                        )
+                    pass
                 else:
                     # Normal order —  earned add
                     earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
