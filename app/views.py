@@ -978,6 +978,7 @@ def safe_json(value):
 def update_order_status_ui(request, pk):
     order = get_object_or_404(Order, pk=pk)
     cities = City.objects.all()
+
     items = order.items.all()
 
     total_amount = 0
@@ -985,6 +986,13 @@ def update_order_status_ui(request, pk):
         price = item.price or 0
         qty = item.quantity or 0
         total_amount += price * qty
+
+    point_setting = PointSetting.objects.first()
+    point_value = point_setting.point_value if point_setting else 0.50
+
+    points_spent = order.points_used or 0
+    points_discount = order.points_discount or 0
+    cash_paid = total_amount - points_discount    
 
     # City from address
     order_city_name = get_city_from_address(order.address)
@@ -1049,6 +1057,11 @@ def update_order_status_ui(request, pk):
         "order_city_id": order_city_id,
         "shipping": shipping,
         "address": address,
+        "points_spent": points_spent,
+        "points_discount": points_discount,
+        "cash_paid": cash_paid,
+        "point_value": point_value,
+        "points_spent_rs": points_spent * point_value,
     })
 
 
