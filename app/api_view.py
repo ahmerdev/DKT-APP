@@ -572,35 +572,38 @@ def create_order(request):
 
 from django.db import transaction
 from django.db.models import Sum
+
 @api_view(["PATCH"])
 def update_order_status(request, order_pk):
     try:
-        order = Order.objects.get(id=order_pk)
+        order = Order.objects.select_related("user").get(id=order_pk)
     except Order.DoesNotExist:
-        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Order not found"}, status=404)
 
     new_status = request.data.get("status")
 
-    if new_status not in dict(Order.STATUS_CHOICES):
-        return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
+    if not new_status:
+        return Response({"error": "Status required"}, status=400)
 
-    order.status = new_status
-    if new_status == "delivered":
+    with transaction.atomic():
+        if new_status == "delivered" and not order.is_points_added:
+            earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
 
-        if not order.is_points_added:
-            order_points = order.items.aggregate(total=Sum("pts"))["total"] or 0
-            if order.user:
-                order.user.points = (order.user.points or 0) + order_points
-                order.user.save(update_fields=["points"])
-            order.is_points_added = True 
+            if order.user and earned > 0:
+                # Direct DB update — race condition safe
+                AppUser.objects.filter(pk=order.user.pk).update(
+                    points=models.F("points") + earned
+                )
 
-    order.save()
+            # Order update
+            Order.objects.filter(id=order_pk).update(
+                status=new_status,
+                is_points_added=True
+            )
+        else:
+            Order.objects.filter(id=order_pk).update(status=new_status)
 
-    return Response({
-        "message": "Status updated",
-        "order": OrderSerializer(order).data
-    })
-
+    return Response({"message": "updated"})
 
 @api_view(["GET"])
 def list_orders(request):
