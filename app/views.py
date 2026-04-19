@@ -470,14 +470,12 @@ def customer_detail(request, pk):
     orders = Order.objects.filter(user=user)
 
     total_amount = 0
-
     for order in orders:
         items = order.items.all()
         for item in items:
             price = item.price or 0
             qty = item.quantity or 0
             total_amount += price * qty
-
 
     point_setting = PointSetting.objects.first()
     point_value = point_setting.point_value if point_setting else 0.50
@@ -493,14 +491,18 @@ def customer_detail(request, pk):
 
     for order in orders:
         items = order.items.all()
-        order_earned = sum(item.pts for item in items)
         order_spent = order.points_used or 0
-
         order_total = sum(item.price * item.quantity for item in items)
         cash_paid = order_total - (order.points_discount or 0)
 
-        earned_points += order_earned
-        spent_points += order_spent
+        if order.type == "redeem":
+            # Redeem — earned 0,  spent
+            order_earned = 0
+            spent_points += order_spent
+        else:
+            #  Normal — earned add, spent 0
+            order_earned = sum(item.pts for item in items)
+            earned_points += order_earned
 
         data = {
             "order": order,
@@ -509,17 +511,17 @@ def customer_detail(request, pk):
             "spent": order_spent,
             "earned_rs": order_earned * point_value,
             "spent_rs": order_spent * point_value,
-            "cash_paid": cash_paid,       
+            "cash_paid": cash_paid,
             "order_total": order_total,
         }
 
-        # Redeem order = sirf points se buy, Normal = cash/mixed
         if order.type == "redeem":
             redeem_orders_data.append(data)
         else:
             normal_orders_data.append(data)
 
     available_points = user.points or 0
+    total_points = earned_points + available_points
 
     context = {
         "user": user,
@@ -529,6 +531,8 @@ def customer_detail(request, pk):
         "earned_points": earned_points,
         "spent_points": spent_points,
         "available_points": available_points,
+        "total_points": total_points,
+        "total_points_rs": total_points * point_value,
         "earned_rs": earned_points * point_value,
         "spent_rs": spent_points * point_value,
         "available_rs": available_points * point_value,
