@@ -571,31 +571,38 @@ def create_order(request):
 
 
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, F
 
 @api_view(["PATCH"])
 def update_order_status(request, order_pk):
     try:
         order = Order.objects.select_related("user").get(id=order_pk)
     except Order.DoesNotExist:
-        return Response({"error": "Order not found"}, status=404)
+        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
 
     new_status = request.data.get("status")
 
-    if not new_status:
-        return Response({"error": "Status required"}, status=400)
+    if new_status not in dict(Order.STATUS_CHOICES):
+        return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
     with transaction.atomic():
         if new_status == "delivered" and not order.is_points_added:
-            earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
+            if order.user:
+                if order.type == "redeem":
+                    #  Redeem —  deduct
+                    points_used = order.points_used or 0
+                    if points_used > 0:
+                        AppUser.objects.filter(pk=order.user.pk).update(
+                            points=F("points") - points_used
+                        )
+                else:
+                    #  Normal —  earned add
+                    earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
+                    if earned > 0:
+                        AppUser.objects.filter(pk=order.user.pk).update(
+                            points=F("points") + earned
+                        )
 
-            if order.user and earned > 0:
-                # Direct DB update — race condition safe
-                AppUser.objects.filter(pk=order.user.pk).update(
-                    points=models.F("points") + earned
-                )
-
-            # Order update
             Order.objects.filter(id=order_pk).update(
                 status=new_status,
                 is_points_added=True
@@ -603,7 +610,11 @@ def update_order_status(request, order_pk):
         else:
             Order.objects.filter(id=order_pk).update(status=new_status)
 
-    return Response({"message": "updated"})
+    return Response({
+        "message": "Status updated",
+        "order": OrderSerializer(order).data
+    })
+    
 
 @api_view(["GET"])
 def list_orders(request):
