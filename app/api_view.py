@@ -539,35 +539,65 @@ def create_order(request):
                 status=status.HTTP_201_CREATED,
             )
 
+# from django.db.models import Sum
+# @api_view(["PATCH"])
+# def update_order_status(request, order_pk):
+#     try:
+#         order = Order.objects.get(id=order_pk)
+#     except Order.DoesNotExist:
+#         return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+#     new_status = request.data.get("status")
+
+#     if new_status not in dict(Order.STATUS_CHOICES):
+#         return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
+
+#     order.status = new_status
+#     if new_status == "delivered":
+
+#         if not order.is_points_added:
+#             order_points = order.items.aggregate(total=Sum("pts"))["total"] or 0
+#             if order.user:
+#                 order.user.points = (order.user.points or 0) + order_points
+#                 order.user.save(update_fields=["points"])
+#             order.is_points_added = True 
+
+#     order.save()
+
+#     return Response({
+#         "message": "Status updated",
+#         "order": OrderSerializer(order).data
+#     })
+
+
 from django.db.models import Sum
+
 @api_view(["PATCH"])
 def update_order_status(request, order_pk):
     try:
         order = Order.objects.get(id=order_pk)
     except Order.DoesNotExist:
-        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Order not found"}, status=404)
 
     new_status = request.data.get("status")
-
-    if new_status not in dict(Order.STATUS_CHOICES):
-        return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
-
     order.status = new_status
-    if new_status == "delivered":
 
-        if not order.is_points_added:
-            order_points = order.items.aggregate(total=Sum("pts"))["total"] or 0
-            if order.user:
-                order.user.points = (order.user.points or 0) + order_points
-                order.user.save(update_fields=["points"])
-            order.is_points_added = True 
+    # MAIN LOGIC
+    if new_status == "delivered" and not order.is_points_added:
+
+        earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
+
+        if order.user:
+            user = order.user
+            user.points = (user.points or 0) + earned  
+            user.save(update_fields=["points"])
+
+        order.is_points_added = True
 
     order.save()
 
-    return Response({
-        "message": "Status updated",
-        "order": OrderSerializer(order).data
-    })
+    return Response({"message": "updated"})
+
 
 
 @api_view(["GET"])
