@@ -463,6 +463,7 @@ def delete_appuser_ui(request, pk):
 
 
 
+
 def customer_detail(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
 
@@ -519,6 +520,7 @@ def customer_detail(request, pk):
             normal_orders_data.append(data)
 
     available_points = user.points or 0
+    total_points = earned_points + available_points
 
     context = {
         "user": user,
@@ -528,6 +530,8 @@ def customer_detail(request, pk):
         "earned_points": earned_points,
         "spent_points": spent_points,
         "available_points": available_points,
+        "total_points": total_points,              
+        "total_points_rs": total_points * point_value,
         "earned_rs": earned_points * point_value,
         "spent_rs": spent_points * point_value,
         "available_rs": available_points * point_value,
