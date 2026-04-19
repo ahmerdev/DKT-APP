@@ -570,8 +570,8 @@ def create_order(request):
 #     })
 
 
+from django.db import transaction
 from django.db.models import Sum
-
 @api_view(["PATCH"])
 def update_order_status(request, order_pk):
     try:
@@ -580,21 +580,23 @@ def update_order_status(request, order_pk):
         return Response({"error": "Order not found"}, status=404)
 
     new_status = request.data.get("status")
-    order.status = new_status
 
-    # MAIN LOGIC
     if new_status == "delivered" and not order.is_points_added:
-
         earned = order.items.aggregate(total=Sum("pts"))["total"] or 0
 
         if order.user:
             user = order.user
-            user.points = (user.points or 0) + earned  
+            user.points = (user.points or 0) + earned
             user.save(update_fields=["points"])
 
-        order.is_points_added = True
+        Order.objects.filter(id=order_pk).update(
+            status=new_status,
+            is_points_added=True
+        )
 
-    order.save()
+    else:
+        # status update
+        Order.objects.filter(id=order_pk).update(status=new_status)
 
     return Response({"message": "updated"})
 
