@@ -1070,9 +1070,9 @@ def update_order_status_ui(request, pk):
 
             order.is_points_added = True
 
-            order.save()
-            messages.success(request, "Order updated successfully")
-            return redirect("order_list_ui")
+        order.save()
+        messages.success(request, "Order updated successfully")
+        return redirect("order_list_ui")
 
     return render(request, "pages/update_order.html", {
         "order": order,
@@ -1089,7 +1089,6 @@ def update_order_status_ui(request, pk):
         "point_value": point_value,
         "points_spent_rs": points_spent * point_value,
     })
-
 
 import ast
 import json
