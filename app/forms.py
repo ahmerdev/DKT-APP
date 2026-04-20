@@ -79,6 +79,33 @@ class ProductForm(forms.ModelForm):
         ]
 
 
+   def clean_slug(self):
+        name = self.data.get("name", "").strip()
+        base = slugify(name) if name else slugify(self.data.get("slug", ""))
+        
+        if not base:
+            base = "product"
+
+        # 50 characters tak trim karo
+        base = base[:50].rstrip('-')
+
+        final_slug = base
+        counter = 1
+
+        qs = Product.objects.filter(slug=final_slug)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        while qs.exists():
+            final_slug = f"{base}-{counter}"
+            counter += 1
+            qs = Product.objects.filter(slug=final_slug)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+
+        return final_slug
+ 
+    # ── Price fields: comma strip ─────────────────────────────────────────
     def _clean_price(self, field_name):
         val = self.cleaned_data.get(field_name)
         if val is None or val == "":
@@ -97,6 +124,7 @@ class ProductForm(forms.ModelForm):
     def clean_cost_price(self):
         return self._clean_price("cost_price")
  
+    # ── Main clean ────────────────────────────────────────────────────────
     def clean(self):
         cleaned_data = super().clean()
         product_type = cleaned_data.get("product_type")
@@ -108,6 +136,7 @@ class ProductForm(forms.ModelForm):
                 self.add_error("sku", "SKU is required for simple products.")
  
         elif product_type == "variable":
+            # Simple fields variable products ke liye required nahi
             cleaned_data["regular_price"] = None
             cleaned_data["sku"] = None
  
