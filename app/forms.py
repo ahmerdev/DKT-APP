@@ -80,35 +80,36 @@ class ProductForm(forms.ModelForm):
  
     # ── Slug: auto-unique ─────────────────────────────────────────────────
     def clean_slug(self):
-        # POST se jo slug aaya use lo (JS ne already slugify kar diya)
-        slug = self.cleaned_data.get("slug", "").strip()
-        
-        # Agar slug empty hai to name se banao
-        if not slug:
-            slug = slugify(self.cleaned_data.get("name", ""))
-        
-        # Ensure proper slugify format
-        slug = slugify(slug)
-        
-        if not slug:
+        # Raw POST data se lo
+        name = self.data.get("name", "").strip()
+        slug = self.data.get("slug", "").strip()
+    
+        # Slug se generate karo, fallback name se
+        if slug:
+            base = slugify(slug)
+        elif name:
+            base = slugify(name)
+        else:
+            raise forms.ValidationError("Slug generate nahi ho saka.")
+    
+        if not base:
             raise forms.ValidationError("Valid slug generate nahi ho saka.")
-        
-        base = slug
+    
+        final_slug = base
         counter = 1
-        
-        # Edit mode mein apne aap ko exclude karo
-        qs = Product.objects.filter(slug=slug)
+    
+        qs = Product.objects.filter(slug=final_slug)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-        
+    
         while qs.exists():
-            slug = f"{base}-{counter}"
+            final_slug = f"{base}-{counter}"
             counter += 1
-            qs = Product.objects.filter(slug=slug)
+            qs = Product.objects.filter(slug=final_slug)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
-        
-        return slug
+    
+        return final_slug
  
     # ── Price fields: comma strip ─────────────────────────────────────────
     def _clean_price(self, field_name):
