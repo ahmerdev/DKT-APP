@@ -78,28 +78,6 @@ class ProductForm(forms.ModelForm):
             "stock_status", "points", "product_type"
         ]
 
-    def clean_slug(self):
-        name = self.data.get("name", "").strip()
-        base = slugify(name) if name else slugify(self.data.get("slug", ""))
-        
-        if not base:
-            base = "product"
-
-        final_slug = base
-        counter = 1
-
-        qs = Product.objects.filter(slug=final_slug)
-        if self.instance and self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        while qs.exists():
-            final_slug = f"{base}-{counter}"
-            counter += 1
-            qs = Product.objects.filter(slug=final_slug)
-            if self.instance and self.instance.pk:
-                qs = qs.exclude(pk=self.instance.pk)
-
-        return final_slug
 
     def _clean_price(self, field_name):
         val = self.cleaned_data.get(field_name)
