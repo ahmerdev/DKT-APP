@@ -77,35 +77,6 @@ class ProductForm(forms.ModelForm):
             "cost_price", "regular_price", "sale_price", "sku", "quantity",
             "stock_status", "points", "product_type"
         ]
- 
-    # ── Slug: auto-unique ─────────────────────────────────────────────────
-    def clean_slug(self):
-        # Hamesha name se slug banao — POST slug pe trust mat karo
-        name = self.data.get("name", "").strip()
-        
-        if not name:
-            raise forms.ValidationError("Product name required hai slug ke liye.")
-        
-        base = slugify(name)
-        
-        if not base:
-            raise forms.ValidationError("Valid slug generate nahi ho saka.")
-        
-        final_slug = base
-        counter = 1
-        
-        qs = Product.objects.filter(slug=final_slug)
-        if self.instance and self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
-        
-        while qs.exists():
-            final_slug = f"{base}-{counter}"
-            counter += 1
-            qs = Product.objects.filter(slug=final_slug)
-            if self.instance and self.instance.pk:
-                qs = qs.exclude(pk=self.instance.pk)
-        
-        return final_slug
 
     def _clean_price(self, field_name):
         val = self.cleaned_data.get(field_name)
