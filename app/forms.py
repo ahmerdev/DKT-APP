@@ -80,8 +80,8 @@ class ProductForm(forms.ModelForm):
 
 
    def clean_slug(self):
-        name = self.data.get("name", "").strip()
-        base = slugify(name) if name else slugify(self.data.get("slug", ""))
+       name = self.data.get("name", "").strip()
+       base = slugify(name) if name else slugify(self.data.get("slug", ""))
         
         if not base:
             base = "product"
