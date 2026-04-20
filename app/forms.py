@@ -80,35 +80,35 @@ class ProductForm(forms.ModelForm):
  
     # ── Slug: auto-unique ─────────────────────────────────────────────────
     def clean_slug(self):
-    # POST se jo slug aaya use lo (JS ne already slugify kar diya)
-    slug = self.cleaned_data.get("slug", "").strip()
-    
-    # Agar slug empty hai to name se banao
-    if not slug:
-        slug = slugify(self.cleaned_data.get("name", ""))
-    
-    # Ensure proper slugify format
-    slug = slugify(slug)
-    
-    if not slug:
-        raise forms.ValidationError("Valid slug generate nahi ho saka.")
-    
-    base = slug
-    counter = 1
-    
-    # Edit mode mein apne aap ko exclude karo
-    qs = Product.objects.filter(slug=slug)
-    if self.instance and self.instance.pk:
-        qs = qs.exclude(pk=self.instance.pk)
-    
-    while qs.exists():
-        slug = f"{base}-{counter}"
-        counter += 1
+        # POST se jo slug aaya use lo (JS ne already slugify kar diya)
+        slug = self.cleaned_data.get("slug", "").strip()
+        
+        # Agar slug empty hai to name se banao
+        if not slug:
+            slug = slugify(self.cleaned_data.get("name", ""))
+        
+        # Ensure proper slugify format
+        slug = slugify(slug)
+        
+        if not slug:
+            raise forms.ValidationError("Valid slug generate nahi ho saka.")
+        
+        base = slug
+        counter = 1
+        
+        # Edit mode mein apne aap ko exclude karo
         qs = Product.objects.filter(slug=slug)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-    
-    return slug
+        
+        while qs.exists():
+            slug = f"{base}-{counter}"
+            counter += 1
+            qs = Product.objects.filter(slug=slug)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+        
+        return slug
  
     # ── Price fields: comma strip ─────────────────────────────────────────
     def _clean_price(self, field_name):
