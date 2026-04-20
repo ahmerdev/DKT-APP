@@ -1308,6 +1308,67 @@ def _handle_product_variants(product_obj, request, is_edit=False):
 # MAIN VIEW
 # ─────────────────────────────────────────────────────────────────────────────
 
+# @login_required(login_url="login")
+# def add_or_edit_product(request, pk=None):
+#     product_obj = get_object_or_404(Product, pk=pk) if pk else None
+
+#     if request.method == "POST":
+#         form = ProductForm(request.POST, request.FILES, instance=product_obj)
+#         print(form.errors)
+#         if form.is_valid():
+#             with transaction.atomic():
+#                 product_obj = form.save()
+
+#                 # Gallery images
+#                 gallery_images = request.FILES.getlist("gallery_images")
+#                 if gallery_images:
+#                     for img in gallery_images:
+#                         ProductImage.objects.create(product=product_obj, image=img)
+
+#                 product_type = request.POST.get("product_type", "simple")
+
+#                 if product_type == "variable":
+#                     _handle_product_variants(product_obj, request, is_edit=bool(pk))
+#                 else:
+#                     # Switched back to simple → clear variants
+#                     if pk:
+#                         product_obj.variants.all().delete()
+#                         product_obj.variant_options.all().delete()
+
+#             messages.success(
+#                 request,
+#                 f"Product '{product_obj.name}' {'updated' if pk else 'created'} successfully!"
+#             )
+#             return redirect("product")
+
+#         else:
+#             messages.error(request, "Please correct the errors below.")
+
+#     else:
+#         form = ProductForm(instance=product_obj)
+
+#     # ── Context ──
+#     from .models import Category, Brand  # local import to avoid circular
+#     categories = Category.objects.all()
+#     brands     = Brand.objects.all()
+
+#     variant_options   = []
+#     existing_variants = []
+
+#     if product_obj and product_obj.product_type == "variable":
+#         variant_options   = product_obj.variant_options.all().prefetch_related("values")
+#         existing_variants = product_obj.variants.all()
+
+#     return render(request, "pages/add-product.html", {
+#         "form"             : form,
+#         "product"          : product_obj,
+#         "categories"       : categories,
+#         "brands"           : brands,
+#         "variant_options"  : variant_options,
+#         "existing_variants": existing_variants,
+#     })
+
+
 @login_required(login_url="login")
 def add_or_edit_product(request, pk=None):
     product_obj = get_object_or_404(Product, pk=pk) if pk else None
@@ -1317,14 +1378,34 @@ def add_or_edit_product(request, pk=None):
         print(form.errors)
         if form.is_valid():
             with transaction.atomic():
+                
+                # ===== 1. DELETE REMOVED GALLERY IMAGES (NEW LOGIC) =====
+                remove_gallery_ids = request.POST.get('remove_gallery_images', '')
+                if remove_gallery_ids:
+                    # "1,2,3" string ko [1, 2, 3] list mein convert karna
+                    ids_to_remove = [int(i.strip()) for i in remove_gallery_ids.split(',') if i.strip().isdigit()]
+                    if ids_to_remove:
+                        # Model ke delete method ki wajah se file folder se bhi delete hogi
+                        ProductImage.objects.filter(id__in=ids_to_remove).delete()
+
+                # ===== 2. SAVE FORM =====
                 product_obj = form.save()
 
-                # Gallery images
+                # ===== 3. REMOVE MAIN IMAGE (NEW LOGIC) =====
+                # Agar remove checkbox click kiya aur nayi image upload nahi ki
+                if request.POST.get('remove_main_image') == '1' and 'image' not in request.FILES:
+                    if product_obj.image:
+                        product_obj.image.delete(save=False)  # Folder se delete
+                        product_obj.image = None              # DB se null karein
+                        product_obj.save(update_fields=['image'])
+
+                # ===== 4. ADD NEW GALLERY IMAGES =====
                 gallery_images = request.FILES.getlist("gallery_images")
                 if gallery_images:
                     for img in gallery_images:
                         ProductImage.objects.create(product=product_obj, image=img)
 
+                # ===== 5. HANDLE VARIANTS =====
                 product_type = request.POST.get("product_type", "simple")
 
                 if product_type == "variable":
@@ -1367,6 +1448,8 @@ def add_or_edit_product(request, pk=None):
         "variant_options"  : variant_options,
         "existing_variants": existing_variants,
     })
+
+
    
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
