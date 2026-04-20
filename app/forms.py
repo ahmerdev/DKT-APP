@@ -111,18 +111,11 @@ class ProductForm(forms.ModelForm):
         if val is None or val == "":
             return val
         try:
-            return float(str(val).replace(",", "").strip())
-        except (ValueError, TypeError):
-            raise forms.ValidationError("Valid price enter karein (e.g. 1500 ya 1,500).")
- 
-    def clean_regular_price(self):
-        return self._clean_price("regular_price")
- 
-    def clean_sale_price(self):
-        return self._clean_price("sale_price")
- 
-    def clean_cost_price(self):
-        return self._clean_price("cost_price")
+            from decimal import Decimal, ROUND_DOWN
+            cleaned = str(val).replace(",", "").strip()
+            return Decimal(cleaned).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+        except Exception:
+            raise forms.ValidationError("Valid price enter karein.")
  
     # ── Main clean ────────────────────────────────────────────────────────
     def clean(self):
