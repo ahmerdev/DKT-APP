@@ -80,30 +80,30 @@ class ProductForm(forms.ModelForm):
  
     # ── Slug: auto-unique ─────────────────────────────────────────────────
     def clean_slug(self):
-    name = self.cleaned_data.get("name", "")
-    
-    #  slug hamesha name se banega (auto update)
-    base = slugify(name)
-    slug = base
-    counter = 1
-
-    qs = Product.objects.filter(slug=slug)
-
-    # edit mode me apne aap ko exclude karo
-    if self.instance and self.instance.pk:
-        qs = qs.exclude(pk=self.instance.pk)
-
-    # duplicate avoid karne ke liye loop
-    while qs.exists():
-        slug = f"{base}-{counter}"
-        counter += 1
+        name = self.cleaned_data.get("name", "")
+        
+        # 🔥 slug hamesha name se banega (auto update)
+        base = slugify(name)
+        slug = base
+        counter = 1
 
         qs = Product.objects.filter(slug=slug)
 
+        # edit mode me apne aap ko exclude karo
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
 
-    return slug
+        # duplicate avoid karne ke liye loop
+        while qs.exists():
+            slug = f"{base}-{counter}"
+            counter += 1
+
+            qs = Product.objects.filter(slug=slug)
+
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+
+        return slug
  
     # ── Price fields: comma strip ─────────────────────────────────────────
     def _clean_price(self, field_name):
