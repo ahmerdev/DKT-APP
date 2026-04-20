@@ -172,7 +172,7 @@
           <div class="wg-box" style="padding: 0 !important; overflow:hidden;">
             <div class="type-switcher" style="border:none; padding:24px 32px;">
               <div class="d-flex align-items-center gap-3">
-                <div class="form-check mb-0"><input class="form-check-input" type="checkbox" id="productTypeToggle"  {% if product.product_type == "variable" %}checked{% endif %}></div>
+                <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox"  id="productTypeToggle" style="width:50px; height:26px; cursor:pointer;" {% if product.product_type == "variable" %}checked{% endif %}></div>
                 <div><label class="form-check-label" for="productTypeToggle" style="font-weight:700; font-size:15px; color:var(--text-heading); cursor:pointer; margin:0;">Product has Variants</label><p style="margin:0; font-size:12px; color:var(--text-muted);">e.g. Different sizes or colors</p></div>
               </div>
               <span id="typePill" class="badge-pill {% if product.product_type == 'variable' %}variable{% else %}simple{% endif %}">{% if product.product_type == "variable" %}Variable{% else %}Simple{% endif %}</span>
