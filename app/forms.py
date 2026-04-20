@@ -77,11 +77,11 @@ class ProductForm(forms.ModelForm):
             "cost_price", "regular_price", "sale_price", "sku", "quantity",
             "stock_status", "points", "product_type"
         ]
-
-
-   def clean_slug(self):
-       name = self.data.get("name", "").strip()
-       base = slugify(name) if name else slugify(self.data.get("slug", ""))
+ 
+    # ── Slug: auto-unique ─────────────────────────────────────────────────
+    def clean_slug(self):
+        name = self.data.get("name", "").strip()
+        base = slugify(name) if name else slugify(self.data.get("slug", ""))
         
         if not base:
             base = "product"
