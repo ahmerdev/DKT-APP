@@ -80,38 +80,33 @@ class ProductForm(forms.ModelForm):
  
     # ── Slug: auto-unique ─────────────────────────────────────────────────
     def clean_slug(self):
-        # Raw POST data se lo
+        # Hamesha name se slug banao — POST slug pe trust mat karo
         name = self.data.get("name", "").strip()
-        slug = self.data.get("slug", "").strip()
-    
-        # Slug se generate karo, fallback name se
-        if slug:
-            base = slugify(slug)
-        elif name:
-            base = slugify(name)
-        else:
-            raise forms.ValidationError("Slug generate nahi ho saka.")
-    
+        
+        if not name:
+            raise forms.ValidationError("Product name required hai slug ke liye.")
+        
+        base = slugify(name)
+        
         if not base:
             raise forms.ValidationError("Valid slug generate nahi ho saka.")
-    
+        
         final_slug = base
         counter = 1
-    
+        
         qs = Product.objects.filter(slug=final_slug)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-    
+        
         while qs.exists():
             final_slug = f"{base}-{counter}"
             counter += 1
             qs = Product.objects.filter(slug=final_slug)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
-    
+        
         return final_slug
- 
-    # ── Price fields: comma strip ─────────────────────────────────────────
+
     def _clean_price(self, field_name):
         val = self.cleaned_data.get(field_name)
         if val is None or val == "":
@@ -130,7 +125,6 @@ class ProductForm(forms.ModelForm):
     def clean_cost_price(self):
         return self._clean_price("cost_price")
  
-    # ── Main clean ────────────────────────────────────────────────────────
     def clean(self):
         cleaned_data = super().clean()
         product_type = cleaned_data.get("product_type")
@@ -142,7 +136,6 @@ class ProductForm(forms.ModelForm):
                 self.add_error("sku", "SKU is required for simple products.")
  
         elif product_type == "variable":
-            # Simple fields variable products ke liye required nahi
             cleaned_data["regular_price"] = None
             cleaned_data["sku"] = None
  
