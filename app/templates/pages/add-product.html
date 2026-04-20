@@ -170,7 +170,18 @@
               </div>
               <div class="col-12">
                 <label class="label-master">Short Description <span>*</span></label>
-                <textarea name="short_description" class="form-input-master" rows="2" placeholder="A brief summary for product listing pages..." required>{{ product.short_description|default_if_none:'' }}</textarea>
+                    <textarea name="short_description" class="form-input-master" rows="2" 
+                        placeholder="A brief summary for product listing pages..." 
+                        required
+                        maxlength="300"
+                        oninput="updateCharCount(this)"
+                        id="shortDescTextarea">{{ product.short_description|default_if_none:'' }}</textarea>
+                    <div style="text-align:right; margin-top:6px;">
+                        <span id="shortDescCount" style="font-size:12px; color:var(--text-muted);">
+                            {{ product.short_description|default_if_none:''|length }}/500
+                        </span>
+                    </div>
+                <!-- <textarea name="short_description" class="form-input-master" rows="2" placeholder="A brief summary for product listing pages..." required>{{ product.short_description|default_if_none:'' }}</textarea> -->
               </div>
               <div class="col-12">
                 <label class="label-master">Full Description</label>
@@ -528,6 +539,22 @@ const FormValidator = {
     }
     return true;
   }
+};
+
+  window.updateCharCount = function(textarea) {
+    const max = parseInt(textarea.getAttribute('maxlength'));
+    const current = textarea.value.length;
+    const counter = document.getElementById('shortDescCount');
+    if (counter) {
+        counter.textContent = `${current}/${max}`;
+        if (current >= max) {
+            counter.style.color = '#ef4444';
+        } else if (current >= max * 0.8) {
+            counter.style.color = '#f59e0b';
+        } else {
+            counter.style.color = 'var(--text-muted)';
+        }
+    }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
