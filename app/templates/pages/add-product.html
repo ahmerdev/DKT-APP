@@ -66,16 +66,34 @@
   .img-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   .img-thumb-box {
     position: relative; width: 90px; height: 90px; border-radius: var(--radius-sm);
-    overflow: hidden; box-shadow: var(--shadow-soft); border: 2px solid var(--border); transition: all 0.2s;
+    overflow: visible; box-shadow: var(--shadow-soft); border: 2px solid var(--border); transition: all 0.2s;
   }
   .img-thumb-box:hover { border-color: var(--primary); transform: scale(1.05); }
-  .img-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+  .img-thumb-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
   .img-thumb-box .del-btn {
-    position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
-    background: rgba(15,23,42,0.7); color: #fff; border: none; border-radius: 50%;
-    font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s;
+    position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+    background: #ef4444; color: #fff; border: 2px solid #fff; border-radius: 50%;
+    font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    opacity: 1; transition: all 0.2s; z-index: 10; font-weight: 700; line-height: 1;
   }
-  .img-thumb-box:hover .del-btn { opacity: 1; }
+  .img-thumb-box .del-btn:hover { background: #dc2626; transform: scale(1.15); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
+  
+  /* Main Image Preview Box - Larger with better delete button */
+  .main-img-preview-box {
+    position: relative; width: 100%; height: 200px; border-radius: var(--radius-md);
+    overflow: visible; border: 2px solid var(--border); transition: all 0.3s;
+  }
+  .main-img-preview-box:hover { border-color: var(--primary); }
+  .main-img-preview-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+  .main-img-preview-box .del-btn {
+    position: absolute; top: -10px; right: -10px; width: 32px; height: 32px;
+    background: #ef4444; color: #fff; border: 3px solid #fff; border-radius: 50%;
+    font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    opacity: 1; transition: all 0.2s; z-index: 10; font-weight: 700; line-height: 1;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+  }
+  .main-img-preview-box .del-btn:hover { background: #dc2626; transform: scale(1.1); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5); }
+  
   .type-switcher { display: flex; align-items: center; justify-content: space-between; background: var(--surface-dim); border: 1px solid var(--border); padding: 16px 24px; border-radius: var(--radius-md); }
   .form-check-input:checked { background-color: var(--primary) !important; border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-glow) !important; }
   .badge-pill { padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
@@ -129,6 +147,10 @@
 
     <form class="form-add-product" method="POST" enctype="multipart/form-data" id="productForm">
       {% csrf_token %}
+
+      <!-- Hidden inputs for tracking removals -->
+      <input type="hidden" name="remove_main_image" id="removeMainImageInput" value="">
+      <input type="hidden" name="remove_gallery_images" id="removeGalleryImagesInput" value="">
 
       <!-- ===== SPLIT LAYOUT START ===== -->
       <div class="row g-4">
@@ -254,9 +276,19 @@
                 <label class="label-master">Main Image <span>*</span></label>
                 <div id="singleImagePreview">
                   {% if product and product.image %}
-                  <div class="img-thumb-box" id="imgpreview" style="width:100%; height:200px;"><img id="previewImg" src="{{ product.image.url }}" alt="Main" style="width:100%; height:100%; object-fit:cover;"><button type="button" class="del-btn" onclick="removeSingleImage()">×</button></div>
+                  <div class="main-img-preview-box" id="imgpreview">
+                    <img id="previewImg" src="{{ product.image.url }}" alt="Main">
+                    <button type="button" class="del-btn" onclick="removeSingleImage()">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
                   {% else %}
-                  <div id="imgpreview" class="img-thumb-box" style="display:none; width:100%; height:200px;"><img id="previewImg" src="" alt="Main" style="width:100%; height:100%; object-fit:cover;"><button type="button" class="del-btn" onclick="removeSingleImage()">×</button></div>
+                  <div id="imgpreview" class="main-img-preview-box" style="display:none;">
+                    <img id="previewImg" src="" alt="Main">
+                    <button type="button" class="del-btn" onclick="removeSingleImage()">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
                   {% endif %}
                 </div>
                 <div id="upload-file" class="upload-zone-premium mt-3" {% if product and product.image %}style="display:none"{% endif %}>
@@ -275,7 +307,12 @@
                 <div class="img-grid" id="galleryPreview">
                   {% if product %}
                     {% for img in product.gallery_images.all %}
-                    <div class="img-thumb-box"><img src="{{ img.image.url }}" alt="Gallery"></div>
+                    <div class="img-thumb-box" data-gallery-id="{{ img.id }}">
+                      <img src="{{ img.image.url }}" alt="Gallery">
+                      <button type="button" class="del-btn" onclick="removeGalleryImage(this, {{ img.id }})">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
                     {% endfor %}
                   {% endif %}
                 </div>
@@ -312,7 +349,7 @@
   </div>
 </div>
 
-<!-- ================= JS (100% UNTOUCHED) ================= -->
+<!-- ================= JS ================= -->
 <script>
 const Utils = {
   escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = String(str); return div.innerHTML; },
@@ -331,7 +368,10 @@ const SlugHandler = {
 };
 
 const ImagePreview = {
+  removedGalleryIds: [],
+  
   init() { this.setupMainImage(); this.setupGalleryImages(); },
+  
   setupMainImage() {
     const fileInput = document.getElementById('myFile'); if (!fileInput) return;
     fileInput.addEventListener('change', function() {
@@ -339,26 +379,83 @@ const ImagePreview = {
       const reader = new FileReader();
       reader.onload = (e) => {
         const preview = document.getElementById('previewImg'); const container = document.getElementById('imgpreview'); const uploadArea = document.getElementById('upload-file');
-        if (preview && container && uploadArea) { preview.src = e.target.result; container.style.display = 'block'; uploadArea.style.display = 'none'; }
+        const removeInput = document.getElementById('removeMainImageInput');
+        if (preview && container && uploadArea) { 
+          preview.src = e.target.result; 
+          container.style.display = 'block'; 
+          uploadArea.style.display = 'none';
+          if (removeInput) removeInput.value = '';
+        }
       }; reader.readAsDataURL(file);
     });
   },
+  
   setupGalleryImages() {
     const fileInput = document.getElementById('gFile'); if (!fileInput) return;
     fileInput.addEventListener('change', function() {
       const preview = document.getElementById('galleryPreview'); if (!preview) return;
       Array.from(this.files).forEach(file => {
         if (!file.type.startsWith('image/')) return; const reader = new FileReader();
-        reader.onload = (e) => { const div = document.createElement('div'); div.className = 'img-thumb-box'; div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;" alt="Gallery">`; preview.appendChild(div); };
+        reader.onload = (e) => { 
+          const div = document.createElement('div'); 
+          div.className = 'img-thumb-box'; 
+          div.dataset.newImage = 'true';
+          div.innerHTML = `
+            <img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;" alt="Gallery">
+            <button type="button" class="del-btn" onclick="removeNewGalleryImage(this)">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          `; 
+          preview.appendChild(div); 
+        };
         reader.readAsDataURL(file);
       });
     });
   },
+  
   removeSingleImage() {
-    const preview = document.getElementById('previewImg'); const container = document.getElementById('imgpreview'); const uploadArea = document.getElementById('upload-file'); const fileInput = document.getElementById('myFile');
-    if (preview) preview.src = ''; if (container) container.style.display = 'none'; if (uploadArea) uploadArea.style.display = 'block'; if (fileInput) fileInput.value = '';
+    const preview = document.getElementById('previewImg'); 
+    const container = document.getElementById('imgpreview'); 
+    const uploadArea = document.getElementById('upload-file'); 
+    const fileInput = document.getElementById('myFile');
+    const removeInput = document.getElementById('removeMainImageInput');
+    
+    if (preview) preview.src = ''; 
+    if (container) container.style.display = 'none'; 
+    if (uploadArea) uploadArea.style.display = 'block'; 
+    if (fileInput) fileInput.value = '';
+    if (removeInput) removeInput.value = '1';
   },
-  removeGalleryItem(btn) { const item = btn.closest('.img-thumb-box'); if (item) item.remove(); },
+  
+  removeGalleryImage(btn, imageId) {
+    const item = btn.closest('.img-thumb-box'); 
+    if (item) {
+      item.style.transform = 'scale(0.8)';
+      item.style.opacity = '0';
+      setTimeout(() => {
+        item.remove();
+        this.removedGalleryIds.push(imageId);
+        this.updateRemoveGalleryInput();
+      }, 200);
+    }
+  },
+  
+  removeNewGalleryImage(btn) {
+    const item = btn.closest('.img-thumb-box'); 
+    if (item) {
+      item.style.transform = 'scale(0.8)';
+      item.style.opacity = '0';
+      setTimeout(() => item.remove(), 200);
+    }
+  },
+  
+  updateRemoveGalleryInput() {
+    const input = document.getElementById('removeGalleryImagesInput');
+    if (input) {
+      input.value = this.removedGalleryIds.join(',');
+    }
+  },
+  
   previewVariantImage(input) {
     const file = input.files[0]; if (!file || !file.type.startsWith('image/')) return; const reader = new FileReader();
     reader.onload = (e) => { let img = input.parentElement.querySelector('.var-img-thumb'); if (!img) { img = document.createElement('img'); img.className = 'var-img-thumb'; input.parentElement.appendChild(img); } img.src = e.target.result; };
@@ -428,13 +525,25 @@ const FormValidator = {
       let hasEmptyPrice = false;
       variantCards.forEach((card, idx) => { const priceInput = card.querySelector(`input[name="variants[${idx}][regular_price]"]`); if (priceInput && !priceInput.value.trim()) { hasEmptyPrice = true; priceInput.classList.add('is-invalid'); } else if (priceInput) priceInput.classList.remove('is-invalid'); });
       if (hasEmptyPrice) { e.preventDefault(); VariantGenerator.showAlert('Please fill in the regular price for all variants.'); document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
-    } return true;
+    }
+    return true;
   }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  SlugHandler.init(); ImagePreview.init(); ProductTypeToggle.init(); OptionManager.init(); VariantGenerator.init(); FormValidator.init();
-  window.removeSingleImage = () => ImagePreview.removeSingleImage(); window.addOption = () => OptionManager.addOption(); window.generateVariants = () => VariantGenerator.generate(); window.previewVarImage = (input) => ImagePreview.previewVariantImage(input);
+  SlugHandler.init(); 
+  ImagePreview.init(); 
+  ProductTypeToggle.init(); 
+  OptionManager.init(); 
+  VariantGenerator.init(); 
+  FormValidator.init();
+  
+  window.removeSingleImage = () => ImagePreview.removeSingleImage();
+  window.addOption = () => OptionManager.addOption();
+  window.generateVariants = () => VariantGenerator.generate();
+  window.previewVarImage = (input) => ImagePreview.previewVariantImage(input);
+  window.removeGalleryImage = (btn, id) => ImagePreview.removeGalleryImage(btn, id);
+  window.removeNewGalleryImage = (btn) => ImagePreview.removeNewGalleryImage(btn);
 });
 </script>
 
