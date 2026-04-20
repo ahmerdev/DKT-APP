@@ -163,6 +163,12 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Image for {self.product.name}"
 
+    def delete(self, *args, **kwargs):
+        if self.image:
+            self.image.delete(save=False)
+        super().delete(*args, **kwargs)
+
+
 
 # Variant Options (e.g. Color, Size)
 class VariantOption(models.Model):
