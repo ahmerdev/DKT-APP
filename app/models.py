@@ -37,8 +37,8 @@ class Brand(models.Model):
 
 
 class Banner(models.Model):   
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="banners")
-    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="banners")
+    category = models.ManyToManyField(Category, related_name="banners", blank=True)
+    brand = models.ManyToManyField(Brand, related_name="banners", blank=True)
     image = models.ImageField(upload_to="banners/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -47,8 +47,8 @@ class Banner(models.Model):
     
 
 class Ad(models.Model):   
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="ads")
-    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="ads")
+    category = models.ManyToManyField(Category, related_name="ads", blank=True)
+    brand = models.ManyToManyField(Brand, related_name="ads", blank=True)
     image = models.ImageField(upload_to="ads/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
