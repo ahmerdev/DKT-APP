@@ -504,6 +504,9 @@ def customer_detail(request, pk):
             order_earned = sum(item.pts for item in items)
             earned_points += order_earned
 
+            if order.points_used:
+                spent_points += order.points_used
+
         data = {
             "order": order,
             "items": items,
