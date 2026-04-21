@@ -42,16 +42,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'item', 'user', 'rating', 'comment', 'created_at']
 
 class BannerSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField()   
-    brand = serializers.StringRelatedField() 
+    category = serializers.StringRelatedField(many=True)
+    brand = serializers.StringRelatedField(many=True) 
     class Meta:
         model = Banner
         fields = ["id", "category", "brand", "image", "created_at"]   
 
 
 class AdSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField()   
-    brand = serializers.StringRelatedField() 
+    category = serializers.StringRelatedField(many=True)
+    brand = serializers.StringRelatedField(many=True)
     class Meta:
         model = Ad
         fields = ["id", "category", "brand", "image", "created_at"] 
