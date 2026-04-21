@@ -40,11 +40,11 @@
                                                 </div>
                                                  <div class="select">
                                                     <!-- Category -->
-                                                        <select name="category" required>
+                                                        <select class="form-multi-select" name="category" multiple data-coreui-search="true">
                                                             <option value="">Choose category</option>
                                                             {% for category in categories %}
                                                                 <option value="{{ category.id }}"
-                                                                    {% if banner and banner.category and banner.category.id == category.id %}selected{% endif %}>
+                                                                    {% if banner and category in banner.category.all %}selected{% endif %}>
                                                                     {{ category.name }}
                                                                 </option>
                                                             {% endfor %}
@@ -56,11 +56,11 @@
                                                 </div>
                                                  <div class="select">
                                                         <!-- Brand -->
-                                                    <select name="brand" required>
+                                                     <select class="form-multi-select" name="brand" multiple data-coreui-search="true">
                                                         <option value="">Choose Brand</option>
                                                         {% for brand in brands %}
                                                             <option value="{{ brand.id }}"
-                                                                {% if banner and banner.brand and banner.brand.id == brand.id %}selected{% endif %}>
+                                                                {% if banner and brand in banner.brand.all %}selected{% endif %}>
                                                                 {{ brand.name }}
                                                             </option>
                                                         {% endfor %}
