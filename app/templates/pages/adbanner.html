@@ -44,12 +44,12 @@
                                        <table id="myDataTable" class="table table-hover no-border align-middle">
                                     <thead class="table-head text-white text-center">
                                     <tr>
-                                        <th class="id-col text-center align-middle p-0">#</th>
-                                         <th class="text-center">Image</th>
-                                        <th class="text-center">Category Name</th>
-                                         <th class="text-center">Brand Name</th>
-                                        <th class="text-center">Date</th>
-                                        <th class="text-center">Action</th>
+                                        <th class="id-col text-center text-white align-middle p-0">#</th>
+                                         <th class="text-center text-white">Image</th>
+                                        <th class="text-center text-white">Category Name</th>
+                                         <th class="text-center text-white">Brand Name</th>
+                                        <th class="text-center text-white">Date</th>
+                                        <th class="text-center text-white">Action</th>
                                     </tr>
                                     </thead>
                                    <tbody id="user-table-body">
@@ -64,28 +64,30 @@
                                             {% endif %}
                                         </td>
                                         <td class="text-center">
-                                            {% if ad.category %}
-                                                {{ ad.category.name }}
-                                            {% else %}
-                                                <span class="text-muted">No Category</span>
-                                            {% endif %}
+                                            {% for ad in ad.category.all %}
+                                               <span class="badge bg-info">{{ ad.name }}</span>
+                                            {% endfor %}
                                         </td>
 
                                         <!-- Brand name -->
                                         <td class="text-center">
-                                            {% if ad.brand %}
-                                                {{ ad.brand.name }}
-                                            {% else %}
-                                                <span class="text-muted">No Brand</span>
-                                            {% endif %}
+                                            {% for ad in ad.brand.all %}
+                                               <span class="badge bg-info"> {{ ad.name }}</span>
+                                            {% endfor %}
                                         </td>
                                         <td class="text-center">{{ ad.created_at|date:"m/d/Y" }}</td>
                                         <td class="text-center">
                                                 <a href="{% url 'edit_adbanner' ad.pk %}" class="btn text-white fs-5 fw-semibold bg-secondary shadow"> Edit
                                                     <i class="fa-solid fa-pen"></i>
                                                 </a>
-                                                <a href="{% url 'delete_adbanner' ad.pk %}" class="btn text-white fw-semibold bg-danger fs-5 shadow">Delete <i class="fa-solid fa-trash-can shadow"></i>
-                                                </a>
+                                                <a href="{% url 'delete_adbanner' ad.pk %}" 
+                                        class="btn text-white fw-semibold bg-danger fs-5 shadow"
+                                            data-bs-toggle="modal"
+                                                data-bs-target="#globalDeleteModal"
+                                                data-name="{{ ad.category.name }}"
+                                                data-url="{% url 'delete_adbanner' ad.pk %}">
+                                            Delete <i class="fa-solid fa-trash-can shadow"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                     {% empty %}
