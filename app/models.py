@@ -318,7 +318,7 @@ class Order(models.Model):
     points_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_points_added = models.BooleanField(default=False)
     discount_code = models.CharField(max_length=50, null=True, blank=True)
-    discount_percent = models.FloatField(default=0)
+    discount_type = models.CharField(max_length=50, blank=True, null=True)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
