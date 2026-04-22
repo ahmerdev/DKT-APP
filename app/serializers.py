@@ -277,6 +277,9 @@ class AppUserSerializer(serializers.ModelSerializer):
 #         fields = ['id', 'number', 'name', 'email'] 
 
 class OrderSerializer(serializers.ModelSerializer):
+    total_amount = serializers.FloatField(read_only=True)
+    discount_amount = serializers.FloatField(read_only=True)
+    discount_percent = serializers.FloatField(read_only=True)
     user_detail = AppUserSerializer(source="user", read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
@@ -285,7 +288,10 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = [ 'id', 'user_detail', 'address', 'shipping', 'status', 'type', 'items', 'payments',"points_used",       
+        fields = [ 'id', 'user_detail', 'address', 'shipping', 'status', 'type', 'items', "discount_code",
+            "discount_percent",
+            "discount_amount",
+            "total_amount", 'payments',"points_used",       
             "points_discount", 
             'created_at'
         ]
