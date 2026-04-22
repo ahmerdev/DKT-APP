@@ -279,7 +279,7 @@ class AppUserSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     total_amount = serializers.FloatField(read_only=True)
     discount_amount = serializers.FloatField(read_only=True)
-    discount_type = serializers.FloatField(read_only=True)
+    discount_type = serializers.CharField(read_only=True)
     user_detail = AppUserSerializer(source="user", read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
