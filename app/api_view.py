@@ -655,7 +655,7 @@ def create_order(request):
 
         if discount_code:
             try:
-                discount = Discount.objects.get(code=discount_code, is_active=True)
+                discount = Discount.objects.get(code=discount_code, active=True)
 
                 if discount.discount_type == "percent":
                     discount_percent = Decimal(str(discount.value))
