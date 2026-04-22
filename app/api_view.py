@@ -678,12 +678,12 @@ def create_order(request):
         # =========================
         # UPDATE ORDER
         # =========================
-        order.discount_percent = discount_percent
+        order.discount_type = discount_type
         order.discount_amount = discount_amount
         order.total_amount = final_total
 
         order.save(update_fields=[
-            "discount_percent",
+            "discount_type",
             "discount_amount",
             "total_amount"
         ])
