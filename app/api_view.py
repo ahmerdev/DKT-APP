@@ -451,93 +451,263 @@ def create_review(request):
 from django.db import transaction
 
 
-@api_view(["POST"])
-@permission_classes([AllowAny])   
-def create_order(request): 
-    data = request.data
-    user_id = data.get("user_id")
-    applied_points = int(data.get("applied_points", 0)) 
+# @api_view(["POST"])
+# @permission_classes([AllowAny])   
+# def create_order(request): 
+#     data = request.data
+#     user_id = data.get("user_id")
+#     applied_points = int(data.get("applied_points", 0)) 
 
+#     try:
+#         app_user = AppUser.objects.get(id=user_id)
+#     except AppUser.DoesNotExist:
+#         return Response({"error": "Invalid user_id"}, status=400)
+    
+#     with transaction.atomic():
+    
+#             points_discount = 0.00
+#             if applied_points > 0:
+#                 if applied_points > app_user.points:
+#                     return Response({"error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."}, status=400)
+                
+#                 settings = get_point_settings()
+#                 points_discount = applied_points * settings.point_value
+
+#                 app_user.points = (app_user.points or 0) - applied_points
+#                 app_user.save(update_fields=["points"])
+
+#             order = Order.objects.create(
+#                 user=app_user,   
+#                 address=data.get("address", ""),
+#                 shipping=data.get("shipping", ""),
+#                 status=data.get("status", "pending"),
+#                 points_used=applied_points,
+#                 points_discount=points_discount
+#             )
+
+#             for item in data.get("product", []):
+#                 image_data = item.get("image")
+#                 image_file = None
+
+#                 if isinstance(image_data, dict):
+#                     image_data = image_data.get("uri")
+
+#                 # 1. Base64 image
+#                 if image_data and isinstance(image_data, str) and image_data.startswith("data:image"):
+#                     format, imgstr = image_data.split(";base64,")
+#                     ext = format.split("/")[-1]
+#                     image_file = ContentFile(base64.b64decode(imgstr), name=f"order_item.{ext}")
+
+#                 # 2. File object (direct upload)
+#                 elif image_data and not isinstance(image_data, str):
+#                     image_file = image_data
+
+#                 # 3. Agar URL aaya hai
+#                 elif image_data and isinstance(image_data, str) and image_data.startswith("http"):
+#                     try:
+#                         response = requests.get(image_data)
+#                         if response.status_code == 200:
+#                             ext = image_data.split(".")[-1].split("?")[0]
+#                             image_file = ContentFile(response.content, name=f"order_item.{ext}")
+#                     except Exception as e:
+#                         print("Image download failed:", e)
+
+#                 OrderItem.objects.create(
+#                     order=order,
+#                     image=image_file, 
+#                     name=item.get("name"),
+#                     pts=item.get("pts", 0),
+#                     variants=item.get("variants", ""),
+#                     price=item.get("price", 0),
+#                     cost_price=item.get("cost_price", 0),
+#                     quantity=item.get("quantity", 1),
+#                 )
+
+#             # Payment loop
+#             for pay in data.get("payment", []):
+#                 Payment.objects.create(
+#                     order=order,
+#                     method=pay.get("method", "Unknown"),
+#                     status=pay.get("status", "Pending"),
+#                 )
+
+#             return Response(
+#                 {
+#                     "message": "Order created successfully",
+#                     "order": OrderSerializer(order).data,
+#                 },
+#                 status=status.HTTP_201_CREATED,
+#             )
+
+
+
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from django.db import transaction
+from django.db.models import Sum, F
+from decimal import Decimal
+import base64
+import requests
+from django.core.files.base import ContentFile
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def create_order(request):
+    data = request.data
+
+    user_id = data.get("user_id")
+    applied_points = int(data.get("applied_points", 0))
+    discount_code = data.get("discount_code")
+
+    # Validate user
     try:
         app_user = AppUser.objects.get(id=user_id)
     except AppUser.DoesNotExist:
         return Response({"error": "Invalid user_id"}, status=400)
-    
+
     with transaction.atomic():
-    
-            points_discount = 0.00
-            if applied_points > 0:
-                if applied_points > app_user.points:
-                    return Response({"error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."}, status=400)
-                
-                settings = get_point_settings()
-                points_discount = applied_points * settings.point_value
 
-                app_user.points = (app_user.points or 0) - applied_points
-                app_user.save(update_fields=["points"])
+        # =========================
+        # APPLY POINTS
+        # =========================
+        points_discount = Decimal("0.00")
 
-            order = Order.objects.create(
-                user=app_user,   
-                address=data.get("address", ""),
-                shipping=data.get("shipping", ""),
-                status=data.get("status", "pending"),
-                points_used=applied_points,
-                points_discount=points_discount
+        if applied_points > 0:
+            if applied_points > (app_user.points or 0):
+                return Response({
+                    "error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."
+                }, status=400)
+
+            settings = get_point_settings()
+            points_discount = Decimal(applied_points) * Decimal(settings.point_value)
+
+            app_user.points = (app_user.points or 0) - applied_points
+            app_user.save(update_fields=["points"])
+
+        # =========================
+        # CREATE ORDER
+        # =========================
+        order = Order.objects.create(
+            user=app_user,
+            address=data.get("address", ""),
+            shipping=data.get("shipping", ""),
+            status=data.get("status", "pending"),
+            points_used=applied_points,
+            points_discount=points_discount,
+            discount_code=discount_code
+        )
+
+        # =========================
+        # CREATE ITEMS + CALCULATE TOTAL
+        # =========================
+        total = Decimal("0.00")
+
+        for item in data.get("product", []):
+            image_data = item.get("image")
+            image_file = None
+
+            # IMAGE HANDLING
+            if isinstance(image_data, dict):
+                image_data = image_data.get("uri")
+
+            if image_data and isinstance(image_data, str) and image_data.startswith("data:image"):
+                format, imgstr = image_data.split(";base64,")
+                ext = format.split("/")[-1]
+                image_file = ContentFile(base64.b64decode(imgstr), name=f"order_item.{ext}")
+
+            elif image_data and not isinstance(image_data, str):
+                image_file = image_data
+
+            elif image_data and isinstance(image_data, str) and image_data.startswith("http"):
+                try:
+                    response = requests.get(image_data)
+                    if response.status_code == 200:
+                        ext = image_data.split(".")[-1].split("?")[0]
+                        image_file = ContentFile(response.content, name=f"order_item.{ext}")
+                except Exception:
+                    pass
+
+            price = Decimal(str(item.get("price", 0)))
+            qty = int(item.get("quantity", 1))
+
+            total += price * qty
+
+            OrderItem.objects.create(
+                order=order,
+                image=image_file,
+                name=item.get("name"),
+                pts=item.get("pts", 0),
+                variants=item.get("variants", ""),
+                price=price,
+                cost_price=item.get("cost_price", 0),
+                quantity=qty,
             )
 
-            for item in data.get("product", []):
-                image_data = item.get("image")
-                image_file = None
+        # =========================
+        # APPLY DISCOUNT
+        # =========================
+        discount_percent = Decimal("0")
+        discount_amount = Decimal("0.00")
 
-                if isinstance(image_data, dict):
-                    image_data = image_data.get("uri")
+        if discount_code:
+            try:
+                discount = Discount.objects.get(code=discount_code, is_active=True)
 
-                # 1. Base64 image
-                if image_data and isinstance(image_data, str) and image_data.startswith("data:image"):
-                    format, imgstr = image_data.split(";base64,")
-                    ext = format.split("/")[-1]
-                    image_file = ContentFile(base64.b64decode(imgstr), name=f"order_item.{ext}")
+                if discount.discount_type == "percent":
+                    discount_percent = Decimal(str(discount.value))
+                    discount_amount = (total * discount_percent) / Decimal("100")
 
-                # 2. File object (direct upload)
-                elif image_data and not isinstance(image_data, str):
-                    image_file = image_data
+                elif discount.discount_type == "fixed":
+                    discount_amount = Decimal(str(discount.value))
 
-                # 3. Agar URL aaya hai
-                elif image_data and isinstance(image_data, str) and image_data.startswith("http"):
-                    try:
-                        response = requests.get(image_data)
-                        if response.status_code == 200:
-                            ext = image_data.split(".")[-1].split("?")[0]
-                            image_file = ContentFile(response.content, name=f"order_item.{ext}")
-                    except Exception as e:
-                        print("Image download failed:", e)
+            except Discount.DoesNotExist:
+                pass
 
-                OrderItem.objects.create(
-                    order=order,
-                    image=image_file, 
-                    name=item.get("name"),
-                    pts=item.get("pts", 0),
-                    variants=item.get("variants", ""),
-                    price=item.get("price", 0),
-                    cost_price=item.get("cost_price", 0),
-                    quantity=item.get("quantity", 1),
-                )
+        # =========================
+        # FINAL TOTAL
+        # =========================
+        final_total = total - discount_amount - points_discount
 
-            # Payment loop
-            for pay in data.get("payment", []):
-                Payment.objects.create(
-                    order=order,
-                    method=pay.get("method", "Unknown"),
-                    status=pay.get("status", "Pending"),
-                )
+        if final_total < 0:
+            final_total = Decimal("0.00")
 
-            return Response(
-                {
-                    "message": "Order created successfully",
-                    "order": OrderSerializer(order).data,
-                },
-                status=status.HTTP_201_CREATED,
+        # =========================
+        # UPDATE ORDER
+        # =========================
+        order.discount_percent = discount_percent
+        order.discount_amount = discount_amount
+        order.total_amount = final_total
+
+        order.save(update_fields=[
+            "discount_percent",
+            "discount_amount",
+            "total_amount"
+        ])
+
+        # =========================
+        # PAYMENT
+        # =========================
+        for pay in data.get("payment", []):
+            Payment.objects.create(
+                order=order,
+                method=pay.get("method", "Unknown"),
+                status=pay.get("status", "Pending"),
             )
+
+        return Response({
+            "message": "Order created successfully",
+            "order": OrderSerializer(order).data
+        }, status=201)
+
+
+
+
+
+
 
 # from django.db.models import Sum
 # @api_view(["PATCH"])
