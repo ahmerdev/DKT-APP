@@ -650,18 +650,19 @@ def create_order(request):
         # =========================
         # APPLY DISCOUNT
         # =========================
-        discount_percent = Decimal("0")
+        discount_type = ""        # ← string, Decimal nahi
         discount_amount = Decimal("0.00")
 
         if discount_code:
             try:
                 discount = Discount.objects.get(code=discount_code, active=True)
+                discount_type = discount.discount_type  # ← "percent" ya "fixed" string save karo
 
-                if discount.discount_type == "percent":
+                if discount_type == "percent":
                     discount_percent = Decimal(str(discount.value))
                     discount_amount = (total * discount_percent) / Decimal("100")
 
-                elif discount.discount_type == "fixed":
+                elif discount_type == "fixed":
                     discount_amount = Decimal(str(discount.value))
 
             except Discount.DoesNotExist:
@@ -678,7 +679,7 @@ def create_order(request):
         # =========================
         # UPDATE ORDER
         # =========================
-        order.discount_type = discount_type
+        order.discount_type = discount_type    # ← ab string save hogi
         order.discount_amount = discount_amount
         order.total_amount = final_total
 
@@ -702,7 +703,6 @@ def create_order(request):
             "message": "Order created successfully",
             "order": OrderSerializer(order).data
         }, status=201)
-
 
 
 
