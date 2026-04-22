@@ -1699,48 +1699,66 @@ def delete_hero(request, pk):
 
 @login_required(login_url='login')
 def create_discount(request, discount_pk=None):
-   
-    if discount_pk:
-        discount = get_object_or_404(Discount, pk=discount_pk)
-    else:
-        discount = None
+
+    discount = get_object_or_404(Discount, pk=discount_pk) if discount_pk else None
 
     products = Product.objects.all()
     users = AppUser.objects.all()
 
     if request.method == "POST":
         form = DiscountForm(request.POST, request.FILES, instance=discount)
+
         if form.is_valid():
             discount = form.save(commit=False)
 
-            # Handle checkboxes safely
-            apply_all_products = "apply_all_products" in request.POST
-            apply_all_users = "apply_all_users" in request.POST
+            # Checkbox handling (SAFE)
+            apply_all_products = request.POST.get("apply_all_products") == "on"
+            apply_all_users = request.POST.get("apply_all_users") == "on"
 
             discount.apply_all_products = apply_all_products
             discount.apply_all_users = apply_all_users
             discount.save()
 
-        # Handle products
-        if not apply_all_products:
-            selected_products = request.POST.getlist("products")
-            discount.products.set(selected_products)
-        else:
-            # Optional: if you want to automatically link all
-            discount.products.set(Product.objects.all())
+            # =========================
+            # PRODUCTS HANDLE
+            # =========================
+            if apply_all_products:
+                # Clear specific selection (logic clean rahe)
+                discount.products.clear()
+            else:
+                selected_products = request.POST.getlist("products")
+                discount.products.set(selected_products)
 
-        #  Handle users
-        if not apply_all_users:
-            selected_users = request.POST.getlist("users")
-            discount.users.set(selected_users)
+            # =========================
+            # USERS HANDLE
+            # =========================
+            if apply_all_users:
+                discount.users.clear()
+            else:
+                selected_users = request.POST.getlist("users")
+                discount.users.set(selected_users)
+
+            # =========================
+            # OPTIONAL SAFETY CHECKS
+            # =========================
+            if not apply_all_products and discount.products.count() == 0:
+                messages.error(request, "Please select at least one product or enable 'Apply All Products'")
+                return redirect(request.path)
+
+            if not apply_all_users and discount.users.count() == 0:
+                messages.error(request, "Please select at least one user or enable 'Apply All Users'")
+                return redirect(request.path)
+
+            # =========================
+            #  SEND EMAIL
+            # =========================
+            send_discount_email(discount)
+
+            messages.success(request, f"Discount '{discount.title}' saved successfully!")
+            return redirect("discount")
+
         else:
-            # Optional: link all users if “apply all” is checked
-            discount.users.set(AppUser.objects.all())
-            discount.save()
-      
-        send_discount_email(discount)
-        messages.success(request, f"Discount '{discount.title}' created successfully!")
-        return redirect("discount")  
+            messages.error(request, "Form is invalid. Please check inputs.")
 
     context = {
         "discount": discount,
