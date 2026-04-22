@@ -825,6 +825,18 @@ def validate_discount_api(request):
     if discount.end_date and discount.end_date < now:
         return Response({"valid": False, "message": "Coupon expired."}, status=400)
 
+    user_id = request.data.get("user_id")
+    if user_id:
+        already_used = Order.objects.filter(
+            user__id=user_id,
+            discount_code__iexact=code
+        ).exists()
+        if already_used:
+            return Response({
+                "valid": False,
+                "message": "This Coupon is already used"
+            }, status=400)
+
     # Initialize
     applied_product_ids = []
     eligible_total = Decimal("0.00")
