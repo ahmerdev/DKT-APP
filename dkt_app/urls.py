@@ -1,18 +1,19 @@
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from app import views, api_view
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
+    path('media-library/', include('media_library.urls')),
 # custom login/logout
    path('login/', views.user_login, name='login'),
+   path('rider/login/', views.rider_login, name='rider_login'),
    path('logout/rider/', views.user_logout, name='user_logout'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+   path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
 #App User Route 
     path('appusers/', views.appuser_list_ui, name="appuser_list"),
@@ -68,6 +69,9 @@ urlpatterns = [
 
 
 # Product Route
+    path('update-order/', views.update_product_order, name='update-order'),
+    path('update-category-order/', views.update_category_order, name='update-category-order'),
+    path('update-brand-order/', views.update_brand_order, name='update-brand-order'),
     path('product/', views.product, name='product'),
     path("product/add/", views.add_or_edit_product, name="add_product"),
     path('product/<int:pk>/edit/', views.add_or_edit_product, name='edit_product'),
@@ -127,7 +131,14 @@ urlpatterns = [
     path("review/delete/<int:pk>/", views.delete_review, name="delete_review"),
 # ->orderByRaw('(product_images.src IS NOT NULL AND products.regular_price IS NOT NULL) DESC')
 #             ->orderBy('products.regular_price', 'asc')
-# API
+
+
+    # Rider APIs
+    path('api/rider/login/', api_view.rider_login_api, name='rider_login_api'),
+    path('api/rider/forgot-password/', api_view.rider_forgot_password_api, name='rider_forgot_password_api'),
+    path('api/rider/reset-password/', api_view.rider_reset_password_api, name='rider_reset_password_api'),
+    path('api/rider/orders/<int:rider_id>/', api_view.rider_orders_api, name='rider_orders_api'),
+    path('api/rider/orders/<int:order_id>/update-status/', api_view.rider_update_order_status_api, name='rider_update_order_status_api'),
     path('api/categories/', api_view.category_list_api, name='api_category_list'),
     path('api/brands/', api_view.brand_list_api, name='api_brand_list'),
     path('api/privacy/', api_view.privacy_content_api, name='api_privacy_content'),
