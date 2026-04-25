@@ -3,18 +3,22 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Sum, Avg, Q
 import ast
 from .sms import send_sms
-from .models import Category, Brand, PointSetting, Product, Discount, Redeem, Banner, Hero, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
+from .models import Category, Brand, PointSetting, Product, Discount, Redeem, Banner, Hero, Rider, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
 
 class CategorySerializer(serializers.ModelSerializer):
+    position = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'is_active', 'image', 'created_at']
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'position', 'created_at']
 
 
 class BrandSerializer(serializers.ModelSerializer):
+    position = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Brand
-        fields = ['id', 'name', 'slug', 'is_active', 'image', 'created_at']      
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'position', 'created_at']      
 
 class PrivacySerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,6 +100,7 @@ class ProductSerializer(serializers.ModelSerializer):
     category = serializers.StringRelatedField()
     brand = serializers.StringRelatedField()
     gallery_images = ProductImageSerializer(many=True, read_only=True)
+    position = serializers.IntegerField(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     
     reviews = serializers.SerializerMethodField()
@@ -120,6 +125,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "stock_status",
             "points",
             "product_type",
+            "position",
             "category",
             "brand",
             "gallery_images",
@@ -325,3 +331,58 @@ class DiscountValidateSerializer(serializers.ModelSerializer):
             "message",
             "valid",
         ]
+
+
+class RiderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rider
+        fields = [
+            'id',
+            'name',
+            'email',
+            'phone',
+            'is_active',
+        ]
+
+
+# ══════════════════════════════════════
+# RIDER ORDER SERIALIZER
+# ══════════════════════════════════════
+class RiderOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'name', 'price', 'quantity', 'variants', 'image', 'pts']
+
+
+class RiderOrderSerializer(serializers.ModelSerializer):
+    items = RiderOrderItemSerializer(many=True, read_only=True)
+    payments = PaymentSerializer(many=True, read_only=True) 
+    city = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id',
+            'status',
+            'address',
+            'city',
+            'total_amount',
+            'shipping',
+            'discount_code',
+            'discount_amount',
+            'points_used',
+            'points_discount',
+            'items',
+            'payments',
+            'created_at',
+        ]
+
+    def get_city(self, obj):
+        return obj.city.name if obj.city else ""
+
+    def get_address(self, obj):
+        try:
+            return ast.literal_eval(obj.address) if obj.address else {}
+        except Exception:
+            return {}
