@@ -13,6 +13,7 @@ class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='category/images/', blank=True, null=True)
+    position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -27,6 +28,7 @@ class Brand(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to="brands/images/", blank=True, null=True)
+    position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -148,6 +150,7 @@ class Product(models.Model):
     points = models.PositiveIntegerField(default=0, null=True, blank=True)
 
     product_type = models.CharField(max_length=20, choices=PRODUCT_TYPE_CHOICES, default="simple")
+    position = models.PositiveIntegerField(default=0)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -162,12 +165,11 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.name}"
-
+    
     def delete(self, *args, **kwargs):
         if self.image:
             self.image.delete(save=False)
         super().delete(*args, **kwargs)
-
 
 
 # Variant Options (e.g. Color, Size)
@@ -314,11 +316,12 @@ class Order(models.Model):
     city = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
     rider = models.ForeignKey("Rider", on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending") 
+    cancel_reason = models.TextField(blank=True, null=True)
     points_used = models.IntegerField(default=0)
     points_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_points_added = models.BooleanField(default=False)
     discount_code = models.CharField(max_length=50, null=True, blank=True)
-    discount_type = models.CharField(max_length=50, blank=True, null=True)
+    discount_type = models.CharField(max_length=20, default="", blank=True)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -443,7 +446,9 @@ class City(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.name    
+        return self.name   
+
+
 import uuid
 class RiderPasswordResetToken(models.Model):
     rider = models.ForeignKey(Rider, on_delete=models.CASCADE, related_name="reset_tokens")
@@ -457,3 +462,15 @@ class RiderPasswordResetToken(models.Model):
 
     def __str__(self):
         return f"Reset token for {self.rider.name}"    
+    
+
+class UsedCoupon(models.Model):
+    user = models.ForeignKey("AppUser", on_delete=models.CASCADE, related_name='used_coupons')
+    discount = models.ForeignKey("Discount", on_delete=models.CASCADE, related_name='coupon_uses')
+    order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True, related_name='used_discounts')
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'discount') 
+    def __str__(self):
+        return f"{self.user.name if self.user.name else self.user.number} used {self.discount.code}"    
