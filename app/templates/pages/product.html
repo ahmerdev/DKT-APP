@@ -41,6 +41,7 @@
                 <table id="myDataTable" class="table table-hover no-border align-middle">
                 <thead class="table-head text-center">
                         <tr>
+                            <th></th>
                             <th class="id-col text-center align-middle p-0 text-white">#</th>
                             <th scope="col" class="text-center text-white">Image</th>
                             <th scope="col" class="text-center text-white">Name</th>
@@ -54,7 +55,8 @@
                     </thead>
                     <tbody id="user-table-body">
                         {% for product in products %}
-                        <tr>
+                        <tr data-id="{{ product.id }}">
+                            <td class="drag-handle" style="cursor: grab;"><i class="fa-solid fa-grip-vertical"></i></td>
                             <td class="text-center">{{ forloop.counter }}</td>
                             <td class="text-center">
                                 {% if product.image %}
@@ -74,11 +76,11 @@
                             </td>
 
                             <td class="text-center">
-                                {% if product.variants.exists %}
-                                    Rs: {{ product.variants.2nd.sale_price }}
-                                {% else %}
-                                        Rs: {{ product.sale_price }}
-                                {% endif %}
+                                {% with product.variants.all as vars %}
+                                    {% if vars|length > 1 %}
+                                        Rs: {{ vars.1.sale_price }}
+                                    {% endif %}
+                                {% endwith %}
                             </td>
                             <td class="text-center">{{ product.category.name }}</td>
                             <td class="text-center">{{ product.brand.name }}</td>
@@ -133,5 +135,47 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+function getCSRFToken() {
+    return document.cookie.split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
 
+const el = document.getElementById('user-table-body');
+
+new Sortable(el, {
+    animation: 150,
+    handle: '.drag-handle',
+    onEnd: function () {
+        let order = [];
+        el.querySelectorAll('tr').forEach((row, index) => {
+            row.querySelector('td:nth-child(2)').textContent = index + 1;
+            order.push({
+                id: row.dataset.id,
+                position: index + 1
+            });
+        });
+
+        fetch("/update-order/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({ order: order })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "ok"){
+                console.log("Order saved!");
+            } else {
+                console.error("❌ Error:", data);
+            }
+        })
+        .catch(err => console.error("❌ Network error:", err));
+    }
+});
+</script>
 {% endblock %}
