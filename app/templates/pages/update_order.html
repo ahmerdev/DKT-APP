@@ -776,119 +776,221 @@
                 </div>
 
                 <!-- ===== UPDATE STATUS ===== -->
-                <div class="col">
-                    <div class="premium-card">
-                        <div class="pc-head">
-                            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
-                                <i class="fas fa-pen-to-square"></i>
-                            </div>
-                            <h5>Update Status</h5>
-                        </div>
-                        <div class="pc-body">
-                            <form method="post">
-                                {% csrf_token %}
+                <!-- ===== UPDATE STATUS ===== -->
+<div class="col">
+    <div class="premium-card">
+        <div class="pc-head">
+            <div class="pc-head-icon" style="background:var(--primary-50);color:var(--primary);">
+                <i class="fas fa-pen-to-square"></i>
+            </div>
+            <h5>Update Status</h5>
+        </div>
+        <div class="pc-body">
+            <form method="post">
+                {% csrf_token %}
 
-                                <!-- Current Status Visual -->
-                                {% if order.status == "pending" %}
-                                <div class="current-status-visual" style="background:#fffbeb;">
-                                    <div class="csv-icon pending"><i class="fas fa-clock"></i></div>
-                                    <div class="csv-text">
-                                        <div class="csv-label">Current Status</div>
-                                        <div class="csv-value" style="color:#92400e;">Pending</div>
-                                    </div>
-                                </div>
-                                {% elif order.status == "inprocess" or order.status == "process" %}
-                                <div class="current-status-visual" style="background:#eff6ff;">
-                                    <div class="csv-icon process"><i class="fas fa-gear fa-spin"></i></div>
-                                    <div class="csv-text">
-                                        <div class="csv-label">Current Status</div>
-                                        <div class="csv-value" style="color:#1e40af;">In Process</div>
-                                    </div>
-                                </div>
-                                {% elif order.status == "on_the_way" %}
-                                <div class="current-status-visual" style="background:#fdf2f8;">
-                                    <div class="csv-icon on_the_way"><i class="fas fa-truck-fast"></i></div>
-                                    <div class="csv-text">
-                                        <div class="csv-label">Current Status</div>
-                                        <div class="csv-value" style="color:#be185d;">On The Way</div>
-                                    </div>
-                                </div>
-                                {% elif order.status == "delivered" %}
-                                <div class="current-status-visual" style="background:#ecfdf5;">
-                                    <div class="csv-icon delivered"><i class="fas fa-circle-check"></i></div>
-                                    <div class="csv-text">
-                                        <div class="csv-label">Current Status</div>
-                                        <div class="csv-value" style="color:#065f46;">Delivered</div>
-                                    </div>
-                                </div>
-                                {% elif order.status == "cancelled" %}
-                                <div class="current-status-visual" style="background:#fef2f2;">
-                                    <div class="csv-icon cancelled"><i class="fas fa-circle-xmark"></i></div>
-                                    <div class="csv-text">
-                                        <div class="csv-label">Current Status</div>
-                                        <div class="csv-value" style="color:#991b1b;">Cancelled</div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="current-status-visual" style="background:#f9fafb;">
-                                    <div class="csv-icon default"><i class="fas fa-circle-question"></i></div>
-                                    <div class="csv-text">
-                                        <div class="csv-label">Current Status</div>
-                                        <div class="csv-value">{{ order.get_status_display }}</div>
-                                    </div>
-                                </div>
-                                {% endif %}
+                <!-- Current Status Visual -->
+                {% if order.status == "pending" %}
+                <div class="current-status-visual" style="background:#fffbeb;">
+                    <div class="csv-icon pending"><i class="fas fa-clock"></i></div>
+                    <div class="csv-text">
+                        <div class="csv-label">Current Status</div>
+                        <div class="csv-value" style="color:#92400e;">Pending</div>
+                    </div>
+                </div>
+                {% elif order.status == "inprocess" or order.status == "process" %}
+                <div class="current-status-visual" style="background:#eff6ff;">
+                    <div class="csv-icon process"><i class="fas fa-gear fa-spin"></i></div>
+                    <div class="csv-text">
+                        <div class="csv-label">Current Status</div>
+                        <div class="csv-value" style="color:#1e40af;">In Process</div>
+                    </div>
+                </div>
+                {% elif order.status == "on_the_way" %}
+                <div class="current-status-visual" style="background:#fdf2f8;">
+                    <div class="csv-icon on_the_way"><i class="fas fa-truck-fast"></i></div>
+                    <div class="csv-text">
+                        <div class="csv-label">Current Status</div>
+                        <div class="csv-value" style="color:#be185d;">On The Way</div>
+                    </div>
+                </div>
+                {% elif order.status == "delivered" %}
+                <div class="current-status-visual" style="background:#ecfdf5;">
+                    <div class="csv-icon delivered"><i class="fas fa-circle-check"></i></div>
+                    <div class="csv-text">
+                        <div class="csv-label">Current Status</div>
+                        <div class="csv-value" style="color:#065f46;">Delivered</div>
+                    </div>
+                </div>
+                {% elif order.status == "cancelled" %}
+                <div class="current-status-visual" style="background:#fef2f2;">
+                    <div class="csv-icon cancelled"><i class="fas fa-circle-xmark"></i></div>
+                    <div class="csv-text">
+                        <div class="csv-label">Current Status</div>
+                        <div class="csv-value" style="color:#991b1b;">Cancelled</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="current-status-visual" style="background:#f9fafb;">
+                    <div class="csv-icon default"><i class="fas fa-circle-question"></i></div>
+                    <div class="csv-text">
+                        <div class="csv-label">Current Status</div>
+                        <div class="csv-value">{{ order.get_status_display }}</div>
+                    </div>
+                </div>
+                {% endif %}
 
-                                <label class="fl"><i class="fas fa-arrows-rotate me-1"></i> Change To</label>
-                                <select name="status" class="fs mb-4">
-                                    <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
-                                    <option value="process" {% if order.status == "process" or order.status == "inprocess" %}selected{% endif %}>In Process</option>
-                                    <option value="on_the_way" {% if order.status == "on_the_way" %}selected{% endif %}>On The Way</option>
-                                    <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
-                                    <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
-                                </select>
+                <!-- ✅ Delivered hone ke baad status change hide karo -->
+                {% if order.status != "delivered" and order.status != "cancelled" %}
 
-                                <div class="btn-row">
-                                    <button type="submit" class="btn-burg">
-                                        <i class="fas fa-check"></i> Update
-                                    </button>
-                                    <a href="{% url 'order_list_ui' %}" class="btn-ghost">
-                                        <i class="fas fa-arrow-left"></i> Back
-                                    </a>
-                                </div>
+                <label class="fl"><i class="fas fa-arrows-rotate me-1"></i> Change To</label>
+                <select name="status" class="fs mb-4" id="statusSelect" onchange="handleStatusChange(this.value)">
+                    <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                    <option value="process" {% if order.status == "process" or order.status == "inprocess" %}selected{% endif %}>In Process</option>
+                    <option value="on_the_way" {% if order.status == "on_the_way" %}selected{% endif %}>On The Way</option>
+                    <option value="delivered" {% if order.status == "delivered" %}selected{% endif %}>Delivered</option>
+                    <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+                </select>
 
-                                {% if not request.session.is_rider %}
-                                <div class="divider"></div>
-
-                                <label class="fl" style="margin-top:4px;"><i class="fas fa-motorcycle me-1"></i> Assign Rider</label>
-                                <select id="citySelect" name="city" class="fs mb-3">
-                                    {% for city in cities %}
-                                     {% if order_city_id == city.id %}
-                                         <option value="{{ city.id }}" selected>{{ city.name }}</option>
-                                {% endif %}
-                            {% endfor %}
-                                </select>
-                                <button type="button" onclick="loadRiders({{ order.pk }})" class="btn-rider">
-                                    <i class="fas fa-users"></i> View Available Riders
-                                </button>
-                                <div class="rider-note">
-                                    <i class="fas fa-info-circle"></i>
-                                    Riders are filtered by the order's delivery city automatically.
-                                </div>
-                                {% endif %}
-
-                                <div class="modal fade" id="riderModal" tabindex="-1">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content" id="riderModalContent">
-                                            <!-- AJAX data yahan ayega -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                <!-- ✅ Cancel Reason Box — sirf tab dikhega jab cancelled select ho -->
+                <div id="cancelReasonBox" style="display:none; margin-bottom: 16px;">
+                    <label class="fl" style="color:#991b1b;">
+                        <i class="fas fa-triangle-exclamation me-1"></i> Cancellation Reason
+                    </label>
+                    <textarea
+                        name="cancel_reason"
+                        id="cancelReasonInput"
+                        rows="3"
+                        placeholder="Please explain why this order is being cancelled..."
+                        style="
+                            width: 100%;
+                            padding: 14px 18px;
+                            border: 2px solid #fca5a5;
+                            border-radius: 14px;
+                            font-size: 14px;
+                            font-weight: 500;
+                            color: #1f2937;
+                            background: #fff5f5;
+                            resize: vertical;
+                            outline: none;
+                            transition: 0.3s;
+                            font-family: inherit;
+                        "
+                        onfocus="this.style.borderColor='#ef4444'; this.style.boxShadow='0 0 0 4px rgba(239,68,68,0.1)'"
+                        onblur="this.style.borderColor='#fca5a5'; this.style.boxShadow='none'"
+                    ></textarea>
+                    <div style="
+                        background: #fef2f2;
+                        border: 1px solid #fecaca;
+                        border-radius: 10px;
+                        padding: 10px 14px;
+                        font-size: 12px;
+                        color: #991b1b;
+                        margin-top: 10px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    ">
+                        <i class="fas fa-info-circle"></i>
+                        This reason will be saved and shown on the order.
                     </div>
                 </div>
 
+                <div class="btn-row">
+                    <button type="submit" class="btn-burg" id="submitBtn">
+                        <i class="fas fa-check"></i> Update
+                    </button>
+                    <a href="{% url 'order_list_ui' %}" class="btn-ghost">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+
+                {% else %}
+                <!-- ✅ Delivered ya Cancelled hone ke baad sirf back button -->
+
+                {% if order.status == "delivered" %}
+                <div style="
+                    background: #ecfdf5;
+                    border: 1px solid #a7f3d0;
+                    border-radius: 14px;
+                    padding: 18px;
+                    text-align: center;
+                    margin-bottom: 20px;
+                ">
+                    <i class="fas fa-circle-check" style="font-size:32px; color:#10b981; margin-bottom:10px; display:block;"></i>
+                    <div style="font-weight:800; color:#065f46; font-size:15px;">Order Delivered</div>
+                    <div style="font-size:12px; color:#6b7280; margin-top:4px;">This order has been successfully delivered. No further changes allowed.</div>
+                </div>
+                {% endif %}
+
+                {% if order.status == "cancelled" %}
+                <div style="
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    border-radius: 14px;
+                    padding: 18px;
+                    margin-bottom: 20px;
+                ">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom: {% if order.cancel_reason %}12px{% else %}0{% endif %};">
+                        <i class="fas fa-circle-xmark" style="font-size:24px; color:#ef4444;"></i>
+                        <div>
+                            <div style="font-weight:800; color:#991b1b; font-size:15px;">Order Cancelled</div>
+                            <div style="font-size:12px; color:#6b7280; margin-top:2px;">This order has been cancelled.</div>
+                        </div>
+                    </div>
+                    <!-- ✅ Cancel reason show karo -->
+                    {% if order.cancel_reason %}
+                    <div style="
+                        background: white;
+                        border: 1px solid #fecaca;
+                        border-radius: 10px;
+                        padding: 12px 14px;
+                        font-size: 13px;
+                        color: #7f1d1d;
+                        margin-top: 8px;
+                    ">
+                        <div style="font-size:11px; font-weight:800; color:#9ca3af; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
+                            <i class="fas fa-comment-dots me-1"></i> Reason
+                        </div>
+                        {{ order.cancel_reason }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <a href="{% url 'order_list_ui' %}" class="btn-ghost" style="width:100%; justify-content:center;">
+                    <i class="fas fa-arrow-left"></i> Back to Orders
+                </a>
+                {% endif %}
+
+                {% if not request.session.is_rider and order.status != "delivered" and order.status != "cancelled" %}
+                <div class="divider"></div>
+                <label class="fl" style="margin-top:4px;"><i class="fas fa-motorcycle me-1"></i> Assign Rider</label>
+                <select id="citySelect" name="city" class="fs mb-3">
+                    {% for city in cities %}
+                        {% if order_city_id == city.id %}
+                            <option value="{{ city.id }}" selected>{{ city.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <button type="button" onclick="loadRiders({{ order.pk }})" class="btn-rider">
+                    <i class="fas fa-users"></i> View Available Riders
+                </button>
+                <div class="rider-note">
+                    <i class="fas fa-info-circle"></i>
+                    Riders are filtered by the order's delivery city automatically.
+                </div>
+                {% endif %}
+
+                <div class="modal fade" id="riderModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content" id="riderModalContent"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
             </div>
 
             <!-- ====== ORDER ITEMS ====== -->
@@ -998,19 +1100,30 @@
     </div>
 </div>
 <script>
+function handleStatusChange(val) {
+    const box = document.getElementById('cancelReasonBox');
+    const btn = document.getElementById('submitBtn');
+    if (val === 'cancelled') {
+        box.style.display = 'block';
+        btn.innerHTML = '<i class="fas fa-ban"></i> Cancel Order';
+        btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+    } else {
+        box.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-check"></i> Update';
+        btn.style.background = '';
+    }
+}
+
 function loadRiders(orderId) {
     let cityId = document.getElementById("citySelect").value;
-
     if (!cityId) {
         alert("Please select city first");
         return;
     }
-
     fetch(`/city-riders/${orderId}/${cityId}/`)
         .then(res => res.text())
         .then(data => {
             document.getElementById("riderModalContent").innerHTML = data;
-
             let modal = new bootstrap.Modal(document.getElementById('riderModal'));
             modal.show();
         });
