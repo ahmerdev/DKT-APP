@@ -38,6 +38,7 @@
             <table id="myDataTable" class="table table-hover no-border align-middle">
             <thead class="table-head text-center">
             <tr>
+                <th class="id-col text-center align-middle p-0 text-white"></th>
                <th class="id-col text-center align-middle p-0 text-white">#</th>
                 <th scope="col" class="text-center text-white">Image</th>
                 <th scope="col" class="text-center text-white">Name</th>
@@ -46,9 +47,10 @@
                 <th scope="col" class="text-center text-white">Action</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="user-table-body">
             {% for brand in brands %}
-            <tr class="table-row">
+            <tr class="table-row" data-id="{{ brand.id }}">
+                <td class="drag-handle text-center" style="cursor: grab;"><i class="fa-solid fa-grip-vertical"></i></td>
                 <td class="fw-semibold px-3">{{ forloop.counter }}</td>
                 <td class="text-center">
                     {% if brand.image %}
@@ -112,5 +114,47 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+function getCSRFToken() {
+    return document.cookie.split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
 
+const el = document.getElementById('user-table-body');
+
+new Sortable(el, {
+    animation: 150,
+    handle: '.drag-handle',
+    onEnd: function () {
+        let order = [];
+        el.querySelectorAll('tr').forEach((row, index) => {
+            row.querySelector('td:nth-child(2)').textContent = index + 1;
+            order.push({
+                id: row.dataset.id,
+                position: index + 1
+            });
+        });
+
+        fetch("/update-brand-order/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({ order: order })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "ok"){
+                console.log("Order saved!");
+            } else {
+                console.error("❌ Error:", data);
+            }
+        })
+        .catch(err => console.error("❌ Network error:", err));
+    }
+});
+</script>
 {% endblock %}
