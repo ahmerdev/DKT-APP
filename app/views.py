@@ -259,16 +259,23 @@ def user_login(request):
             messages.success(request, "Admin login successful")
             return redirect("dashboard")
 
-        # ----------------------
-        # RIDER LOGIN
-        # ----------------------
+
+    return render(request, "login.html")
+
+
+
+def rider_login(request):
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
+
         try:
             rider = Rider.objects.get(email__iexact=username)
 
-            # ❌ BLOCK inactive rider
             if not rider.is_active:
                 messages.error(request, "Your account is inactive")
-                return redirect("login")
+                return redirect("rider_login")
 
             if rider.password.startswith("pbkdf2"):
                 login_success = check_password(password, rider.password)
@@ -282,20 +289,22 @@ def user_login(request):
                 return redirect("order_list_ui")
             else:
                 messages.error(request, "Wrong password")
-                return redirect("login")
+                return redirect("rider_login")
 
         except Rider.DoesNotExist:
             messages.error(request, "Rider not found")
-            return redirect("login")
+            return redirect("rider_login")
 
-    return render(request, "login.html")
+    return render(request, "rider_login.html")
+
+
 
 
 # Dashborad Admin Panel User Logout
 def user_logout(request):
     logout(request)
     messages.info(request, "You have been logged out")
-    return redirect("login")
+    return redirect("rider_login")
 
 #  Home → Login redirect
 def home(request):
@@ -463,7 +472,6 @@ def delete_appuser_ui(request, pk):
 
 
 
-
 def customer_detail(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
 
@@ -548,9 +556,6 @@ def customer_detail(request, pk):
 
 
 
-
-
-
 # Add or Edit Category
 @login_required(login_url='login')
 def add_or_edit_category(request, pk=None):
@@ -580,9 +585,9 @@ def add_or_edit_category(request, pk=None):
 def category(request):
     search_query = request.GET.get('q', '')
     if search_query:
-        categories = Category.objects.filter(name__icontains=search_query).order_by('-id')
+        categories = Category.objects.filter(name__icontains=search_query).order_by('position')
     else:
-        categories = Category.objects.all().order_by('-id')
+        categories = Category.objects.all().order_by('position')
 
     return render(request, "pages/category.html", {"categories": categories})
 
@@ -627,9 +632,9 @@ def add_or_edit_brand(request, pk=None):
 def brand(request):
     search_query = request.GET.get('q', '')
     if search_query: 
-        brands = Brand.objects.filter(name__icontains=search_query).order_by('-id')
+        brands = Brand.objects.filter(name__icontains=search_query).order_by('position')
     else:  
-        brands = Brand.objects.all().order_by('-id')
+        brands = Brand.objects.all().order_by('position')
 
     return render(request, "pages/brand.html", {"brands": brands})
 
@@ -961,6 +966,8 @@ def create_order_ui(request):
     return render(request, "pages/create_order.html", {"users": users})
 
 
+
+
 def safe_json(value):
     if not value:
         return {}
@@ -1089,6 +1096,8 @@ def update_order_status_ui(request, pk):
         "points_spent_rs": points_spent * point_value,
     })
 
+
+
 import ast
 import json
 
@@ -1118,6 +1127,7 @@ def get_city_from_address(address):
     return ""
 
 
+
 # def update_order_status_ui(request, pk):
 #     order = get_object_or_404(Order, pk=pk)
 
@@ -1135,7 +1145,6 @@ def delete_order_ui(request, pk):
     order.delete()
     messages.warning(request, "Order deleted successfully!")
     return redirect('order_list_ui')
-
 
 
 
@@ -1311,67 +1320,6 @@ def _handle_product_variants(product_obj, request, is_edit=False):
 # MAIN VIEW
 # ─────────────────────────────────────────────────────────────────────────────
 
-# @login_required(login_url="login")
-# def add_or_edit_product(request, pk=None):
-#     product_obj = get_object_or_404(Product, pk=pk) if pk else None
-
-#     if request.method == "POST":
-#         form = ProductForm(request.POST, request.FILES, instance=product_obj)
-#         print(form.errors)
-#         if form.is_valid():
-#             with transaction.atomic():
-#                 product_obj = form.save()
-
-#                 # Gallery images
-#                 gallery_images = request.FILES.getlist("gallery_images")
-#                 if gallery_images:
-#                     for img in gallery_images:
-#                         ProductImage.objects.create(product=product_obj, image=img)
-
-#                 product_type = request.POST.get("product_type", "simple")
-
-#                 if product_type == "variable":
-#                     _handle_product_variants(product_obj, request, is_edit=bool(pk))
-#                 else:
-#                     # Switched back to simple → clear variants
-#                     if pk:
-#                         product_obj.variants.all().delete()
-#                         product_obj.variant_options.all().delete()
-
-#             messages.success(
-#                 request,
-#                 f"Product '{product_obj.name}' {'updated' if pk else 'created'} successfully!"
-#             )
-#             return redirect("product")
-
-#         else:
-#             messages.error(request, "Please correct the errors below.")
-
-#     else:
-#         form = ProductForm(instance=product_obj)
-
-#     # ── Context ──
-#     from .models import Category, Brand  # local import to avoid circular
-#     categories = Category.objects.all()
-#     brands     = Brand.objects.all()
-
-#     variant_options   = []
-#     existing_variants = []
-
-#     if product_obj and product_obj.product_type == "variable":
-#         variant_options   = product_obj.variant_options.all().prefetch_related("values")
-#         existing_variants = product_obj.variants.all()
-
-#     return render(request, "pages/add-product.html", {
-#         "form"             : form,
-#         "product"          : product_obj,
-#         "categories"       : categories,
-#         "brands"           : brands,
-#         "variant_options"  : variant_options,
-#         "existing_variants": existing_variants,
-#     })
-
-
 @login_required(login_url="login")
 def add_or_edit_product(request, pk=None):
     product_obj = get_object_or_404(Product, pk=pk) if pk else None
@@ -1451,8 +1399,6 @@ def add_or_edit_product(request, pk=None):
         "variant_options"  : variant_options,
         "existing_variants": existing_variants,
     })
-
-
    
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -1465,9 +1411,9 @@ def product(request):
     search_query = request.GET.get('q', '')
 
     if search_query:
-        products = Product.objects.filter(name__icontains=search_query).order_by('-id')
+        products = Product.objects.filter(name__icontains=search_query).order_by('position')
     else:
-        products = Product.objects.all().order_by('-id')
+        products = Product.objects.all().order_by('position')
 
     categories = Category.objects.all().order_by('-id')
 
@@ -1827,7 +1773,7 @@ def add_or_edit_rider(request, pk=None):
         if form.is_valid():
             rider = form.save(commit=False)
 
-            # 🔥 PASSWORD FIX (IMPORTANT)
+            # PASSWORD FIX (IMPORTANT)
             raw_password = form.cleaned_data.get("password")
             if raw_password:
                 if not raw_password.startswith("pbkdf2"):
@@ -1835,7 +1781,7 @@ def add_or_edit_rider(request, pk=None):
 
             rider.save()
 
-            # 🔥 MANY TO MANY FIX (CITIES)
+            # MANY TO MANY FIX (CITIES)
             form.save_m2m()
 
             messages.success(request, success_message)
@@ -1920,10 +1866,61 @@ from .models import Rider
 
 
 
+# views.py
+
+import json
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from .models import Product
+
+@login_required
+@require_POST
+def update_product_order(request):
+    try:
+        data = json.loads(request.body)
+        order = data.get("order", [])
+        
+        for item in order:
+            Product.objects.filter(id=item["id"]).update(
+                position=item["position"]
+            )
+        
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
+@login_required
+@require_POST
+def update_category_order(request):
+    try:
+        data = json.loads(request.body)
+        order = data.get("order", [])
+        
+        for item in order:
+            Category.objects.filter(id=item["id"]).update(
+                position=item["position"])
+        
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
+@login_required
+@require_POST
+def update_brand_order(request):
+    try:
+        data = json.loads(request.body)
+        order = data.get("order", [])
+        
+        for item in order:
+                Brand.objects.filter(id=item["id"]).update(
+                    position=item["position"])
+                
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
 
