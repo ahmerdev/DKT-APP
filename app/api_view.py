@@ -733,24 +733,24 @@ def create_order(request):
         with transaction.atomic():
 
             # ── Points Logic ──
-             points_discount = Decimal("0.00")
-
-        if applied_points > 0:
-            if applied_points > (app_user.points or 0):
-                return Response({
-                    "error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."
-                }, status=400)
-
-            settings = get_point_settings()
-            points_discount = Decimal(applied_points) * Decimal(settings.point_value)
-
-            app_user.points = (app_user.points or 0) - applied_points
-            app_user.save(update_fields=["points"])
-
+            points_discount = Decimal("0.00")
             # ── Coupon Validation ──
             discount_obj = None
             discount_amount = Decimal("0.00")
             products_data = data.get("product", [])
+            products_data = data.get("product", [])
+
+            if applied_points > 0:
+                if applied_points > (app_user.points or 0):
+                    return Response({
+                        "error": f"Insufficient points. You have {app_user.points}, requested {applied_points}."
+                    }, status=400)
+
+                settings = get_point_settings()
+                points_discount = Decimal(applied_points) * Decimal(settings.point_value)
+
+                app_user.points = (app_user.points or 0) - applied_points
+                app_user.save(update_fields=["points"])
 
             if discount_code:
                 try:
