@@ -355,6 +355,7 @@ class RiderOrderItemSerializer(serializers.ModelSerializer):
 
 
 class RiderOrderSerializer(serializers.ModelSerializer):
+    user_detail = AppUserSerializer(source="user", read_only=True)
     items = RiderOrderItemSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True) 
     city = serializers.SerializerMethodField()
@@ -364,6 +365,7 @@ class RiderOrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id',
+            'user_detail',
             'status',
             'address',
             'city',
