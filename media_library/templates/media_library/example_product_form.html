@@ -1,0 +1,173 @@
+{% extends 'dashboard.html' %}
+{% block title %}Add Product{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<h4 class="fw-bold mb-4">Add Product</h4>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+
+                <!-- Product Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Product Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter product name">
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Description</label>
+                    <textarea name="description" class="form-control" rows="4"></textarea>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN — IMAGE FIELDS -->
+        <div class="col-md-4">
+
+            <!-- ══════════════════════════════════════════
+                 MAIN PRODUCT IMAGE — Image Picker Example
+                 ══════════════════════════════════════════ -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3">Main Image</h6>
+
+                <!--
+                    data-img-field  = form field ka name
+                    data-img-folder = media library mein kahan save ho
+                -->
+                <div data-img-field="image" data-img-folder="products">
+
+                    <!-- Preview Area -->
+                    <div class="img-preview-wrap mb-2">
+                        <!-- Agar edit mode hai aur image hai: -->
+                        {% if form.instance.image %}
+                            <img src="{{ form.instance.image.url }}"
+                                 class="preview-img w-100 rounded-3 mb-2"
+                                 style="max-height:200px; object-fit:cover;">
+                        {% else %}
+                            <div class="preview-placeholder rounded-3 mb-2">
+                                <i class="fa-solid fa-image fa-2x mb-2"></i>
+                                <span>No image selected</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-2">
+                        <!-- Media Library se pick karo -->
+                        <button type="button" class="btn btn-primary btn-sm open-picker-btn flex-1">
+                            <i class="fa-solid fa-images me-1"></i> Pick from Library
+                        </button>
+                        <!-- Ya directly upload karo -->
+                        <label class="btn btn-outline-secondary btn-sm mb-0">
+                            <i class="fa-solid fa-upload me-1"></i> Upload
+                            <input type="file" name="image" accept="image/*" class="d-none"
+                                   onchange="previewDirectUpload(this, '[data-img-field=image]')">
+                        </label>
+                    </div>
+
+                    <!-- Hidden URL field (agar media library se pick kiya) -->
+                    <input type="hidden" name="image_picker_url" id="imagePickerUrl">
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════
+                 BRAND IMAGE — Doosra Image Field
+                 ══════════════════════════════════════════ -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3">Brand Image</h6>
+
+                <div data-img-field="brand_image" data-img-folder="brands">
+                    <div class="img-preview-wrap mb-2">
+                        <div class="preview-placeholder rounded-3 mb-2">
+                            <i class="fa-solid fa-image fa-2x mb-2"></i>
+                            <span>No image selected</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-sm open-picker-btn flex-1">
+                            <i class="fa-solid fa-images me-1"></i> Pick from Library
+                        </button>
+                        <label class="btn btn-outline-secondary btn-sm mb-0">
+                            <i class="fa-solid fa-upload me-1"></i> Upload
+                            <input type="file" name="brand_image" accept="image/*" class="d-none"
+                                   onchange="previewDirectUpload(this, '[data-img-field=brand_image]')">
+                        </label>
+                    </div>
+                    <input type="hidden" name="brand_image_picker_url">
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════
+                 BANNER IMAGE — Teesra Image Field
+                 ══════════════════════════════════════════ -->
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h6 class="fw-bold mb-3">Banner Image</h6>
+
+                <div data-img-field="banner_image" data-img-folder="banners">
+                    <div class="img-preview-wrap mb-2">
+                        <div class="preview-placeholder rounded-3 mb-2">
+                            <i class="fa-solid fa-image fa-2x mb-2"></i>
+                            <span>No image selected</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-sm open-picker-btn flex-1">
+                            <i class="fa-solid fa-images me-1"></i> Pick from Library
+                        </button>
+                        <label class="btn btn-outline-secondary btn-sm mb-0">
+                            <i class="fa-solid fa-upload me-1"></i> Upload
+                            <input type="file" name="banner_image" accept="image/*" class="d-none"
+                                   onchange="previewDirectUpload(this, '[data-img-field=banner_image]')">
+                        </label>
+                    </div>
+                    <input type="hidden" name="banner_image_picker_url">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success px-5">
+            <i class="fa-solid fa-save me-2"></i> Save Product
+        </button>
+    </div>
+</form>
+</div>
+
+<script>
+/* Direct upload karne pe preview dikhao */
+function previewDirectUpload(input, wrapSelector) {
+    if (!input.files || !input.files[0]) return;
+    var wrap = document.querySelector(wrapSelector);
+    if (!wrap) return;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var placeholder = wrap.querySelector('.preview-placeholder');
+        var previewImg  = wrap.querySelector('.preview-img');
+
+        if (!previewImg) {
+            previewImg = document.createElement('img');
+            previewImg.className = 'preview-img w-100 rounded-3 mb-2';
+            previewImg.style.cssText = 'max-height:200px; object-fit:cover;';
+            wrap.querySelector('.img-preview-wrap').appendChild(previewImg);
+        }
+
+        previewImg.src = e.target.result;
+        previewImg.classList.remove('d-none');
+        if (placeholder) placeholder.classList.add('d-none');
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+</script>
+{% endblock %}

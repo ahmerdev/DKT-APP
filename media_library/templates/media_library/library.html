@@ -1,0 +1,947 @@
+{% extends 'dashboard.html' %}
+{% block title %}Media Library{% endblock %}
+
+{% block content %}
+
+<!-- SweetAlert2 CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<style>
+:root {
+    --ink:         #ffffff;   /* background white */
+    --ink-2:       #ffffff;
+    --ink-3:       #f5f5f5;
+    --ink-4:       #eeeeee;
+
+    --slate:       #555555;
+    --slate-lt:    #222222;
+
+    --border:      rgba(0,0,0,0.08);
+    --border-2:    rgba(0,0,0,0.15);
+
+    --accent:      #7d1d27;
+    --accent-2:    #a02535;
+    --accent-glow: rgba(125,29,39,0.15);
+
+    --green:       #16a34a;
+    --red:         #dc2626;
+    --gold:        #d97706;
+
+    --white:       #000000; /* text black */
+
+    --card:        #ffffff;
+    --card-2:      #f9f9f9;
+}
+
+/* ── SweetAlert2 Custom Theme ── */
+.swal2-popup {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 18px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.8) !important;
+}
+.swal2-title {
+    color: #ffffff !important;
+    font-family: 'Syne', sans-serif !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.3px !important;
+}
+.swal2-html-container {
+    color: #a0a0a0 !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+}
+.swal2-icon.swal2-warning {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+}
+.swal2-icon.swal2-warning .swal2-icon-content {
+    color: var(--accent) !important;
+}
+.swal2-icon.swal2-success {
+    border-color: var(--green) !important;
+    color: var(--green) !important;
+}
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: var(--green) !important;
+}
+.swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(34,197,94,0.3) !important;
+}
+.swal2-confirm {
+    background: var(--accent) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 4px 16px var(--accent-glow) !important;
+    transition: all 0.2s !important;
+}
+.swal2-confirm:hover {
+    background: #9a2330 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 24px var(--accent-glow) !important;
+}
+.swal2-cancel {
+    background: #1a1a1a !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 10px !important;
+    color: #a0a0a0 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 10px 24px !important;
+    transition: all 0.2s !important;
+}
+.swal2-cancel:hover {
+    background: #222 !important;
+    border-color: rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+}
+.swal2-actions { gap: 8px !important; }
+.swal2-backdrop-show { background: rgba(0,0,0,0.75) !important; backdrop-filter: blur(6px); }
+.swal2-timer-progress-bar { background: var(--accent) !important; }
+
+/* ── Reset ── */
+.ml-page * { box-sizing: border-box; }
+.ml-page {
+    font-family: 'DM Sans', sans-serif;
+    background: #fff;
+    min-height: 100vh;
+    color: var(--white);
+    padding: 0;
+}
+
+/* ── TOP BAR ── */
+.ml-topbar {
+    background: var(--ink-2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+}
+.ml-topbar-left { display: flex; align-items: center; gap: 16px; }
+.ml-topbar-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), #9a2330);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #fff;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    flex-shrink: 0;
+}
+.ml-topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: #000; letter-spacing: -0.3px; margin: 0;
+}
+.ml-topbar-count {
+    font-size: 12px; color: var(--slate);
+    background: var(--ink-3);
+    border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 20px; font-weight: 500;
+}
+.ml-topbar-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── UPLOAD BUTTON ── */
+.ml-upload-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, var(--accent), #9a2330);
+    color: #fff; border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    text-decoration: none; white-space: nowrap;
+}
+.ml-upload-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px var(--accent-glow);
+    color: #fff;
+}
+
+/* ── VIEW TOGGLE ── */
+.ml-view-toggle {
+    display: flex; background: var(--ink-3);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 3px; gap: 2px;
+}
+.ml-view-btn {
+    width: 32px; height: 30px; border: none; border-radius: 6px;
+    background: transparent; color: var(--slate);
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; transition: all 0.2s;
+}
+.ml-view-btn.active { background: var(--ink-2); color: var(--white); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+/* ── FILTER BAR ── */
+.ml-filterbar {
+    padding: 16px 32px;
+    background: var(--ink-2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.ml-filter-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+.ml-filter-search i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); color: var(--slate);
+    font-size: 13px; pointer-events: none;
+}
+.ml-filter-search input {
+    width: 100%; padding: 9px 12px 9px 36px;
+    background: var(--ink-3); border: 1px solid var(--border);
+    border-radius: 9px; color: var(--white);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    outline: none; transition: all 0.2s;
+}
+.ml-filter-search input::placeholder { color: var(--slate); }
+.ml-filter-search input:focus {
+    border-color: var(--accent); background: var(--ink-3);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.ml-filter-select {
+    padding: 9px 32px 9px 12px;
+    background: #7d1d27; border: 1px solid var(--border);
+    border-radius: 9px; color: var(--white);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    outline: none; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%238892A4'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    min-width: 150px; transition: border-color 0.2s;
+}
+.ml-filter-select:focus { border-color: var(--accent); }
+.ml-filter-select option { background: var(--ink-2); }
+.ml-filter-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--ink-3); color: var(--slate-lt);
+    transition: all 0.2s; white-space: nowrap; text-decoration: none;
+}
+.ml-filter-btn:hover { border-color: var(--accent); color: var(--accent-2); }
+.ml-filter-btn.danger:hover { border-color: var(--red); color: var(--red); }
+.ml-filter-spacer { flex: 1; }
+
+/* Folder pills */
+.ml-folder-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.ml-folder-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--ink-3);
+    color: var(--slate); cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+.ml-folder-pill:hover { border-color: var(--accent); color: var(--accent-2); }
+.ml-folder-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ml-folder-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+
+/* ── UPLOAD PROGRESS ── */
+.ml-upload-progress {
+    display: none; margin: 0 32px 0;
+    padding: 14px 20px; background: var(--ink-2);
+    border: 1px solid var(--border); border-radius: 12px; margin-top: 16px;
+}
+.ml-upload-progress.show { display: block; }
+.ml-up-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ml-up-label { font-size: 12px; color: var(--slate); }
+.ml-up-pct   { font-size: 12px; font-weight: 700; color: var(--accent-2); }
+.ml-up-track { height: 4px; background: var(--ink-4); border-radius: 2px; overflow: hidden; }
+.ml-up-fill  {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 2px; width: 0%; transition: width 0.25s ease;
+}
+
+/* ── MAIN CONTENT ── */
+.ml-content { padding: 24px 32px 40px; }
+
+/* ── STATS ── */
+.ml-stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.ml-stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    flex: 1; min-width: 160px; transition: border-color 0.2s;
+}
+.ml-stat:hover { border-color: var(--border-2); }
+.ml-stat-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+}
+.ml-stat-icon.purple { background: rgba(125,29,39,0.2); color: var(--accent-2); }
+.ml-stat-icon.green  { background: rgba(34,197,94,0.15); color: var(--green); }
+.ml-stat-icon.gold   { background: rgba(245,158,11,0.15); color: var(--gold); }
+.ml-stat-icon.red    { background: rgba(239,68,68,0.15); color: var(--red); }
+.ml-stat-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--white); line-height: 1; margin-bottom: 2px; }
+.ml-stat-lbl { font-size: 11px; color: var(--slate); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── SECTION HEADER ── */
+.ml-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.ml-section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--slate-lt); letter-spacing: 0.5px; text-transform: uppercase; }
+.ml-select-all-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--slate); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+}
+.ml-select-all-btn:hover { border-color: var(--accent); color: var(--accent-2); }
+
+/* ── IMAGE GRID ── */
+#mlGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+}
+#mlGrid.list-view { grid-template-columns: 1fr; gap: 6px; }
+
+/* ── IMAGE CARD ── */
+.ml-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    position: relative; cursor: default;
+    animation: mlCardIn 0.4s ease both;
+}
+@keyframes mlCardIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ml-card:hover { border-color: var(--border-2); box-shadow: 0 8px 32px rgba(0,0,0,0.3); transform: translateY(-3px); }
+.ml-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow), 0 8px 24px rgba(0,0,0,0.3); }
+
+/* Checkbox */
+.ml-card-check {
+    position: absolute; top: 10px; left: 10px; z-index: 3;
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(13,15,20,0.5); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; cursor: pointer; transition: all 0.2s;
+}
+.ml-card:hover .ml-card-check,
+.ml-card.selected .ml-card-check { opacity: 1; }
+.ml-card.selected .ml-card-check { background: var(--accent); border-color: var(--accent); }
+.ml-card-check i { font-size: 9px; color: #fff; opacity: 0; transition: opacity 0.15s; }
+.ml-card.selected .ml-card-check i { opacity: 1; }
+
+/* Image */
+.ml-card-img { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--ink-3); }
+.ml-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); display: block; }
+.ml-card:hover .ml-card-img img { transform: scale(1.06); }
+
+/* Overlay */
+.ml-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.75));
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 12px; gap: 6px;
+    opacity: 0; transition: opacity 0.25s;
+}
+.ml-card:hover .ml-card-overlay { opacity: 1; }
+
+.ml-card-act-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(6px);
+    color: #fff; font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; transform: translateY(6px); opacity: 0;
+}
+.ml-card:hover .ml-card-act-btn { transform: translateY(0); opacity: 1; }
+.ml-card:hover .ml-card-act-btn:nth-child(1) { transition-delay: 0.00s; }
+.ml-card:hover .ml-card-act-btn:nth-child(2) { transition-delay: 0.04s; }
+.ml-card:hover .ml-card-act-btn:nth-child(3) { transition-delay: 0.08s; }
+.ml-card-act-btn:hover { background: rgba(255,255,255,0.25); }
+.ml-card-act-btn.danger:hover { background: rgba(125,29,39,0.8); border-color: var(--accent); }
+
+/* Info */
+.ml-card-info { padding: 10px 12px; border-top: 1px solid var(--border); }
+.ml-card-name { font-size: 11px; font-weight: 600; color: var(--slate-lt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.ml-card-meta { display: flex; align-items: center; justify-content: space-between; }
+.ml-card-folder { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent-2); background: rgba(125,29,39,0.15); padding: 2px 7px; border-radius: 4px; }
+.ml-card-size { font-size: 10px; color: var(--slate); }
+
+/* List view */
+#mlGrid.list-view .ml-card { display: flex; align-items: center; gap: 14px; border-radius: 10px; padding: 8px 14px 8px 8px; }
+#mlGrid.list-view .ml-card-img { width: 48px; height: 48px; aspect-ratio: 1; border-radius: 8px; flex-shrink: 0; }
+#mlGrid.list-view .ml-card-overlay { display: none; }
+#mlGrid.list-view .ml-card-info { flex: 1; padding: 0; border: none; min-width: 0; }
+#mlGrid.list-view .ml-card:hover { transform: none; }
+#mlGrid.list-view .ml-card-list-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.ml-card-list-actions { display: none; }
+#mlGrid.list-view .ml-card-act-btn { position: static; transform: none; opacity: 1; width: 30px; height: 30px; background: var(--ink-3); border-color: var(--border); color: var(--slate); }
+
+/* Empty */
+.ml-empty { grid-column: 1 / -1; text-align: center; padding: 80px 20px; }
+.ml-empty-icon { width: 80px; height: 80px; background: var(--ink-3); border: 1px solid var(--border); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--slate); margin: 0 auto 20px; }
+.ml-empty h5 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--slate-lt); margin-bottom: 8px; }
+.ml-empty p { font-size: 14px; color: var(--slate); margin: 0; }
+
+/* Selection bar */
+.ml-sel-bar {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink-2); border: 1px solid var(--border-2);
+    border-radius: 14px; padding: 12px 20px;
+    display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    backdrop-filter: blur(16px); z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); white-space: nowrap;
+}
+.ml-sel-bar.visible { transform: translateX(-50%) translateY(0); }
+.ml-sel-bar-count { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent-2); }
+.ml-sel-bar-divider { width: 1px; height: 20px; background: var(--border); }
+.ml-sel-bar-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--slate-lt); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+}
+.ml-sel-bar-btn:hover { border-color: var(--accent); color: var(--accent-2); }
+.ml-sel-bar-btn.danger:hover { border-color: var(--red); color: var(--red); }
+.ml-sel-bar-btn.cancel { color: var(--slate); }
+
+/* Pagination */
+.ml-pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 36px; }
+.ml-page-btn { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--card); color: var(--slate); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; text-decoration: none; font-family: 'DM Sans', sans-serif; }
+.ml-page-btn:hover { border-color: var(--accent); color: var(--accent-2); }
+.ml-page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 12px var(--accent-glow); }
+
+/* Toast */
+.ml-toast {
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink-2); border: 1px solid var(--border-2);
+    border-radius: 10px; padding: 10px 18px;
+    font-size: 13px; font-weight: 500; color: var(--white);
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 300; opacity: 0; transition: all 0.3s; pointer-events: none;
+}
+.ml-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.ml-toast i { font-size: 13px; }
+.ml-toast.success i { color: var(--green); }
+.ml-toast.error   i { color: var(--red); }
+
+/* Drag overlay */
+.ml-drag-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(125,29,39,0.12); backdrop-filter: blur(4px);
+    border: 3px dashed var(--accent); border-radius: 16px; margin: 12px;
+    align-items: center; justify-content: center; flex-direction: column;
+    gap: 12px; pointer-events: none;
+}
+.ml-drag-overlay.show { display: flex; }
+.ml-drag-overlay i { font-size: 48px; color: var(--accent-2); animation: mlPulse 1s ease infinite; }
+@keyframes mlPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:0.7} }
+.ml-drag-overlay p { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent-2); margin: 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ml-topbar, .ml-filterbar { padding: 0 16px; }
+    .ml-filterbar { padding: 12px 16px; }
+    .ml-content { padding: 16px 16px 40px; }
+    .ml-upload-progress { margin: 0 16px; margin-top: 12px; }
+    #mlGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .ml-stats, .ml-folder-pills { display: none; }
+    .ml-topbar-title { font-size: 15px; }
+}
+</style>
+
+<!-- Drag overlay -->
+<div class="ml-drag-overlay" id="mlDragOverlay">
+    <i class="fa-solid fa-cloud-arrow-up"></i>
+    <p>Drop images to upload</p>
+</div>
+
+<!-- Toast -->
+<div class="ml-toast" id="mlToast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="mlToastMsg">Done!</span>
+</div>
+
+<!-- Selection bar -->
+<div class="ml-sel-bar" id="mlSelBar">
+    <span class="ml-sel-bar-count" id="mlSelCount">0 selected</span>
+    <div class="ml-sel-bar-divider"></div>
+    <button class="ml-sel-bar-btn" onclick="mlCopySelected()">
+        <i class="fa-solid fa-copy"></i> Copy URLs
+    </button>
+    <button class="ml-sel-bar-btn danger" onclick="mlDeleteSelected()">
+        <i class="fa-solid fa-trash"></i> Delete
+    </button>
+    <button class="ml-sel-bar-btn cancel" onclick="mlClearSelection()">
+        <i class="fa-solid fa-xmark"></i> Cancel
+    </button>
+</div>
+
+<div class="ml-page">
+
+    <!-- TOP BAR -->
+    <div class="ml-topbar">
+        <div class="ml-topbar-left">
+            <div class="ml-topbar-icon"><i class="fa-solid fa-images"></i></div>
+            <h1 class="ml-topbar-title">Media Library</h1>
+            <span class="ml-topbar-count">{{ total }} images</span>
+        </div>
+        <div class="ml-topbar-right">
+            <div class="ml-view-toggle">
+                <button class="ml-view-btn active" id="mlViewGrid" onclick="mlSetView('grid')" title="Grid view">
+                    <i class="fa-solid fa-grid-2"></i>
+                </button>
+                <button class="ml-view-btn" id="mlViewList" onclick="mlSetView('list')" title="List view">
+                    <i class="fa-solid fa-list"></i>
+                </button>
+            </div>
+            <label class="ml-upload-btn" for="pageUploadInput">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Images
+            </label>
+            <input type="file" id="pageUploadInput" accept="image/*" multiple class="d-none">
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="ml-filterbar">
+        <form method="get" style="display:contents;">
+            <div class="ml-filter-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" value="{{ search }}" placeholder="Search by name...">
+            </div>
+            <select name="folder" class="ml-filter-select" onchange="this.form.submit()">
+                <option value="">All Folders</option>
+                {% for val, label in folders %}
+                    <option value="{{ val }}" {% if current_folder == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="ml-filter-btn"><i class="fa-solid fa-filter"></i> Filter</button>
+            {% if search or current_folder %}
+            <a href="{% url 'media_library' %}" class="ml-filter-btn danger"><i class="fa-solid fa-xmark"></i> Clear</a>
+            {% endif %}
+        </form>
+        <div class="ml-filter-spacer"></div>
+        <div class="ml-folder-pills">
+            <a href="{% url 'media_library' %}" class="ml-folder-pill {% if not current_folder %}active{% endif %}">
+                <span class="ml-folder-pill-dot"></span> All
+            </a>
+            {% for val, label in folders %}
+            <a href="?folder={{ val }}" class="ml-folder-pill {% if current_folder == val %}active{% endif %}">
+                <span class="ml-folder-pill-dot"></span>{{ label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- UPLOAD PROGRESS -->
+    <div id="mlUploadProgress" class="ml-upload-progress">
+        <div class="ml-up-header">
+            <span class="ml-up-label" id="mlUpLabel">Uploading...</span>
+            <span class="ml-up-pct" id="mlUpPct">0%</span>
+        </div>
+        <div class="ml-up-track"><div class="ml-up-fill" id="mlUpFill"></div></div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="ml-content">
+
+        <!-- Stats -->
+        <div class="ml-stats">
+            <div class="ml-stat">
+                <div class="ml-stat-icon purple"><i class="fa-solid fa-images"></i></div>
+                <div><div class="ml-stat-val">{{ total }}</div><div class="ml-stat-lbl">Total Images</div></div>
+            </div>
+            <div class="ml-stat">
+                <div class="ml-stat-icon green"><i class="fa-solid fa-folder-open"></i></div>
+                <div><div class="ml-stat-val">{{ folders|length }}</div><div class="ml-stat-lbl">Folders</div></div>
+            </div>
+            <div class="ml-stat">
+                <div class="ml-stat-icon gold"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+                <div><div class="ml-stat-val" id="mlStatUploading">—</div><div class="ml-stat-lbl">Uploading</div></div>
+            </div>
+            <div class="ml-stat">
+                <div class="ml-stat-icon red"><i class="fa-solid fa-check-double"></i></div>
+                <div><div class="ml-stat-val" id="mlStatSelected">0</div><div class="ml-stat-lbl">Selected</div></div>
+            </div>
+        </div>
+
+        <!-- Section header -->
+        <div class="ml-section-head">
+            <span class="ml-section-title">
+                {% if current_folder %}{{ current_folder }}{% else %}All Images{% endif %}
+                {% if search %} — "{{ search }}"{% endif %}
+            </span>
+            {% if files %}
+            <button class="ml-select-all-btn" onclick="mlToggleSelectAll()">
+                <i class="fa-solid fa-square-check"></i>
+                <span id="mlSelectAllTxt">Select All</span>
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Image Grid -->
+        <div id="mlGrid">
+            {% for file in files %}
+            <div class="ml-card" id="mlFile-{{ file.id }}"
+                 data-id="{{ file.id }}"
+                 data-url="{{ file.image.url }}"
+                 data-name="{{ file.name }}">
+
+                <div class="ml-card-check" onclick="mlToggleCard(this.closest('.ml-card'))">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+
+                <div class="ml-card-img">
+                    <img src="{{ file.image.url }}" alt="{{ file.name }}" loading="lazy">
+                    <div class="ml-card-overlay">
+                        <button class="ml-card-act-btn" onclick="mlCopyUrl('{{ file.image.url }}')" title="Copy URL">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                        <button class="ml-card-act-btn" onclick="mlPreview('{{ file.image.url }}', '{{ file.name }}')" title="Preview">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                        <button class="ml-card-act-btn danger" onclick="mlDeleteFile({{ file.id }}, '{{ file.name }}')" title="Delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ml-card-info">
+                    <div class="ml-card-name" title="{{ file.name }}">{{ file.name }}</div>
+                    <div class="ml-card-meta">
+                        <span class="ml-card-folder">{{ file.folder }}</span>
+                        <span class="ml-card-size">{{ file.size_display }}</span>
+                    </div>
+                </div>
+
+                <div class="ml-card-list-actions">
+                    <button class="ml-card-act-btn" onclick="mlCopyUrl('{{ file.image.url }}')" title="Copy URL">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                    <button class="ml-card-act-btn danger" onclick="mlDeleteFile({{ file.id }}, '{{ file.name }}')" title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="ml-empty">
+                <div class="ml-empty-icon"><i class="fa-solid fa-photo-film"></i></div>
+                <h5>No images found</h5>
+                <p>{% if search %}No results for "{{ search }}"{% else %}Upload your first image using the button above{% endif %}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if files.has_other_pages %}
+        <div class="ml-pagination">
+            {% if files.has_previous %}
+            <a class="ml-page-btn" href="?page={{ files.previous_page_number }}&folder={{ current_folder }}&search={{ search }}">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            {% for num in files.paginator.page_range %}
+            <a class="ml-page-btn {% if files.number == num %}active{% endif %}"
+               href="?page={{ num }}&folder={{ current_folder }}&search={{ search }}">{{ num }}</a>
+            {% endfor %}
+            {% if files.has_next %}
+            <a class="ml-page-btn" href="?page={{ files.next_page_number }}&folder={{ current_folder }}&search={{ search }}">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="mlPreviewModal" style="display:none;position:fixed;inset:0;z-index:9999;
+     background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
+     align-items:center;justify-content:center;padding:20px;"
+     onclick="this.style.display='none'">
+    <img id="mlPreviewImg" src="" alt=""
+         style="max-width:90vw;max-height:90vh;border-radius:12px;
+                box-shadow:0 24px 80px rgba(0,0,0,0.6);object-fit:contain;">
+</div>
+
+<script>
+var CSRF = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+var mlSelected = new Set();
+
+/* ── SweetAlert2 default config ── */
+var swalDark = Swal.mixin({
+    background: '#0d0d0d',
+    color: '#fff',
+    confirmButtonColor: '#7d1d27',
+    cancelButtonColor: '#1a1a1a',
+    customClass: {
+        confirmButton: 'swal2-confirm',
+        cancelButton:  'swal2-cancel',
+    },
+    buttonsStyling: true,
+});
+
+/* ── Upload ── */
+document.getElementById('pageUploadInput').addEventListener('change', function () {
+    mlUploadFiles(Array.from(this.files), '{{ current_folder }}' || 'general');
+    this.value = '';
+});
+
+function mlUploadFiles(files, folder) {
+    if (!files.length) return;
+    var prog  = document.getElementById('mlUploadProgress');
+    var fill  = document.getElementById('mlUpFill');
+    var label = document.getElementById('mlUpLabel');
+    var pct   = document.getElementById('mlUpPct');
+    var stat  = document.getElementById('mlStatUploading');
+
+    prog.classList.add('show');
+    if (stat) stat.textContent = files.length;
+
+    var total = files.length, done = 0;
+
+    function next(i) {
+        if (i >= total) {
+            label.textContent = 'Done!';
+            pct.textContent = '100%';
+            fill.style.width = '100%';
+            if (stat) stat.textContent = '✓';
+            setTimeout(function () { location.reload(); }, 600);
+            return;
+        }
+        label.textContent = 'Uploading ' + (i + 1) + '/' + total + ': ' + files[i].name;
+        var fd = new FormData();
+        fd.append('image', files[i]);
+        fd.append('folder', folder);
+        fd.append('name', files[i].name);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/media-library/api/upload/');
+        xhr.setRequestHeader('X-CSRFToken', CSRF);
+        xhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+                var p = Math.round(((i + e.loaded / e.total) / total) * 100);
+                fill.style.width = p + '%';
+                pct.textContent = p + '%';
+            }
+        });
+        xhr.onload = function () { done++; next(i + 1); };
+        xhr.onerror = function () { done++; next(i + 1); };
+        xhr.send(fd);
+    }
+    next(0);
+}
+
+/* ── Copy URL ── */
+function mlCopyUrl(url) {
+    navigator.clipboard.writeText(url).then(function () {
+        mlToast('URL copied to clipboard', 'success');
+    });
+}
+
+/* ── DELETE SINGLE — SweetAlert2 ── */
+function mlDeleteFile(id, name) {
+    swalDark.fire({
+        title: 'Delete Image?',
+        html: '<span style="color:#a0a0a0;">Are you sure you want to permanently delete<br><strong style="color:#fff;">"' + name + '"</strong>?<br><br>This action cannot be undone.</span>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-trash" style="margin-right:6px;"></i>Yes, Delete',
+        cancelButtonText:  '<i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+
+        fetch('/media-library/api/delete/' + id + '/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            if (d.success) {
+                var el = document.getElementById('mlFile-' + id);
+                if (el) {
+                    el.style.transition = 'all 0.3s';
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.85)';
+                    setTimeout(function () { el.remove(); }, 300);
+                }
+                mlSelected.delete(String(id));
+                mlUpdateSelBar();
+
+                swalDark.fire({
+                    title: 'Deleted!',
+                    html: '<span style="color:#a0a0a0;">"' + name + '" has been removed.</span>',
+                    icon: 'success',
+                    timer: 1800,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+            } else {
+                swalDark.fire({ title: 'Error', text: 'Could not delete image.', icon: 'error' });
+            }
+        })
+        .catch(function () {
+            swalDark.fire({ title: 'Error', text: 'Server error. Try again.', icon: 'error' });
+        });
+    });
+}
+
+/* ── DELETE SELECTED — SweetAlert2 ── */
+function mlDeleteSelected() {
+    var count = mlSelected.size;
+    if (!count) return;
+
+    swalDark.fire({
+        title: 'Delete ' + count + ' Image' + (count > 1 ? 's' : '') + '?',
+        html: '<span style="color:#a0a0a0;">You are about to permanently delete <strong style="color:#fff;">' + count + ' image' + (count > 1 ? 's' : '') + '</strong>.<br>This action cannot be undone.</span>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-trash" style="margin-right:6px;"></i>Delete All',
+        cancelButtonText:  '<i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+
+        var ids = Array.from(mlSelected);
+        var done = 0;
+
+        ids.forEach(function (id) {
+            fetch('/media-library/api/delete/' + id + '/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF }
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.success) {
+                    var el = document.getElementById('mlFile-' + id);
+                    if (el) el.remove();
+                }
+                done++;
+                if (done === ids.length) {
+                    mlSelected.clear();
+                    mlUpdateSelBar();
+                    swalDark.fire({
+                        title: 'Deleted!',
+                        html: '<span style="color:#a0a0a0;"><strong style="color:#fff;">' + ids.length + ' image' + (ids.length > 1 ? 's' : '') + '</strong> removed successfully.</span>',
+                        icon: 'success',
+                        timer: 1800,
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    });
+                }
+            });
+        });
+    });
+}
+
+/* ── Preview ── */
+function mlPreview(url, name) {
+    document.getElementById('mlPreviewImg').src = url;
+    document.getElementById('mlPreviewModal').style.display = 'flex';
+}
+
+/* ── Selection ── */
+function mlToggleCard(card) {
+    var id = card.dataset.id;
+    if (mlSelected.has(id)) {
+        mlSelected.delete(id); card.classList.remove('selected');
+    } else {
+        mlSelected.add(id); card.classList.add('selected');
+    }
+    mlUpdateSelBar();
+}
+
+function mlClearSelection() {
+    mlSelected.clear();
+    document.querySelectorAll('.ml-card.selected').forEach(function (c) { c.classList.remove('selected'); });
+    mlUpdateSelBar();
+}
+
+function mlToggleSelectAll() {
+    var cards = document.querySelectorAll('.ml-card[data-id]');
+    var allSel = mlSelected.size === cards.length;
+    if (allSel) {
+        mlClearSelection();
+        document.getElementById('mlSelectAllTxt').textContent = 'Select All';
+    } else {
+        cards.forEach(function (c) { mlSelected.add(c.dataset.id); c.classList.add('selected'); });
+        document.getElementById('mlSelectAllTxt').textContent = 'Deselect All';
+    }
+    mlUpdateSelBar();
+}
+
+function mlUpdateSelBar() {
+    var n = mlSelected.size;
+    document.getElementById('mlSelCount').textContent = n + ' selected';
+    var stat = document.getElementById('mlStatSelected');
+    if (stat) stat.textContent = n;
+    document.getElementById('mlSelBar').classList.toggle('visible', n > 0);
+}
+
+function mlCopySelected() {
+    var urls = [];
+    mlSelected.forEach(function (id) {
+        var card = document.getElementById('mlFile-' + id);
+        if (card) urls.push(card.dataset.url);
+    });
+    navigator.clipboard.writeText(urls.join('\n')).then(function () {
+        mlToast(urls.length + ' URL(s) copied', 'success');
+    });
+}
+
+/* ── View toggle ── */
+function mlSetView(v) {
+    document.getElementById('mlViewGrid').classList.toggle('active', v === 'grid');
+    document.getElementById('mlViewList').classList.toggle('active', v === 'list');
+    document.getElementById('mlGrid').classList.toggle('list-view', v === 'list');
+    localStorage.setItem('mlView', v);
+}
+(function () { var v = localStorage.getItem('mlView'); if (v === 'list') mlSetView('list'); })();
+
+/* ── Drag & Drop ── */
+var dragCnt = 0;
+document.addEventListener('dragenter', function (e) {
+    e.preventDefault(); dragCnt++;
+    document.getElementById('mlDragOverlay').classList.add('show');
+});
+document.addEventListener('dragleave', function () {
+    dragCnt--;
+    if (dragCnt <= 0) { dragCnt = 0; document.getElementById('mlDragOverlay').classList.remove('show'); }
+});
+document.addEventListener('dragover', function (e) { e.preventDefault(); });
+document.addEventListener('drop', function (e) {
+    e.preventDefault(); dragCnt = 0;
+    document.getElementById('mlDragOverlay').classList.remove('show');
+    var files = Array.from(e.dataTransfer.files).filter(function (f) { return f.type.startsWith('image/'); });
+    if (files.length) mlUploadFiles(files, '{{ current_folder }}' || 'general');
+});
+
+/* ── Toast ── */
+function mlToast(msg, type) {
+    var t = document.getElementById('mlToast');
+    document.getElementById('mlToastMsg').textContent = msg;
+    t.className = 'ml-toast show ' + (type || '');
+    t.querySelector('i').className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+    setTimeout(function () { t.classList.remove('show'); }, 2500);
+}
+</script>
+
+{% endblock %}
