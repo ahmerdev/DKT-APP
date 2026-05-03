@@ -1,13 +1,14 @@
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from app import views, api_view
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('media-library/', include('media_library.urls')),
 # custom login/logout
    path('login/', views.user_login, name='login'),
    path('rider/login/', views.rider_login, name='rider_login'),
