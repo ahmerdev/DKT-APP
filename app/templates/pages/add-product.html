@@ -110,7 +110,7 @@
   #variantList::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   .variant-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; box-shadow: var(--shadow-soft); transition: all 0.3s; border: none !important; }
   .variant-card:hover { box-shadow: var(--shadow-elevated); transform: translateY(-2px); }
-  .variant-card-header { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .variant-card-header { background: #7d1d27; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
   .attr-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.15); color: #e0e7ff; margin-right: 8px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
   .attr-badge span.key { color: #a5b4fc; margin-right: 4px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;}
   .variant-card-header small { color: #94a3b8; font-weight: 600; }
@@ -170,18 +170,7 @@
               </div>
               <div class="col-12">
                 <label class="label-master">Short Description <span>*</span></label>
-                    <textarea name="short_description" class="form-input-master" rows="2" 
-                        placeholder="A brief summary for product listing pages..." 
-                        required
-                        maxlength="300"
-                        oninput="updateCharCount(this)"
-                        id="shortDescTextarea">{{ product.short_description|default_if_none:'' }}</textarea>
-                    <div style="text-align:right; margin-top:6px;">
-                        <span id="shortDescCount" style="font-size:12px; color:var(--text-muted);">
-                            {{ product.short_description|default_if_none:''|length }}/300
-                        </span>
-                    </div>
-                <!-- <textarea name="short_description" class="form-input-master" rows="2" placeholder="A brief summary for product listing pages..." required>{{ product.short_description|default_if_none:'' }}</textarea> -->
+                <textarea name="short_description" class="form-input-master" rows="2" placeholder="A brief summary for product listing pages..." required>{{ product.short_description|default_if_none:'' }}</textarea>
               </div>
               <div class="col-12">
                 <label class="label-master">Full Description</label>
@@ -252,13 +241,24 @@
                       <input type="hidden" name="variants[{{ forloop.counter0 }}][id]" value="{{ v.id }}">
                       <input type="hidden" name="variants[{{ forloop.counter0 }}][attributes]" value="{{ v.attributes|to_json }}">
                       <div class="row g-3">
-                        <div class="col-md-3"><label class="form-label">SKU</label><input type="text" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][sku]" value="{{ v.sku }}" placeholder="SKU-001"></div>
-                        <div class="col-md-3"><label class="form-label">Price <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][regular_price]" value="{{ v.price }}" placeholder="0.00"></div>
-                        <div class="col-md-3"><label class="form-label">Sale Price</label><input type="text" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][sale_price]" value="{{ v.attributes.sale_price|default:'' }}" placeholder="0.00"></div>
-                        <div class="col-md-3"><label class="form-label">Stock</label><input type="number" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][stock]" value="{{ v.stock }}" placeholder="0"></div>
+                        <div class="col-md-4"><label class="form-label">SKU</label><input type="text" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][sku]" value="{{ v.sku }}" placeholder="SKU-001"></div>
+                        <div class="col-md-4"><label class="form-label">Price <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][regular_price]" value="{{ v.price }}" placeholder="0.00"></div>
+                        <div class="col-md-4"><label class="form-label">Sale Price</label><input type="text" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][sale_price]" value="{{ v.attributes.sale_price|default:'' }}" placeholder="0.00"></div>
+                        <div class="col-md-4"><label class="form-label">Stock</label><input type="number" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][stock]" value="{{ v.stock }}" placeholder="0"></div>
                         <div class="col-md-4"><label class="form-label">Points</label><input type="number" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][points]" value="{{ v.attributes.points|default:'' }}" placeholder="0"></div>
                         <div class="col-md-4"><label class="form-label">Status</label><select class="form-select form-select-sm" name="variants[{{ forloop.counter0 }}][is_active]"><option value="1" {% if v.is_active %}selected{% endif %}>Active</option><option value="0" {% if not v.is_active %}selected{% endif %}>Inactive</option></select></div>
-                        <div class="col-md-4"><label class="form-label">Image</label><input type="file" class="form-control form-control-sm" name="variants[{{ forloop.counter0 }}][image]" accept="image/*">{% if v.image %}<img src="{{ v.image.url }}" class="var-img-thumb" alt=""><input type="hidden" name="variants[{{ forloop.counter0 }}][existing_image]" value="{{ v.image.name }}">{% endif %}</div>
+<div class="col-md-12">
+  <label class="form-label">Image</label>
+  <input type="hidden" name="variants[{{ forloop.counter0 }}][lib_image_id]" class="var-lib-img-id" value="">
+  <input type="hidden" name="variants[{{ forloop.counter0 }}][existing_image]" id="varExisting_{{ forloop.counter0 }}" value="{% if v.image %}{{ v.image.name }}{% endif %}">
+  <div onclick="varImgOpen({{ forloop.counter0 }})" style="border:2px dashed #cbd5e1;border-radius:8px;padding:12px;text-align:center;cursor:pointer;background:#f8fafc;">
+    <i class="fa-solid fa-images" style="color:#7d1d27;margin-bottom:4px;display:block;"></i>
+    <strong style="color:#7d1d27;font-size:12px;">Pick from Library</strong>
+  </div>
+  <div id="varImgWrap_{{ forloop.counter0 }}" style="display:{% if v.image %}inline-block{% else %}none{% endif %};margin-top:8px;position:relative;">
+    {% if v.image %}<img src="{{ v.image.url }}" class="var-img-thumb" alt="">{% endif %}
+  </div>
+</div>
                         <div class="col-12"><label class="form-label">Description</label><textarea class="form-control form-control-sm" rows="1" name="variants[{{ forloop.counter0 }}][description]">{{ v.attributes.description|default:'' }}</textarea></div>
                       </div>
                     </div>
@@ -278,58 +278,68 @@
         </div>
 
 
-        <!-- RIGHT COLUMN (Details & Variants) -->
-        <div class="col-lg-4">
-          <div class="wg-box">
-            <div class="section-header"><h4><i class="fa-solid fa-images"></i> Media</h4></div>
-            <div class="row g-4">
-              <div class="col-12">
-                <label class="label-master">Main Image <span>*</span></label>
-                <div id="singleImagePreview">
-                  {% if product and product.image %}
-                  <div class="main-img-preview-box" id="imgpreview">
-                    <img id="previewImg" src="{{ product.image.url }}" alt="Main">
-                    <button type="button" class="del-btn" onclick="removeSingleImage()">
-                      <i class="fa-solid fa-xmark"></i>
-                    </button>
-                  </div>
-                  {% else %}
-                  <div id="imgpreview" class="main-img-preview-box" style="display:none;">
-                    <img id="previewImg" src="" alt="Main">
-                    <button type="button" class="del-btn" onclick="removeSingleImage()">
-                      <i class="fa-solid fa-xmark"></i>
-                    </button>
-                  </div>
-                  {% endif %}
-                </div>
-                <div id="upload-file" class="upload-zone-premium mt-3" {% if product and product.image %}style="display:none"{% endif %}>
-                  <i class="fa-solid fa-cloud-arrow-up upload-icon d-block"></i>
-                  <p class="upload-text">Drop here or <strong>browse</strong></p>
-                  <input type="file" id="myFile" name="image" accept="image/*">
-                </div>
-              </div>
-              <div class="col-12">
-                <label class="label-master">Gallery</label>
-                <div class="upload-zone-premium">
-                  <i class="fa-solid fa-images upload-icon d-block"></i>
-                  <p class="upload-text">Add multiple images to <strong>product gallery</strong></p>
-                  <input type="file" id="gFile" name="gallery_images" accept="image/*" multiple>
-                </div>
-                <div class="img-grid" id="galleryPreview">
-                  {% if product %}
-                    {% for img in product.gallery_images.all %}
-                    <div class="img-thumb-box" data-gallery-id="{{ img.id }}">
-                      <img src="{{ img.image.url }}" alt="Gallery">
-                      <button type="button" class="del-btn" onclick="removeGalleryImage(this, {{ img.id }})">
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    </div>
-                    {% endfor %}
-                  {% endif %}
-                </div>
-              </div>
-            </div>
+<div class="col-lg-4">
+  <div class="wg-box">
+    <div class="section-header"><h4><i class="fa-solid fa-images"></i> Media</h4></div>
+    <div class="row g-4">
+
+      <!-- Main Image -->
+      <div class="col-12">
+        <label class="label-master">Main Image <span>*</span></label>
+        <div id="singleImagePreview" data-img-field="image" data-img-folder="products">
+          {% if product and product.image %}
+          <div class="main-img-preview-box" id="imgpreview">
+            <img id="previewImg" src="{{ product.image.url }}" alt="Main">
+            <button type="button" class="remove-btn"  onclick="removeSingleImage()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
+          {% else %}
+          <div id="imgpreview" class="main-img-preview-box" style="display:none;">
+            <img id="previewImg" src="" alt="Main">
+           <button type="button" class="remove-btn"  onclick="removeSingleImage()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          {% endif %}
+        </div>
+        <div id="upload-file" class="upload-zone-premium mt-3" 
+             onclick="mpOpen('single','main')"
+             {% if product and product.image %}style="display:none"{% endif %}>
+          <i class="fa-solid fa-cloud-arrow-up upload-icon d-block"></i>
+          <p class="upload-text">Click to <strong>browse library</strong></p>
+        </div>
+        <input type="hidden"name="image_lib_id" id="mainImageLibId" value="">
+      </div>
+
+      <!-- Gallery -->
+      <div class="col-12">
+        <label class="label-master">Gallery</label>
+        <div class="upload-zone-premium" 
+             onclick="mpOpen('multi','gallery')">
+          <i class="fa-solid fa-images upload-icon d-block"></i>
+          <p class="upload-text">Click to <strong>add from library</strong></p>
+        </div>
+        <div class="img-grid" id="galleryPreview">
+          {% if product %}
+            {% for img in product.gallery_images.all %}
+            <div class="img-thumb-box" data-gallery-id="{{ img.id }}">
+              <img src="{{ img.image.url }}" alt="Gallery">
+              <button type="button" class="remove-btn"  onclick="removeGalleryImage(this, {{ img.id }})">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+<input type="hidden" name="gallery_lib_ids" id="galleryLibIds" value="">
+      </div>
+
+    </div>
+  </div>
+
+
+
 
           <div class="wg-box">
             <div class="section-header"><h4><i class="fa-solid fa-folder-tree"></i> Organization</h4></div>
@@ -474,6 +484,27 @@ const ImagePreview = {
   }
 };
 
+window.varImgOpen = function(idx) {
+  if (!window.MP_HANDLERS) window.MP_HANDLERS = {};
+  window.MP_HANDLERS['var_' + idx] = function(mediaId, imageUrl) {
+    const cards = document.querySelectorAll('#variantList .variant-card');
+    const card = cards[idx];
+    if (!card) return;
+    card.querySelector('.var-lib-img-id').value = mediaId;
+    const existingInput = card.querySelector('input[name*="[existing_image]"]');
+    if (existingInput) existingInput.value = '';
+    const wrap = document.getElementById('varImgWrap_' + idx);
+    if (wrap) {
+      wrap.style.display = 'inline-block';
+      let img = wrap.querySelector('img');
+      if (!img) { img = document.createElement('img'); img.className = 'var-img-thumb'; wrap.prepend(img); }
+      img.src = imageUrl;
+    }
+  };
+  mpOpen('single', 'var_' + idx);
+};
+
+
 const ProductTypeToggle = {
   elements: {},
   init() {
@@ -517,7 +548,18 @@ const VariantGenerator = {
     const attrs = {}; combo.forEach(pair => attrs[pair.optName] = pair.val); const comboKey = this.buildComboKey(combo); const saved = this.existingData[comboKey] || {};
     const badgesHtml = combo.map(p => `<span class="attr-badge"><span class="key">${Utils.escapeHtml(p.optName)}:</span> ${Utils.escapeHtml(p.val)}</span>`).join(''); const attrsJson = JSON.stringify(attrs);
     const card = document.createElement('div'); card.className = 'variant-card card shadow-sm'; card.dataset.vkey = comboKey;
-    card.innerHTML = `<div class="variant-card-header"><div class="d-flex flex-wrap gap-2">${badgesHtml}</div><small>#${idx + 1}</small></div><div class="card-body">${saved.id ? `<input type="hidden" name="variants[${idx}][id]" value="${Utils.escapeAttr(saved.id)}">` : ''}<input type="hidden" name="variants[${idx}][attributes]" value="${Utils.escapeAttr(attrsJson)}"><div class="row g-3"><div class="col-md-3"><label class="form-label">SKU</label><input type="text" class="form-control form-control-sm" name="variants[${idx}][sku]" value="${Utils.escapeAttr(saved.sku || '')}" placeholder="SKU-001"></div><div class="col-md-3"><label class="form-label">Price <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="variants[${idx}][regular_price]" value="${Utils.escapeAttr(saved.regular_price || '')}" placeholder="0.00"></div><div class="col-md-3"><label class="form-label">Sale Price</label><input type="text" class="form-control form-control-sm" name="variants[${idx}][sale_price]" value="${Utils.escapeAttr(saved.sale_price || '')}" placeholder="0.00"></div><div class="col-md-3"><label class="form-label">Stock</label><input type="number" class="form-control form-control-sm" name="variants[${idx}][stock]" value="${Utils.escapeAttr(saved.stock || '')}" placeholder="0" min="0"></div><div class="col-md-4"><label class="form-label">Points</label><input type="number" class="form-control form-control-sm" name="variants[${idx}][points]" value="${Utils.escapeAttr(saved.points || '')}" placeholder="0" min="0"></div><div class="col-md-4"><label class="form-label">Status</label><select class="form-select form-select-sm" name="variants[${idx}][is_active]"><option value="1" ${(!saved.id || saved.is_active !== '0') ? 'selected' : ''}>Active</option><option value="0" ${saved.is_active === '0' ? 'selected' : ''}>Inactive</option></select></div><div class="col-md-4"><label class="form-label">Image</label><input type="file" class="form-control form-control-sm" name="variants[${idx}][image]" accept="image/*">${saved.image_url ? `<img src="${saved.image_url}" class="var-img-thumb" alt="Variant"><input type="hidden" name="variants[${idx}][existing_image]" value="${Utils.escapeAttr(saved.existing_image || '')}">` : ''}</div><div class="col-12"><label class="form-label">Description</label><textarea class="form-control form-control-sm" rows="1" name="variants[${idx}][description]">${Utils.escapeHtml(saved.description || '')}</textarea></div></div></div>`;
+    card.innerHTML = `<div class="variant-card-header"><div class="d-flex flex-wrap gap-2">${badgesHtml}</div><small>#${idx + 1}</small></div><div class="card-body">${saved.id ? `<input type="hidden" name="variants[${idx}][id]" value="${Utils.escapeAttr(saved.id)}">` : ''}<input type="hidden" name="variants[${idx}][attributes]" value="${Utils.escapeAttr(attrsJson)}"><div class="row g-3"><div class="col-md-4"><label class="form-label">SKU</label><input type="text" class="form-control form-control-sm" name="variants[${idx}][sku]" value="${Utils.escapeAttr(saved.sku || '')}" placeholder="SKU-001"></div><div class="col-md-4"><label class="form-label">Price <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="variants[${idx}][regular_price]" value="${Utils.escapeAttr(saved.regular_price || '')}" placeholder="0.00"></div><div class="col-md-4"><label class="form-label">Sale Price</label><input type="text" class="form-control form-control-sm" name="variants[${idx}][sale_price]" value="${Utils.escapeAttr(saved.sale_price || '')}" placeholder="0.00"></div><div class="col-md-4"><label class="form-label">Stock</label><input type="number" class="form-control form-control-sm" name="variants[${idx}][stock]" value="${Utils.escapeAttr(saved.stock || '')}" placeholder="0" min="0"></div><div class="col-md-4"><label class="form-label">Points</label><input type="number" class="form-control form-control-sm" name="variants[${idx}][points]" value="${Utils.escapeAttr(saved.points || '')}" placeholder="0" min="0"></div><div class="col-md-4"><label class="form-label">Status</label><select class="form-select form-select-sm" name="variants[${idx}][is_active]"><option value="1" ${(!saved.id || saved.is_active !== '0') ? 'selected' : ''}>Active</option><option value="0" ${saved.is_active === '0' ? 'selected' : ''}>Inactive</option></select></div><div class="col-md-12">
+  <label class="form-label">Image</label>
+  <input type="hidden" name="variants[${idx}][lib_image_id]" class="var-lib-img-id" value="${Utils.escapeAttr(saved.lib_image_id || '')}">
+  <input type="hidden" name="variants[${idx}][existing_image]" id="varExisting_${idx}" value="${Utils.escapeAttr(saved.existing_image || '')}">
+  <div onclick="varImgOpen(${idx})" style="border:2px dashed #cbd5e1;border-radius:8px;padding:12px;text-align:center;cursor:pointer;background:#f8fafc;">
+    <i class="fa-solid fa-images" style="color:#7d1d27;margin-bottom:4px;display:block;font-size:16px;"></i>
+    <strong style="color:#7d1d27;font-size:12px;">Pick from Library</strong>
+  </div>
+  <div id="varImgWrap_${idx}" style="display:${saved.image_url ? 'inline-block' : 'none'};margin-top:8px;position:relative;">
+    ${saved.image_url ? `<img src="${saved.image_url}" class="var-img-thumb" alt="Variant">` : ''}
+  </div>
+</div><div class="col-12"><label class="form-label">Description</label><textarea class="form-control form-control-sm" rows="1" name="variants[${idx}][description]">${Utils.escapeHtml(saved.description || '')}</textarea></div></div></div>`;
     const imageInput = card.querySelector('input[type="file"][name*="[image]"]'); if (imageInput) imageInput.addEventListener('change', function() { ImagePreview.previewVariantImage(this); }); return card;
   },
   showEmptyState(container, message) { container.innerHTML = `<div class="variant-empty"><i class="fa-solid fa-cubes-stacked"></i><p>${message}</p></div>`; },
@@ -539,22 +581,6 @@ const FormValidator = {
     }
     return true;
   }
-};
-
-  window.updateCharCount = function(textarea) {
-    const max = parseInt(textarea.getAttribute('maxlength'));
-    const current = textarea.value.length;
-    const counter = document.getElementById('shortDescCount');
-    if (counter) {
-        counter.textContent = `${current}/${max}`;
-        if (current >= max) {
-            counter.style.color = '#ef4444';
-        } else if (current >= max * 0.8) {
-            counter.style.color = '#f59e0b';
-        } else {
-            counter.style.color = 'var(--text-muted)';
-        }
-    }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
