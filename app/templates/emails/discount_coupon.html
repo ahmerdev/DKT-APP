@@ -1,16 +1,147 @@
 <!DOCTYPE html>
 <html>
-<body style="font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px;">
-  <div style="max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 8px;">
-    <h2 style="color: #4CAF50;">{{ discount.title }}</h2>
-    <p>Hi {{ user.email }},</p>
-    <p>We’ve got a special offer for you 🎉</p>
-    <p><strong>Coupon Code:</strong> <code style="background: #eee; padding: 5px 10px;">{{ discount.code }}</code></p>
-    <p><strong>Discount:</strong> {{ discount.discount_type|title }} — {{ discount.value }}</p>
-    <p><strong>Valid:</strong> {{ discount.start_date }} → {{ discount.end_date }}</p>
-    <hr>
-    <p>Use this code at checkout to enjoy your savings!</p>
-    <p style="color: #888;">– The Store Team</p>
-  </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discount Offer</title>
+</head>
+<body style="margin:0; padding:0; background:#f0f0f0; font-family:Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0; padding:30px 0;">
+    <tr>
+      <td align="center">
+
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:16px; overflow:hidden;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:#7d1d27; padding:28px 32px; text-align:center;">
+              <img src="http://15.135.166.93:8000/static/images/logo/logo.png"
+                   alt="Logo"
+                   style="max-height:50px; display:block; margin:0 auto 14px auto;">
+              <div style="display:inline-block; background:rgba(255,255,255,0.15); border-radius:50px; padding:6px 18px; margin-bottom:12px;">
+                <span style="color:#f5c0c5; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;">Exclusive Offer</span>
+              </div>
+              <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:800;">Special Discount Just For You!</h1>
+            </td>
+          </tr>
+
+          <!-- GREETING -->
+          <tr>
+            <td style="padding:28px 32px 0;">
+              <p style="margin:0 0 6px; font-size:15px; color:#1a1a1a; font-weight:700;">
+                Hi <strong>{{ user.get_full_name|default:user.email }}</strong>,
+              </p>
+              <p style="margin:0; font-size:14px; color:#666; line-height:1.6;">
+                We have an exclusive deal waiting just for you. Here is your special discount code — use it at checkout and enjoy amazing savings!
+              </p>
+            </td>
+          </tr>
+
+          <!-- PRODUCT CARD -->
+          {% with product=discount.products.first %}
+          {% if product %}
+          <tr>
+            <td style="padding:20px 32px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1.5px solid #f0e0e2; border-radius:12px; overflow:hidden;">
+                <tr>
+                  {% if product.image %}
+                  <td width="100" style="padding:14px; vertical-align:top;">
+                    <img src="{{ product.image.url }}"
+                         alt="{{ product.name }}"
+                         style="width:88px; height:88px; object-fit:cover; border-radius:10px; display:block;">
+                  </td>
+                  {% endif %}
+                  <td style="padding:14px; vertical-align:top;">
+                    <p style="margin:0 0 4px; font-size:15px; font-weight:800; color:#1a1a1a;">{{ product.name }}</p>
+                    <p style="margin:0 0 10px; font-size:13px; color:#888; line-height:1.5;">
+                      {{ product.short_description|default:"Special discounted product" }}
+                    </p>
+                    <span style="background:#fdf0f1; color:#7d1d27; font-size:11px; font-weight:700; padding:4px 10px; border-radius:50px; border:1px solid #f5c0c5;">Featured Product</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {% endif %}
+          {% endwith %}
+
+          <!-- COUPON BOX -->
+          <tr>
+            <td style="padding:20px 32px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f1; border:2px dashed #c9606a; border-radius:12px;">
+                <tr>
+                  <td style="padding:20px; text-align:center;">
+                    <p style="margin:0 0 6px; font-size:12px; font-weight:700; color:#999; text-transform:uppercase; letter-spacing:1.5px;">Your Coupon Code</p>
+                    <div style="background:#7d1d27; display:inline-block; padding:10px 28px; border-radius:8px; margin:6px 0 10px;">
+                      <span style="font-size:24px; font-weight:900; color:#ffffff; letter-spacing:4px;">{{ discount.code }}</span>
+                    </div>
+                    <p style="margin:0; font-size:13px; color:#7d1d27; font-weight:700;">Copy this code and paste at checkout</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- DETAILS ROW -->
+          <tr>
+            <td style="padding:20px 32px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="text-align:center; padding:14px; background:#fdf5f5; border-radius:10px; border:1px solid #f5e0e2; width:33%;">
+                    <p style="margin:0 0 4px; font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Discount</p>
+                    <p style="margin:0; font-size:18px; font-weight:900; color:#7d1d27;">
+                      {% if discount.discount_type == "percentage" %}{{ discount.value }}% OFF
+                      {% else %}Rs. {{ discount.value }} OFF{% endif %}
+                    </p>
+                  </td>
+                  <td style="width:4%;"></td>
+                  <td style="text-align:center; padding:14px; background:#fdf5f5; border-radius:10px; border:1px solid #f5e0e2; width:29%;">
+                    <p style="margin:0 0 4px; font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Valid From</p>
+                    <p style="margin:0; font-size:13px; font-weight:700; color:#333;">{{ discount.start_date|date:"M d, Y" }}</p>
+                  </td>
+                  <td style="width:4%;"></td>
+                  <td style="text-align:center; padding:14px; background:#fdf5f5; border-radius:10px; border:1px solid #f5e0e2; width:30%;">
+                    <p style="margin:0 0 4px; font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Valid Until</p>
+                    <p style="margin:0; font-size:13px; font-weight:700; color:#333;">{{ discount.end_date|date:"M d, Y" }}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA BUTTON -->
+          <tr>
+            <td style="padding:24px 32px 0; text-align:center;">
+              <a href="#" style="display:inline-block; background:#7d1d27; color:#ffffff; text-decoration:none; font-size:15px; font-weight:800; padding:14px 40px; border-radius:50px; letter-spacing:0.5px;">
+                Shop Now &rarr;
+              </a>
+            </td>
+          </tr>
+
+          <!-- DIVIDER -->
+          <tr>
+            <td style="padding:24px 32px 0;">
+              <div style="border-top:1.5px solid #f5e8e9;"></div>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:20px 32px 28px; text-align:center;">
+              <p style="margin:0 0 6px; font-size:13px; color:#999;">
+                If you have any questions, reply to this email — we are happy to help.
+              </p>
+              <p style="margin:0; font-size:12px; color:#ccc;">
+                &copy; 2026 DKT Store. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
 </body>
 </html>
