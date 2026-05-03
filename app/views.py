@@ -15,6 +15,7 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum, F, DecimalField, ExpressionWrapper, Avg
 from django.utils import timezone
 from django.http import JsonResponse
+from media_library.models import MediaFile
 from django.views.decorators.csrf import csrf_exempt
 from .reports import get_sales_report, get_profit_report, get_customer_potentials, get_product_report, get_product_profit_report
 from .forms import CategoryForm, RiderForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, PrivacyForm, DiscountForm, AboutForm, ContactInfoForm
@@ -312,12 +313,14 @@ def home(request):
 
 
 # Dashboard App User List
+@login_required(login_url='login')
 def appuser_list_ui(request):
     users = AppUser.objects.all().order_by("-created_at")
     return render(request, "pages/customer-list.html", {"users": users})
 
 
 # Active & Deactive 
+@login_required(login_url='login')
 def user_status(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
     user.is_active = not user.is_active  
@@ -376,7 +379,7 @@ def create_appuser_ui(request, pk=None):
 
     return render(request, "pages/create-user.html", {"user": user})
 
-
+@login_required(login_url='login')
 def customer_address(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
     
@@ -471,7 +474,7 @@ def delete_appuser_ui(request, pk):
 
 
 
-
+@login_required(login_url='login')
 def customer_detail(request, pk):
     user = get_object_or_404(AppUser, pk=pk)
 
@@ -569,7 +572,19 @@ def add_or_edit_category(request, pk=None):
     if request.method == "POST":
         form = CategoryForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+
+            image_lib_id = request.POST.get('image_lib_id', '').strip()
+            remove_flag  = request.POST.get('remove_image', '').strip()
+
+            if image_lib_id:
+                _assign_lib_image(obj, 'image', image_lib_id)
+            elif remove_flag == '1':
+                if obj.image:
+                    obj.image.delete(save=False)
+                obj.image = None
+
+            obj.save()
             messages.success(request, success_message)
             return redirect("category")
         else:
@@ -604,21 +619,28 @@ def delete_category(request, pk):
 # Brand View
 @login_required(login_url='login')
 def add_or_edit_brand(request, pk=None):
-    if pk:
-        brand = get_object_or_404(Brand, pk=pk)
-        success_message = "Brand updated successfully"
-    else:
-        brand = None
-        success_message = "Brand created successfully"
+    brand = get_object_or_404(Brand, pk=pk) if pk else None
 
     if request.method == "POST":
         form = BrandForm(request.POST, request.FILES, instance=brand)
         if form.is_valid():
-            form.save()
-            messages.success(request, success_message)
+            obj = form.save(commit=False)
+
+            image_lib_id = request.POST.get('image_lib_id', '').strip()
+            remove_flag  = request.POST.get('remove_image', '').strip()
+
+            if image_lib_id:
+                _assign_lib_image(obj, 'image', image_lib_id)
+            elif remove_flag == '1':
+                if obj.image:
+                    obj.image.delete(save=False)
+                obj.image = None
+
+            obj.save()
+            messages.success(request, f"Brand {'updated' if pk else 'created'} successfully!")
             return redirect("brand")
         else:
-            messages.error(request, "Something went wrong, please try again")
+            messages.error(request, "Something went wrong")
     else:
         form = BrandForm(instance=brand)
 
@@ -872,7 +894,7 @@ def order_list_ui(request):
 #     }
 #     return render(request, "pages/reviews.html", context)
 
-
+@login_required(login_url='login')
 def reviews(request):
     reviews_qs = Review.objects.select_related('user', 'item').all().order_by('-created_at')
     user_spent = (
@@ -922,6 +944,7 @@ def delete_review(request, pk):
 
 
 # Create Order UI 
+@login_required(login_url='login')
 def create_order_ui(request):
     users = AppUser.objects.all() 
     if request.method == "POST":
@@ -989,7 +1012,7 @@ def safe_json(value):
     return {}
 
 
-
+@login_required(login_url='login')
 def update_order_status_ui(request, pk):
     order = get_object_or_404(Order, pk=pk)
     cities = City.objects.all()
@@ -1301,96 +1324,149 @@ def _handle_product_variants(product_obj, request, is_edit=False):
                 is_active  = is_active,
             )
         except IntegrityError:
-            # attributes combination already exists — skip silently
             continue
 
-        # ── Image (new upload takes priority, else keep existing) ──
-        image_file = data.get("image")
-        if image_file and hasattr(image_file, "read"):
-            variant.image = image_file
+        lib_image_id = data.get("lib_image_id", "").strip()
+        if lib_image_id:
+            _assign_lib_image(variant, 'image', lib_image_id)
             variant.save()
         else:
-            existing_img = data.get("existing_image", "").strip()
-            if existing_img:
-                variant.image.name = existing_img
+            image_file = data.get("image")
+            if image_file and hasattr(image_file, "read"):
+                variant.image = image_file
                 variant.save()
+            else:
+                existing_img = data.get("existing_image", "").strip()
+                if existing_img:
+                    variant.image.name = existing_img
+                    variant.save()
 
 
+
+# Helper Function
+def _assign_lib_image(instance, field_name, media_id):
+    """
+    MediaFile ID se kisi bhi model ke ImageField mein file assign karo.
+    No re-upload — same file reference use hoti hai.
+    """
+    if not media_id:
+        return
+    media_id = str(media_id).strip()
+    if not media_id:
+        return
+    try:
+        media_file = MediaFile.objects.get(pk=media_id)
+        setattr(instance, field_name, media_file.image)
+    except MediaFile.DoesNotExist:
+        pass
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN VIEW
 # ─────────────────────────────────────────────────────────────────────────────
-
 @login_required(login_url="login")
 def add_or_edit_product(request, pk=None):
     product_obj = get_object_or_404(Product, pk=pk) if pk else None
-
+ 
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=product_obj)
-        print(form.errors)
+ 
         if form.is_valid():
             with transaction.atomic():
-                
-                # ===== 1. DELETE REMOVED GALLERY IMAGES (NEW LOGIC) =====
+ 
+                # ── 1. DELETE REMOVED GALLERY IMAGES ─────────────────────
                 remove_gallery_ids = request.POST.get('remove_gallery_images', '')
                 if remove_gallery_ids:
-                    # "1,2,3" string ko [1, 2, 3] list mein convert karna
-                    ids_to_remove = [int(i.strip()) for i in remove_gallery_ids.split(',') if i.strip().isdigit()]
+                    ids_to_remove = [
+                        int(i.strip())
+                        for i in remove_gallery_ids.split(',')
+                        if i.strip().isdigit()
+                    ]
                     if ids_to_remove:
-                        # Model ke delete method ki wajah se file folder se bhi delete hogi
                         ProductImage.objects.filter(id__in=ids_to_remove).delete()
-
-                # ===== 2. SAVE FORM =====
-                product_obj = form.save()
-
-                # ===== 3. REMOVE MAIN IMAGE (NEW LOGIC) =====
-                # Agar remove checkbox click kiya aur nayi image upload nahi ki
-                if request.POST.get('remove_main_image') == '1' and 'image' not in request.FILES:
+ 
+                # ── 2. FORM SAVE (commit=False — image baad mein assign karenge) ──
+                product_obj = form.save(commit=False)
+ 
+                # ── 3. MAIN IMAGE — Library se (ID → file assign) ─────────
+                image_lib_id = request.POST.get('image_lib_id', '').strip()
+ 
+                if image_lib_id:
+                    # Library se select kiya — MediaFile se assign karo
+                    _assign_lib_image(product_obj, 'image', image_lib_id)
+ 
+                elif request.FILES.get('image'):
+                    # Direct upload — form already handle kar raha hai
+                    pass
+ 
+                elif request.POST.get('remove_main_image') == '1':
+                    # Remove button click kiya
                     if product_obj.image:
-                        product_obj.image.delete(save=False)  # Folder se delete
-                        product_obj.image = None              # DB se null karein
-                        product_obj.save(update_fields=['image'])
-
-                # ===== 4. ADD NEW GALLERY IMAGES =====
+                        product_obj.image.delete(save=False)
+                    product_obj.image = None
+ 
+                # ── 4. DB SAVE ────────────────────────────────────────────
+                product_obj.save()
+ 
+                # ── 5. GALLERY — Library  (IDs → files assign) ──────────
+                gallery_lib_ids = request.POST.get('gallery_lib_ids', '').strip()
+                if gallery_lib_ids:
+                    id_list = [i.strip() for i in gallery_lib_ids.split(',') if i.strip()]
+                    for mid in id_list:
+                        try:
+                            media_file = MediaFile.objects.get(pk=mid)
+                            # Duplicate check — same file already not assigned 
+                            already = ProductImage.objects.filter(
+                                product=product_obj,
+                                image=media_file.image.name
+                            ).exists()
+                            if not already:
+                                ProductImage.objects.create(
+                                    product=product_obj,
+                                    image=media_file.image
+                                )
+                        except MediaFile.DoesNotExist:
+                            pass
+ 
+                # ── 6. GALLERY — Direct upload ────────────────────────────
                 gallery_images = request.FILES.getlist("gallery_images")
                 if gallery_images:
                     for img in gallery_images:
                         ProductImage.objects.create(product=product_obj, image=img)
-
-                # ===== 5. HANDLE VARIANTS =====
+ 
+                # ── 7. VARIANTS ───────────────────────────────────────────
                 product_type = request.POST.get("product_type", "simple")
-
+ 
                 if product_type == "variable":
                     _handle_product_variants(product_obj, request, is_edit=bool(pk))
                 else:
-                    # Switched back to simple → clear variants
                     if pk:
                         product_obj.variants.all().delete()
                         product_obj.variant_options.all().delete()
-
+ 
             messages.success(
                 request,
                 f"Product '{product_obj.name}' {'updated' if pk else 'created'} successfully!"
             )
             return redirect("product")
-
+ 
         else:
             messages.error(request, "Please correct the errors below.")
-
+ 
     else:
         form = ProductForm(instance=product_obj)
-
-    # ── Context ──
-    from .models import Category, Brand  # local import to avoid circular
+ 
+    # ── Context ──────────────────────────────────────────────────────────────
     categories = Category.objects.all()
     brands     = Brand.objects.all()
-
+ 
     variant_options   = []
     existing_variants = []
-
+ 
     if product_obj and product_obj.product_type == "variable":
         variant_options   = product_obj.variant_options.all().prefetch_related("values")
         existing_variants = product_obj.variants.all()
-
+ 
     return render(request, "pages/add-product.html", {
         "form"             : form,
         "product"          : product_obj,
@@ -1399,6 +1475,7 @@ def add_or_edit_product(request, pk=None):
         "variant_options"  : variant_options,
         "existing_variants": existing_variants,
     })
+ 
    
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -1406,7 +1483,8 @@ def delete_product(request, pk):
     messages.warning(request, "Product deleted successfully!")
     return redirect('product') 
 
-   
+
+@login_required(login_url='login')   
 def product(request):
     search_query = request.GET.get('q', '')
 
@@ -1503,7 +1581,20 @@ def add_or_edit_banner(request, pk=None):
     if request.method == "POST":
         form = BannerForm(request.POST, request.FILES, instance=banner)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+
+            image_lib_id = request.POST.get('image_lib_id', '').strip()
+            remove_flag  = request.POST.get('remove_image', '').strip()
+
+            if image_lib_id:
+                _assign_lib_image(obj, 'image', image_lib_id)
+            elif remove_flag == '1':
+                if obj.image:
+                    obj.image.delete(save=False)
+                obj.image = None
+
+            obj.save()
+            form.save_m2m()
             messages.success(request, success_message)
             return redirect("banner")
         else:
@@ -1555,7 +1646,20 @@ def add_or_edit_ad(request, pk=None):
     if request.method == "POST":
         form = AdForm(request.POST, request.FILES, instance=ad)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+
+            image_lib_id = request.POST.get('image_lib_id', '').strip()
+            remove_flag  = request.POST.get('remove_image', '').strip()
+
+            if image_lib_id:
+                _assign_lib_image(obj, 'image', image_lib_id)
+            elif remove_flag == '1':
+                if obj.image:
+                    obj.image.delete(save=False)
+                obj.image = None
+
+            obj.save()
+            form.save_m2m()
             messages.success(request, success_message)
             return redirect("adbanner")
         else:
