@@ -36,6 +36,7 @@
         <span></span>
     </div>
 </div>  -->
+{% include 'media_library/image_picker_modal.html' %}
                 {% include 'include/notifications.html' %}
                 {% include 'include/sidebar.html' %}
                {% include 'include/delete_model.html' %}
@@ -342,8 +343,26 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// Ye dashboard.html ke end mein likho — ek baar
+function removeSingleImage(hiddenFieldId) {
+    document.getElementById('previewImg').src = '';
+    document.getElementById('imgpreview').style.display = 'none';
+    document.getElementById('upload-file').style.display = 'block';
+    document.getElementById(hiddenFieldId).value = '';
+}
+
 </script>
 
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
