@@ -707,6 +707,15 @@ def privacy(request):
     return render(request, "pages/privacy.html", {"privacies": privacies})
 
 
+def privacy_page(request):
+privacy = Privacy.objects.order_by('-id').first()
+return render(request, "privacy-policy.html", {"item": privacy})
+
+def terms_page(request):
+    terms = Privacy.objects.order_by('-id').first()
+    return render(request, "term-condition.html", {"item": terms})
+
+
 
 # Delete Privacy
 @login_required(login_url='login')
