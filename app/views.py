@@ -708,8 +708,8 @@ def privacy(request):
 
 
 def privacy_page(request):
-privacy = Privacy.objects.order_by('-id').first()
-return render(request, "privacy-policy.html", {"item": privacy})
+    privacy = Privacy.objects.order_by('-id').first()
+    return render(request, "privacy-policy.html", {"item": privacy})
 
 def terms_page(request):
     terms = Privacy.objects.order_by('-id').first()
