@@ -47,7 +47,13 @@
         <div class="mp-spinner"></div>
         <span>Loading...</span>
       </div>
-      <button class="mp-load-more" id="mpLoadMore" style="display:none;">Load More</button>
+      <!-- Infinite Scroll Sentinel (IntersectionObserver target) -->
+      <div id="mpSentinel" style="height:1px;width:100%;"></div>
+      <!-- Infinite Scroll Loader -->
+      <div class="mp-scroll-loader" id="mpScrollLoader">
+        <div class="mp-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></div>
+        <span>Loading more...</span>
+      </div>
     </div>
     <div class="mp-footer" id="mpFooter">
       <div class="mp-footer-info" id="mpFooterInfo">Click an image to select</div>
@@ -145,12 +151,16 @@
 .mp-empty p{font-size:14px;color:#aaa}
 .mp-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--mp-text-3);font-size:13px}
 .mp-loading.hide{display:none}
-.mp-spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--mp-bg-4);border-top-color:var(--mp-accent);animation:mpSpin .7s linear infinite}
+.mp-spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--mp-bg-4);border-top-color:var(--mp-accent);animation:mpSpin .7s linear infinite;flex-shrink:0}
 @keyframes mpSpin{to{transform:rotate(360deg)}}
 
-/* LOAD MORE */
-.mp-load-more{display:block;margin:16px auto 0;padding:10px 28px;border-radius:8px;border:1px solid var(--mp-border-2);background:var(--mp-bg);color:var(--mp-text-3);font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
-.mp-load-more:hover{border-color:var(--mp-accent);color:var(--mp-accent);background:var(--mp-accent-soft)}
+/* INFINITE SCROLL LOADER */
+.mp-scroll-loader{display:none;text-align:center;padding:16px;color:var(--mp-text-3);font-size:12px}
+.mp-scroll-loader.show{display:block}
+
+/* ALL LOADED MESSAGE */
+.mp-all-loaded{text-align:center;padding:16px;font-size:11px;color:#aaa;display:none}
+.mp-all-loaded.show{display:block}
 
 /* FOOTER */
 .mp-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--mp-border);background:var(--mp-bg-2);flex-shrink:0}
@@ -173,320 +183,553 @@
 
 /* DARK MODE */
 /* @media(prefers-color-scheme:dark){
-  .mp-modal{background:#1a1010;border-color:rgba(255,255,255,0.08)}
-  .mp-header{border-color:rgba(255,255,255,0.08);background:#1a1010}
-  .mp-header-left h3{color:#f0e0e2}
-  .mp-count{background:#2a1518;color:#c08080;border-color:rgba(255,255,255,0.08)}
-  .mp-close-btn{background:#2a1518;color:#c08080;border-color:rgba(255,255,255,0.08)}
+  :root{
+    --mp-bg:#1a1010;--mp-bg-2:#120d0d;--mp-bg-3:#2a1518;--mp-bg-4:#3a2020;
+    --mp-text:#f0e0e2;--mp-text-2:#d0b0b5;--mp-text-3:#a07070;
+    --mp-border:rgba(255,255,255,0.08);--mp-border-2:rgba(255,255,255,0.15)
+  }
   .mp-close-btn:hover{background:#7d1d27;color:#fff;border-color:#7d1d27}
-  .mp-toolbar{border-color:rgba(255,255,255,0.08);background:#1a1010}
-  .mp-search,.mp-folder-select{background:#2a1518;border-color:rgba(255,255,255,0.08);color:#f0e0e2}
+  .mp-search,.mp-folder-select{background:#2a1518;color:#f0e0e2}
   .mp-search::placeholder{color:#7a5555}
-  .mp-search:focus,.mp-folder-select:focus{border-color:#7d1d27;background:#1a1010}
   .mp-upload-new-btn{background:rgba(125,29,39,0.15);border-color:rgba(125,29,39,0.4);color:#f5a0a8}
-  .mp-upload-bar{background:#120d0d;border-color:rgba(255,255,255,0.08)}
   .mp-upload-track{background:#2a1518}
-  .mp-body{background:#1a1010}
-  .mp-body::-webkit-scrollbar-thumb{background:#2a1518}
-  .mp-item{background:#2a1518;border-color:rgba(255,255,255,0.08)}
   .mp-item:hover{border-color:#a02535}
   .mp-item.selected{border-color:#7d1d27;box-shadow:0 0 0 3px rgba(125,29,39,0.25)}
   .mp-check{background:rgba(26,16,16,0.85);border-color:rgba(255,255,255,0.2)}
-  .mp-load-more{background:#1a1010;border-color:rgba(255,255,255,0.12);color:#c08080}
-  .mp-load-more:hover{border-color:#7d1d27;color:#f5a0a8}
-  .mp-footer{background:#120d0d;border-color:rgba(255,255,255,0.08)}
-  .mp-footer-info{color:#a07070}
-  .mp-btn-ghost{background:#2a1518;color:#c08080;border-color:rgba(255,255,255,0.1)}
-  .mp-btn-ghost:hover{background:#3a2020}
-  .mp-empty i{color:#3a2020}
-  .mp-empty p{color:#7a5555}
-  .mp-loading{color:#a07070}
   .mp-spinner{border-color:#2a1518;border-top-color:#7d1d27}
+  .mp-empty i{color:#3a2020}
+  .mp-empty p,.mp-all-loaded{color:#7a5555}
 } */
 </style>
 
 <script>
 (function(){
-  var API_LIST='/media-library/api/picker/';
-  var API_UPLOAD='/media-library/api/upload/';
-  var CSRF=(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
+  /* ══════════════════════════════════════
+     CONFIG — apni API URLs yahan set karo
+  ══════════════════════════════════════ */
+  var API_LIST   = '/media-library/api/picker/';
+  var API_UPLOAD = '/media-library/api/upload/';
+  var PAGE_SIZE  = 30; // ek page mein kitni images chahiye
 
-  var mode='single',target='main',selected={},allImages=[],currentPage=1,hasMore=false,isLoading=false,searchTimer=null;
+  /* ══════════════════════════════════════
+     STATE
+  ══════════════════════════════════════ */
+  var mode        = 'single';
+  var target      = 'main';
+  var selected    = {};
+  var allImages   = [];
+  var currentPage = 1;
+  var hasMore     = false;
+  var isLoading   = false;
+  var totalCount  = 0;
+  var searchTimer = null;
+  var observer    = null;
 
-  var overlay=document.getElementById('mpOverlay');
-  var grid=document.getElementById('mpGrid');
-  var empty=document.getElementById('mpEmpty');
-  var loading=document.getElementById('mpLoading');
-  var loadMoreBtn=document.getElementById('mpLoadMore');
-  var countEl=document.getElementById('mpCount');
-  var footerInfo=document.getElementById('mpFooterInfo');
-  var confirmBtn=document.getElementById('mpConfirmBtn');
-  var confirmTxt=document.getElementById('mpConfirmText');
-  var searchIn=document.getElementById('mpSearch');
-  var folderIn=document.getElementById('mpFolder');
-  var uploadBar=document.getElementById('mpUploadBar');
-  var uploadFill=document.getElementById('mpUploadFill');
-  var uploadLbl=document.getElementById('mpUploadLabel');
-  var uploadPct=document.getElementById('mpUploadPct');
-  var uploadNewBtn=document.getElementById('mpUploadNewBtn');
-  var fileInput=document.getElementById('mpFileInput');
+  /* ══════════════════════════════════════
+     DOM REFS
+  ══════════════════════════════════════ */
+  var overlay      = document.getElementById('mpOverlay');
+  var grid         = document.getElementById('mpGrid');
+  var emptyEl      = document.getElementById('mpEmpty');
+  var loadingEl    = document.getElementById('mpLoading');
+  var scrollLoader = document.getElementById('mpScrollLoader');
+  var sentinelEl   = document.getElementById('mpSentinel');
+  var countEl      = document.getElementById('mpCount');
+  var footerInfo   = document.getElementById('mpFooterInfo');
+  var confirmBtn   = document.getElementById('mpConfirmBtn');
+  var confirmTxt   = document.getElementById('mpConfirmText');
+  var searchIn     = document.getElementById('mpSearch');
+  var folderIn     = document.getElementById('mpFolder');
+  var uploadBar    = document.getElementById('mpUploadBar');
+  var uploadFill   = document.getElementById('mpUploadFill');
+  var uploadLbl    = document.getElementById('mpUploadLabel');
+  var uploadPct    = document.getElementById('mpUploadPct');
+  var uploadNewBtn = document.getElementById('mpUploadNewBtn');
+  var fileInput    = document.getElementById('mpFileInput');
+  var mpBodyEl     = document.getElementById('mpBody');
 
-  /* ── OPEN ── */
-  window.mpOpen=function(m,t){
-    mode=m;target=t;selected={};currentPage=1;hasMore=false;
-    searchIn.value='';folderIn.value='';grid.innerHTML='';
-    empty.style.display='none';loadMoreBtn.style.display='none';
-    loading.classList.remove('hide');uploadBar.classList.remove('show');
-    confirmTxt.textContent=mode==='single'?'Use This Image':'Add to Gallery';
+  /* CSRF token Django ke liye */
+  var CSRF = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+
+  /* ══════════════════════════════════════
+     INTERSECTION OBSERVER SETUP
+     (Shopify style — sentinel element ko
+      watch karta hai, jaise hi dikhta hai
+      next page fetch hoti hai)
+  ══════════════════════════════════════ */
+  function setupObserver() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    observer = new IntersectionObserver(function(entries) {
+      var entry = entries[0];
+      if (entry.isIntersecting && !isLoading && hasMore) {
+        currentPage++;
+        fetchImages(false);
+      }
+    }, {
+      root: mpBodyEl,       // scroll container ko root banao
+      rootMargin: '0px',
+      threshold: 0.1        // 10% dikhne pe trigger
+    });
+
+    observer.observe(sentinelEl);
+  }
+
+  /* ══════════════════════════════════════
+     OPEN
+  ══════════════════════════════════════ */
+  window.mpOpen = function(m, t) {
+    mode        = m || 'single';
+    target      = t || 'main';
+    selected    = {};
+    currentPage = 1;
+    hasMore     = false;
+    allImages   = [];
+    totalCount  = 0;
+
+    searchIn.value = '';
+    folderIn.value = '';
+    grid.innerHTML = '';
+    emptyEl.style.display      = 'none';
+    scrollLoader.classList.remove('show');
+    loadingEl.classList.remove('hide');
+    uploadBar.classList.remove('show');
+
+    confirmTxt.textContent = (mode === 'single') ? 'Use This Image' : 'Add to Gallery';
     updateFooter();
+
     overlay.classList.add('open');
-    document.body.style.overflow='hidden';
+    document.body.style.overflow = 'hidden';
+
+    /* Observer start karo */
+    setupObserver();
+
+    /* Pehli page load karo */
     fetchImages(true);
   };
 
-  /* ── CLOSE ── */
-  window.mpClose=function(){
+  /* ══════════════════════════════════════
+     CLOSE
+  ══════════════════════════════════════ */
+  window.mpClose = function() {
     overlay.classList.remove('open');
-    document.body.style.overflow='';
+    document.body.style.overflow = '';
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
   };
 
-  overlay.addEventListener('click',function(e){
-    if(e.target===overlay)mpClose();
-  });
-  document.addEventListener('keydown',function(e){
-    if(e.key==='Escape'&&overlay.classList.contains('open'))mpClose();
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) mpClose();
   });
 
-  /* ── FETCH ── */
-  function fetchImages(reset){
-    if(isLoading)return;
-    isLoading=true;
-    loading.classList.remove('hide');
-    var params='?page='+currentPage;
-    var s=searchIn.value.trim();
-    var f=folderIn.value;
-    if(s)params+='&search='+encodeURIComponent(s);
-    if(f)params+='&folder='+encodeURIComponent(f);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) mpClose();
+  });
 
-    fetch(API_LIST+params,{headers:{'X-Requested-With':'XMLHttpRequest'}})
-    .then(function(r){return r.json();})
-    .then(function(data){
-      isLoading=false;
-      loading.classList.add('hide');
-      if(reset){grid.innerHTML='';allImages=[];}
-      var files=data.files||data.images||data.results||[];
-      allImages=allImages.concat(files);
-      hasMore=data.has_next||data.hasMore||false;
-      renderImages(files);
-      countEl.textContent=allImages.length+' image'+(allImages.length!==1?'s':'');
-      empty.style.display=allImages.length===0?'block':'none';
-      loadMoreBtn.style.display=hasMore?'block':'none';
+  /* ══════════════════════════════════════
+     FETCH IMAGES (main function)
+  ══════════════════════════════════════ */
+  function fetchImages(reset) {
+    if (isLoading) return;
+    isLoading = true;
+
+    /* UI state */
+    if (reset) {
+      loadingEl.classList.remove('hide');
+      scrollLoader.classList.remove('show');
+    } else {
+      scrollLoader.classList.add('show');
+    }
+
+    /* Query params build karo */
+    var params = '?page=' + currentPage + '&page_size=' + PAGE_SIZE;
+    var s = searchIn.value.trim();
+    var f = folderIn.value;
+    if (s) params += '&search=' + encodeURIComponent(s);
+    if (f) params += '&folder=' + encodeURIComponent(f);
+
+    fetch(API_LIST + params, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .catch(function(){
-      isLoading=false;
-      loading.classList.add('hide');
-      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ff6b6b;">'+
-        '<i class="fa-solid fa-triangle-exclamation" style="font-size:32px;margin-bottom:10px;display:block;"></i>'+
-        'Failed to load. Check API: '+API_LIST+'</div>';
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      isLoading = false;
+      loadingEl.classList.add('hide');
+      scrollLoader.classList.remove('show');
+
+      if (reset) {
+        grid.innerHTML = '';
+        allImages = [];
+      }
+
+      /* ── FILES EXTRACT (sare possible fields support) ── */
+      var files = data.files
+        || data.images
+        || data.results
+        || data.data
+        || data.items
+        || [];
+
+      /* ── TOTAL COUNT ── */
+      totalCount = data.total_count
+        || data.count
+        || data.total
+        || (data.pagination && data.pagination.total)
+        || (allImages.length + files.length);
+
+      /* ── HAS MORE (sari possible fields check karo) ── */
+      hasMore = !!(
+        data.has_next
+        || data.hasMore
+        || data.has_more
+        || data.next
+        || data.next_page_url
+        || (data.pagination && data.pagination.has_next)
+        || (data.pagination && data.pagination.next_page)
+        || (files.length >= PAGE_SIZE) /* fallback: agar full page mili toh aur hai */
+      );
+
+      allImages = allImages.concat(files);
+
+      /* render */
+      renderImages(files);
+
+      /* count update */
+      countEl.textContent = totalCount > 0
+        ? totalCount + ' image' + (totalCount !== 1 ? 's' : '')
+        : allImages.length + ' image' + (allImages.length !== 1 ? 's' : '');
+
+      /* empty state */
+      emptyEl.style.display = (allImages.length === 0) ? 'block' : 'none';
+
+      /* agar sab load ho gaye */
+      if (!hasMore && allImages.length > 0) {
+        scrollLoader.classList.remove('show');
+        /* optional: "All images loaded" message */
+      }
+
+      /* Observer ko refresh karo taaki sentinel visible ho */
+      if (hasMore && observer) {
+        observer.unobserve(sentinelEl);
+        observer.observe(sentinelEl);
+      }
+    })
+    .catch(function(err) {
+      isLoading = false;
+      loadingEl.classList.add('hide');
+      scrollLoader.classList.remove('show');
+      console.error('[MediaPicker] Fetch error:', err);
+
+      /* Error message grid mein */
+      if (allImages.length === 0) {
+        grid.innerHTML =
+          '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#7d1d27;">' +
+          '<i class="fa-solid fa-triangle-exclamation" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+          '<strong>Images load nahi huye</strong><br>' +
+          '<small style="color:#aaa;margin-top:6px;display:block;">API: ' + API_LIST + '</small>' +
+          '</div>';
+      }
     });
   }
 
-  /* ── RENDER ── */
-  function renderImages(files){
-    files.forEach(function(file,i){
-      var div=document.createElement('div');
-      div.className='mp-item';
-      div.dataset.id=file.id;
-      div.style.animationDelay=(i*0.04)+'s';
-      var url=file.url||file.image_url||(file.image&&file.image.url)||'';
-      var name=file.name||file.filename||'Image';
-      div.innerHTML='<img src="'+url+'" alt="'+name+'" loading="lazy">'+
-        '<div class="mp-check"><i class="fa-solid fa-check"></i></div>'+
-        '<div class="mp-item-name">'+name+'</div>';
-      div.addEventListener('click',function(){
-        toggleSelect(file.id,url,name,div);
+  /* ══════════════════════════════════════
+     RENDER IMAGES
+  ══════════════════════════════════════ */
+  function renderImages(files) {
+    var baseUrl = window.location.origin;
+
+    files.forEach(function(file, i) {
+      var div = document.createElement('div');
+      div.className = 'mp-item';
+      div.dataset.id = file.id || file.pk || i;
+      div.style.animationDelay = (Math.min(i, 10) * 0.04) + 's';
+
+      /* URL fix: relative → absolute */
+      var url = file.url
+        || file.image_url
+        || file.src
+        || file.file_url
+        || (file.image && (file.image.url || file.image))
+        || '';
+
+      if (url && url.startsWith('/')) url = baseUrl + url;
+
+      var name = file.name || file.filename || file.title || ('Image ' + (allImages.length - files.length + i + 1));
+      var id   = file.id || file.pk || String(i);
+
+      div.innerHTML =
+        '<img src="' + url + '" alt="' + escHtml(name) + '" loading="lazy" onerror="this.style.opacity=\'0.3\'">' +
+        '<div class="mp-check"><i class="fa-solid fa-check"></i></div>' +
+        '<div class="mp-item-name">' + escHtml(name) + '</div>';
+
+      div.addEventListener('click', function() {
+        toggleSelect(id, url, name, div);
       });
+
       grid.appendChild(div);
     });
+
+    /* Sentinel ko grid ke BAAD move karo (important!) */
+    mpBodyEl.appendChild(sentinelEl);
+    if (scrollLoader.parentNode === mpBodyEl) {
+      mpBodyEl.appendChild(scrollLoader);
+    }
   }
 
-  /* ── SELECT ── */
-  function toggleSelect(id,url,name,el){
-    if(mode==='single'){
-      grid.querySelectorAll('.mp-item.selected').forEach(function(item){
+  /* HTML escape helper */
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, function(c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ══════════════════════════════════════
+     SELECT / DESELECT
+  ══════════════════════════════════════ */
+  function toggleSelect(id, url, name, el) {
+    if (mode === 'single') {
+      grid.querySelectorAll('.mp-item.selected').forEach(function(item) {
         item.classList.remove('selected');
       });
-      selected={};
-      selected[id]={url:url,name:name};
+      selected = {};
+      selected[id] = { url: url, name: name };
       el.classList.add('selected');
     } else {
-      if(selected[id]){
+      if (selected[id]) {
         delete selected[id];
         el.classList.remove('selected');
       } else {
-        selected[id]={url:url,name:name};
+        selected[id] = { url: url, name: name };
         el.classList.add('selected');
       }
     }
     updateFooter();
   }
 
-  function updateFooter(){
-    var count=Object.keys(selected).length;
-    if(mode==='single'){
-      footerInfo.textContent=count?'1 image selected':'Click an image to select';
+  function updateFooter() {
+    var count = Object.keys(selected).length;
+    if (mode === 'single') {
+      footerInfo.textContent = count ? '1 image selected' : 'Click an image to select';
     } else {
-      footerInfo.textContent=count?count+' image'+(count>1?'s':'')+' selected':'Click images to select';
+      footerInfo.textContent = count
+        ? count + ' image' + (count > 1 ? 's' : '') + ' selected'
+        : 'Click images to select';
     }
-    confirmBtn.disabled=count===0;
+    confirmBtn.disabled = (count === 0);
   }
 
-  /* ── CONFIRM ── */
-window.MP_HANDLERS={};
+  /* ══════════════════════════════════════
+     CONFIRM BUTTON
+  ══════════════════════════════════════ */
+  window.MP_HANDLERS = {};
 
-confirmBtn.addEventListener('click',function(){
-  var ids=Object.keys(selected);
-  if(!ids.length)return;
+  confirmBtn.addEventListener('click', function() {
+    var ids = Object.keys(selected);
+    if (!ids.length) return;
 
-  if(window.MP_HANDLERS[target]){
-    var first=selected[ids[0]];
-    window.MP_HANDLERS[target](ids[0], first.url, first.name);
+    /* Custom handler check karo */
+    if (window.MP_HANDLERS[target]) {
+      var first = selected[ids[0]];
+      window.MP_HANDLERS[target](ids[0], first.url, first.name);
+      mpClose();
+      return;
+    }
+
+    /* Default handlers */
+    if (target === 'main' && mode === 'single') {
+      var first = selected[ids[0]];
+      applyMainImage(first.url, first.name, ids[0]);
+    } else if (target === 'gallery' && mode === 'multi') {
+      applyGalleryImages(ids, selected);
+    }
     mpClose();
-    return;
+  });
+
+  function applyMainImage(url, name, mediaId) {
+    var preview  = document.getElementById('imgpreview');
+    var img      = document.getElementById('previewImg');
+    var zone     = document.getElementById('upload-file');
+    var hiddenId = document.getElementById('mainImageLibId');
+    if (img)      { img.src = url; img.alt = name; }
+    if (preview)  preview.style.display = 'block';
+    if (zone)     zone.style.display = 'none';
+    if (hiddenId) hiddenId.value = mediaId;
   }
 
-  // Default product form handlers
-  if(target==='main'&&mode==='single'){
-    var first=selected[ids[0]];
-    applyMainImage(first.url, first.name, ids[0]);
-  } else if(target==='gallery'&&mode==='multi'){
-    applyGalleryImages(ids, selected);
-  }
-  mpClose();
-});
+  function applyGalleryImages(mediaIds, selectedData) {
+    var container = document.getElementById('galleryPreview');
+    var hidden    = document.getElementById('galleryLibIds');
+    if (!container || !hidden) return;
 
-  
-  function applyMainImage(url, name, mediaId){
-    var preview=document.getElementById('imgpreview');
-    var img=document.getElementById('previewImg');
-    var zone=document.getElementById('upload-file');
-    var hiddenId=document.getElementById('mainImageLibId'); // <-- naya ID field
-
-    img.src=url;
-    img.alt=name;
-    preview.style.display='block';
-    zone.style.display='none';
-    hiddenId.value=mediaId; // <-- MediaFile.id save ho raha hai
-  }
-
-  /* ── APPLY GALLERY ── (FIXED: IDs save karo, URLs nahi) */
-  function applyGalleryImages(mediaIds, selectedData){
-    var container=document.getElementById('galleryPreview');
-    var hidden=document.getElementById('galleryLibIds'); // <-- naya IDs field
-    var existing=hidden.value?hidden.value.split(',').filter(Boolean):[];
-
-    mediaIds.forEach(function(id){
-      if(existing.indexOf(String(id))!==-1)return; // duplicate skip
+    var existing = hidden.value ? hidden.value.split(',').filter(Boolean) : [];
+    mediaIds.forEach(function(id) {
+      if (existing.indexOf(String(id)) !== -1) return;
       existing.push(id);
-      var url=selectedData[id].url;
-      var div=document.createElement('div');
-      div.className='img-thumb-box';
-      div.dataset.libId=id; // <-- ID store karo element pe
-      div.innerHTML='<img src="'+url+'" alt="Gallery">'+
-        '<button type="button" class="del-btn" onclick="removeGalleryImageByEl(this)">'+
+      var url = selectedData[id].url;
+      var div = document.createElement('div');
+      div.className = 'img-thumb-box';
+      div.dataset.libId = id;
+      div.innerHTML =
+        '<img src="' + url + '" alt="Gallery">' +
+        '<button type="button" class="del-btn" onclick="removeGalleryImageByEl(this)">' +
         '<i class="fa-solid fa-xmark"></i></button>';
       container.appendChild(div);
     });
-    hidden.value=existing.join(',');
+    hidden.value = existing.join(',');
   }
 
-  /* ── GALLERY REMOVE ── (FIXED: ID se remove karo) */
-  window.removeGalleryImageByEl=function(btn){
-    var box=btn.closest('.img-thumb-box');
-    var libId=box.dataset.libId; // <-- ID se identify karo
+  window.removeGalleryImageByEl = function(btn) {
+    var box   = btn.closest('.img-thumb-box');
+    var libId = box.dataset.libId;
     box.remove();
-    var hidden=document.getElementById('galleryLibIds');
-    var ids=hidden.value?hidden.value.split(',').filter(Boolean):[];
-    ids=ids.filter(function(i){return String(i)!==String(libId);});
-    hidden.value=ids.join(',');
+    var hidden = document.getElementById('galleryLibIds');
+    if (!hidden) return;
+    var ids = hidden.value ? hidden.value.split(',').filter(Boolean) : [];
+    ids = ids.filter(function(i) { return String(i) !== String(libId); });
+    hidden.value = ids.join(',');
   };
 
-  /* ── SEARCH ── */
-  searchIn.addEventListener('input',function(){
+  /* ══════════════════════════════════════
+     COPY URL HELPER
+  ══════════════════════════════════════ */
+  window.mlCopyUrl = function(url) {
+    var fullUrl = url.startsWith('/') ? window.location.origin + url : url;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(fullUrl).then(showCopyToast).catch(function() { fallbackCopy(fullUrl); });
+    } else {
+      fallbackCopy(fullUrl);
+    }
+  };
+
+  function fallbackCopy(text) {
+    var temp = document.createElement('textarea');
+    temp.value = text;
+    temp.style.cssText = 'position:fixed;opacity:0;';
+    document.body.appendChild(temp);
+    temp.focus(); temp.select();
+    try { document.execCommand('copy'); showCopyToast(); } catch(e) { alert('Copied: ' + text); }
+    document.body.removeChild(temp);
+  }
+
+  function showCopyToast() {
+    var toast = document.createElement('div');
+    toast.textContent = '✓ URL Copied!';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#7d1d27;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;z-index:999999;box-shadow:0 4px 16px rgba(125,29,39,0.4);';
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.remove(); }, 2000);
+  }
+
+  /* ══════════════════════════════════════
+     SEARCH + FILTER
+  ══════════════════════════════════════ */
+  searchIn.addEventListener('input', function() {
     clearTimeout(searchTimer);
-    searchTimer=setTimeout(function(){
-      currentPage=1;fetchImages(true);
-    },350);
-  });
-  folderIn.addEventListener('change',function(){
-    currentPage=1;fetchImages(true);
+    searchTimer = setTimeout(function() {
+      currentPage = 1;
+      fetchImages(true);
+    }, 350);
   });
 
-  /* ── LOAD MORE ── */
-  loadMoreBtn.addEventListener('click',function(){
-    currentPage++;fetchImages(false);
+  folderIn.addEventListener('change', function() {
+    currentPage = 1;
+    fetchImages(true);
   });
 
-  /* ── UPLOAD IN MODAL ── */
-  uploadNewBtn.addEventListener('click',function(){fileInput.click();});
-  fileInput.addEventListener('change',function(){
-    var files=Array.from(this.files).filter(function(f){return f.type.startsWith('image/');});
-    if(files.length)uploadInModal(files);
-    this.value='';
+  /* ══════════════════════════════════════
+     UPLOAD (modal ke andar)
+  ══════════════════════════════════════ */
+  uploadNewBtn.addEventListener('click', function() { fileInput.click(); });
+
+  fileInput.addEventListener('change', function() {
+    var files = Array.from(this.files).filter(function(f) { return f.type.startsWith('image/'); });
+    if (files.length) uploadInModal(files);
+    this.value = '';
   });
 
-  function uploadInModal(files){
+  function uploadInModal(files) {
     uploadBar.classList.add('show');
-    uploadFill.style.width='0%';
-    var total=files.length,done=0,folder=folderIn.value||'general';
-    function next(i){
-      if(i>=total){
-        uploadLbl.textContent='Done! Reloading...';
-        uploadPct.textContent='100%';
-        uploadFill.style.width='100%';
-        setTimeout(function(){currentPage=1;fetchImages(true);uploadBar.classList.remove('show');},600);
+    uploadFill.style.width = '0%';
+    var total  = files.length;
+    var folder = folderIn.value || 'general';
+
+    function next(i) {
+      if (i >= total) {
+        uploadLbl.textContent = 'Done! Reloading...';
+        uploadPct.textContent = '100%';
+        uploadFill.style.width = '100%';
+        setTimeout(function() {
+          currentPage = 1;
+          fetchImages(true);
+          uploadBar.classList.remove('show');
+        }, 600);
         return;
       }
-      uploadLbl.textContent='Uploading '+(i+1)+'/'+total+': '+files[i].name;
-      var fd=new FormData();
-      fd.append('image',files[i]);
-      fd.append('folder',folder);
-      fd.append('name',files[i].name);
-      var xhr=new XMLHttpRequest();
-      xhr.open('POST',API_UPLOAD);
-      xhr.setRequestHeader('X-CSRFToken',CSRF);
-      xhr.upload.addEventListener('progress',function(e){
-        if(e.lengthComputable){
-          var p=Math.round(((i+e.loaded/e.total)/total)*100);
-          uploadFill.style.width=p+'%';
-          uploadPct.textContent=p+'%';
+
+      uploadLbl.textContent = 'Uploading ' + (i + 1) + '/' + total + ': ' + files[i].name;
+      var fd = new FormData();
+      fd.append('image', files[i]);
+      fd.append('folder', folder);
+      fd.append('name', files[i].name);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', API_UPLOAD);
+      xhr.setRequestHeader('X-CSRFToken', CSRF);
+
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          var p = Math.round(((i + e.loaded / e.total) / total) * 100);
+          uploadFill.style.width = p + '%';
+          uploadPct.textContent = p + '%';
         }
       });
-      xhr.onload=function(){done++;next(i+1);};
-      xhr.onerror=function(){done++;next(i+1);};
+
+      xhr.onload  = function() { next(i + 1); };
+      xhr.onerror = function() { next(i + 1); };
       xhr.send(fd);
     }
+
     next(0);
   }
 
-  /* ── DRAG & DROP ── */
-  var body=document.getElementById('mpBody');
-  var dragCounter=0;
-  body.addEventListener('dragenter',function(e){
-    e.preventDefault();dragCounter++;
-    body.style.outline='2px dashed #6c5ce7';
-    body.style.outlineOffset='-8px';
+  /* ══════════════════════════════════════
+     DRAG & DROP (body mein)
+  ══════════════════════════════════════ */
+  var dragCounter = 0;
+
+  mpBodyEl.addEventListener('dragenter', function(e) {
+    e.preventDefault();
+    dragCounter++;
+    mpBodyEl.style.outline = '2px dashed #7d1d27';
+    mpBodyEl.style.outlineOffset = '-8px';
   });
-  body.addEventListener('dragleave',function(e){
-    e.preventDefault();dragCounter--;
-    if(dragCounter<=0){dragCounter=0;body.style.outline='';body.style.outlineOffset='';}
+
+  mpBodyEl.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      mpBodyEl.style.outline = '';
+      mpBodyEl.style.outlineOffset = '';
+    }
   });
-  body.addEventListener('dragover',function(e){e.preventDefault();});
-  body.addEventListener('drop',function(e){
-    e.preventDefault();dragCounter=0;
-    body.style.outline='';body.style.outlineOffset='';
-    var files=Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');});
-    if(files.length)uploadInModal(files);
+
+  mpBodyEl.addEventListener('dragover', function(e) { e.preventDefault(); });
+
+  mpBodyEl.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dragCounter = 0;
+    mpBodyEl.style.outline = '';
+    mpBodyEl.style.outlineOffset = '';
+    var files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith('image/'); });
+    if (files.length) uploadInModal(files);
   });
 
 })();
