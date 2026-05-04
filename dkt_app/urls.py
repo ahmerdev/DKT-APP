@@ -49,6 +49,8 @@ urlpatterns = [
 # Privacy & Terms Route
     path('add-privacy/', views.add_or_edit_privacy, name='add_privacy'),
     path("privacy/", views.privacy, name="privacy"),
+    path('privacy-policy/', views.privacy_page, name='privacy_policy'),
+    path('terms-conditions/', views.terms_page, name='terms_conditions'),
     path("edit-privacy/<int:pk>/", views.add_or_edit_privacy, name="edit_privacy"),
     path("privacy/delete/<int:pk>/", views.delete_privacy  , name="delete_privacy"),
 
