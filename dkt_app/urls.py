@@ -156,6 +156,7 @@ urlpatterns = [
     path("api/products/", api_view.product_list_api, name="product-list-api"),
     path("api/redeems/", api_view.redeem_list_api, name="redeem-list-api"),
     path("api/discounts/", api_view.validate_discount_api, name="validate-discount-api"),
+     path('api/discount-popup/', api_view.active_discount_popup),
     # path("api/send-otp/", api_view.send_otp, name="send-otp"),
     # path("api/verify-otp/", api_view.verify_otp, name="verify-otp"),
     path("api/create-order/", api_view.create_order, name="create_order"),
