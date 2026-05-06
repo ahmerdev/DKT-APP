@@ -126,6 +126,10 @@ urlpatterns = [
     path('discounts/', views.discount, name="discount"),
     path('discounts/create/', views.create_discount, name="create_discount"),
     path("discounts/delete/<int:pk>/", views.delete_discount, name="delete_discount"),
+    path('discount-popup/add/', views.add_or_edit_discount_popup, name="add-discount-popup"),
+    path('discount-popup/edit/<int:pk>/', views.add_or_edit_discount_popup, name="edit-discount-popup"),
+    path('discount-popup/', views.discount_popup_list, name="discount-popup-list"),
+    path('delete-discount-popup/<int:pk>/', views.delete_discount_popup, name='delete-discount-popup'),
     
 
 # Review Route
