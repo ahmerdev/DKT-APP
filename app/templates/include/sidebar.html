@@ -210,15 +210,25 @@
                                         <div class="icon"><i class="icon-zap-off"></i></div>
                                         <div class="text">Discounts</div>
                                     </a>
-                                     <ul class="sub-menu">
+                                    <ul class="sub-menu">
                                         <li class="sub-menu-item">
                                             <a href="{% url 'create_discount' %}" class="">
                                                 <div class="text">Add Coupns</div>
                                             </a>
                                         </li>
                                         <li class="sub-menu-item">
+                                            <a href="{% url 'add-discount-popup' %}" class="">
+                                                <div class="text">Add Discount Popup</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
                                             <a href="{% url 'discount' %}" class="">
                                                 <div class="text">Coupns List</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{% url 'discount-popup-list' %}" class="">
+                                                <div class="text">Discount Popup List</div>
                                             </a>
                                         </li>
                                     </ul>
