@@ -113,6 +113,7 @@ class ProductSerializer(serializers.ModelSerializer):
     gallery_images = ProductImageSerializer(many=True, read_only=True)
     position = serializers.IntegerField(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
+    total_sold = serializers.IntegerField(read_only=True, default=0)
     
     reviews = serializers.SerializerMethodField()
     avg_rating = serializers.SerializerMethodField()
@@ -137,6 +138,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "points",
             "product_type",
             "position",
+            "total_sold",
             "category",
             "brand",
             "gallery_images",
