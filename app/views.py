@@ -19,7 +19,7 @@ from media_library.models import MediaFile
 from django.views.decorators.csrf import csrf_exempt
 from .reports import get_sales_report, get_profit_report, get_customer_potentials, get_product_report, get_product_profit_report
 from .forms import CategoryForm, RiderForm, BrandForm, BannerForm, ProductForm, RedeemForm, AdForm, HeroForm, PrivacyForm, DiscountForm, AboutForm, ContactInfoForm
-from .models import Product, PointSetting, VariantOption, VariantValue, Redeem, ProductVariant, City, Rider, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, Review, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
+from .models import Product, PointSetting, DiscountPopup, VariantOption, VariantValue, Redeem, ProductVariant, City, Rider, Category, Brand, ProductImage, Banner, Ad, Hero, Order, OrderItem, Payment, Review, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Discount
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -2036,4 +2036,58 @@ def update_brand_order(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
+
+@login_required(login_url='login')
+def add_or_edit_discount_popup(request, pk=None):
+    popup = get_object_or_404(DiscountPopup, pk=pk) if pk else None
+
+    if request.method == "POST":
+        form = DiscountPopupForm(request.POST, request.FILES, instance=popup)
+        if form.is_valid():
+            obj = form.save(commit=False)
+
+            image_lib_id = request.POST.get('image_lib_id', '').strip()
+            remove_flag  = request.POST.get('remove_image', '').strip()
+
+            if image_lib_id:
+                _assign_lib_image(obj, 'banner', image_lib_id)  
+            elif remove_flag == '1':
+                if obj.banner:
+                    obj.banner.delete(save=False)
+                obj.banner = None
+
+            obj.save()
+            form.save_m2m()
+
+            messages.success(request, f"Popup {'updated' if pk else 'created'} successfully!")
+            return redirect("discount-popup-list")
+        else:
+            messages.error(request, "Something went wrong")
+    else:
+        form = DiscountPopupForm(instance=popup)
+
+    return render(request, "pages/add_discount_popup.html", {
+        "form": form,
+        "popup": popup,
+
+        # ADD THESE (IMPORTANT)
+        "products": Product.objects.all(),
+        "brands": Brand.objects.all(),
+        "categories": Category.objects.all(),
+    })
+
+
+@login_required(login_url='login')
+def discount_popup_list(request):
+    popups = DiscountPopup.objects.all().order_by('-created_at')
+    return render(request, "pages/discount-popup-list.html", {
+        "popups": popups
+    })
+
+@login_required(login_url='login')
+def delete_discount_popup(request, pk):
+    popup = get_object_or_404(DiscountPopup, pk=pk)
+    popup.delete()
+    messages.success(request, "Popup deleted successfully!")
+    return redirect("discount-popup-list")
 
