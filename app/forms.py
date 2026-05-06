@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.text import slugify
 from django.forms.widgets import ClearableFileInput
-from .models import Product, Rider, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, Privacy, About, ContactInfo, AppUser, Discount
+from .models import Product, Rider, Redeem, Brand, ProductImage, Category, Banner, Ad, Hero, Privacy, About, ContactInfo, AppUser, Discount, DiscountPopup
 
 
 # pehle widget define karo
@@ -21,13 +21,19 @@ class RiderForm(forms.ModelForm):
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ['name', 'slug', 'image']
+        fields = ['name', 'slug', 'image', 'bg_color']
   
 
 class BrandForm(forms.ModelForm):
     class Meta:
         model = Brand
-        fields = ['name', 'slug', 'image']
+        fields = ['name', 'slug', 'image', 'bg_color']
+
+
+class DiscountPopupForm(forms.ModelForm):
+    class Meta:
+        model = DiscountPopup
+        fields = ['banner', 'products', 'brand', 'category', 'is_active']
 
 
 class BannerForm(forms.ModelForm):
