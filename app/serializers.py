@@ -3,14 +3,14 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Sum, Avg, Q
 import ast
 from .sms import send_sms
-from .models import Category, Brand, PointSetting, Product, Discount, Redeem, Banner, Hero, Rider, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
+from .models import Category, Brand, PointSetting, DiscountPopup, Product, Discount, Redeem, Banner, Hero, Rider, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
 
 class CategorySerializer(serializers.ModelSerializer):
     position = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'is_active', 'image', 'position', 'created_at']
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'bg_color', 'position', 'created_at']
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -18,7 +18,13 @@ class BrandSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Brand
-        fields = ['id', 'name', 'slug', 'is_active', 'image', 'position', 'created_at']      
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'bg_color', 'position', 'created_at']   
+
+class DiscountPopupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DiscountPopup
+        fields = ['id', 'banner', 'products', 'brand', 'category', 'is_active']        
 
 class PrivacySerializer(serializers.ModelSerializer):
     class Meta:
