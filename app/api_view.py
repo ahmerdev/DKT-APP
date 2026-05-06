@@ -413,7 +413,9 @@ def hero_list_api(request):
 # Mobile App Product API
 @api_view(['GET'])
 def product_list_api(request):
-    products = Product.objects.all().order_by('-id')
+    products = Product.objects.annotate(
+        total_sold=Sum('orderitem__quantity')
+    ).order_by('-total_sold', '-id')
     serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response(serializer.data)
 
