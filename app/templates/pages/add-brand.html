@@ -46,6 +46,19 @@
                tabindex="0" value="{{ form.slug.value|default_if_none:'' }}" aria-required="true" required="">
     </fieldset>
 
+    <fieldset class="name">
+    <div class="body-title">Background Color</div>
+
+    <select name="bg_color" class="form-input-master">
+        <option value="Green" {% if form.bg_color.value == "Green" %}selected{% endif %}>
+            Green
+        </option>
+        <option value="Red" {% if form.bg_color.value == "Red" %}selected{% endif %}>
+            Red
+        </option>
+    </select>
+</fieldset>
+
     <fieldset>
                     <div class="body-title">Upload Image <span class="tf-color-1">*</span></div>
 
