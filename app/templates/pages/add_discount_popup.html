@@ -1,0 +1,221 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+{% block title %} Discount | Add-Popup{% endblock %}
+{% block content %}
+
+<div class="main-content-inner">
+<div class="main-content-wrap">
+<style>
+    .popup-img-box {
+    width: 100%;
+    height: 186px;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.popup-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.popup-upload-box {
+    width: 100%;
+    height: 186px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #f9fafb;
+    transition: 0.3s;
+    text-align: center;
+}
+
+.popup-upload-box:hover {
+    border-color: #4A90E2;
+    background: #f1f5ff;
+}
+
+.popup-upload-box i {
+    font-size: 28px;
+    color: #4A90E2;
+    margin-bottom: 6px;
+}
+
+.popup-upload-box p {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: red;
+    color: white;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+}
+</style>
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-4">
+    <h3 class="text-xl font-semibold">
+        {% if popup %}Edit Discount Popup{% else %}Add Discount Popup{% endif %}
+    </h3>
+</div>
+
+<div class="wg-box p-4">
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="row">
+
+        <!-- BANNER -->
+        <div class="col-md-6">
+            <fieldset>
+                <div class="body-title mb-10">Upload Banner</div>
+
+                <!-- PREVIEW -->
+                <div id="popupImgPreview"
+                     class="popup-img-box"
+                     style="{% if popup and popup.banner %}display:block{% else %}display:none{% endif %};">
+
+                    <img id="popupPreviewImg"
+                         src="{% if popup and popup.banner %}{{ popup.banner.url }}{% endif %}">
+
+                    <button type="button" class="remove-btn" onclick="popupRemoveImage()">×</button>
+                </div>
+
+                <!-- UPLOAD -->
+                <div id="popupUploadZone"
+                     class="popup-upload-box"
+                     onclick="mpOpen('single','popup_main')"
+                     style="{% if popup and popup.banner %}display:none{% else %}display:flex{% endif %};">
+
+                    <div>
+                        <i class="icon-upload-cloud"></i>
+                        <p>Click to upload banner</p>
+                    </div>
+
+                </div>
+
+                <input type="hidden" name="image_lib_id" id="popupImageLibId">
+                <input type="hidden" name="remove_image" id="popupRemoveFlag">
+
+            </fieldset>
+        </div>
+
+        <!-- STATUS -->
+        <div class="col-md-6">
+            <fieldset>
+                <div class="body-title mb-10">Status</div>
+
+                <select name="is_active" class="form-control">
+                    <option value="true" {% if popup and popup.is_active %}selected{% endif %}>Active</option>
+                    <option value="false" {% if popup and not popup.is_active %}selected{% endif %}>Inactive</option>
+                </select>
+
+            </fieldset>
+        </div>
+
+        <!-- PRODUCTS -->
+        <div class="col-md-12">
+            <fieldset>
+                <div class="body-title mb-10">Select Products</div>
+
+                <select class="form-input-master" name="products">
+                    {% for product in products %}
+                        <option value="{{ product.id }}"
+                            {% if popup and product in popup.products.all %}selected{% endif %}>
+                            {{ product.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </fieldset>
+        </div>
+
+        <!-- BRAND -->
+        <div class="col-md-6">
+            <fieldset>
+                <div class="body-title mb-10">Brand (Optional)</div>
+
+                <select name="brand" class="form-input-master">
+                    <option value="">Select Brand</option>
+                    {% for b in brands %}
+                        <option value="{{ b.id }}"
+                            {% if popup and popup.brand and popup.brand.id == b.id %}selected{% endif %}>
+                            {{ b.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </fieldset>
+        </div>
+
+        <!-- CATEGORY -->
+        <div class="col-md-6">
+            <fieldset>
+                <div class="body-title mb-10">Category (Optional)</div>
+
+                <select name="category" class="form-input-master">
+                    <option value="">Select Category</option>
+                    {% for c in categories %}
+                        <option value="{{ c.id }}"
+                            {% if popup and popup.category and popup.category.id == c.id %}selected{% endif %}>
+                            {{ c.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </fieldset>
+        </div>
+
+    </div>
+
+    <!-- BUTTON -->
+    <div class="mt-4">
+        <button type="submit" class="tf-button style-1">
+            {% if popup %}Update Popup{% else %}Add Popup{% endif %}
+        </button>
+    </div>
+
+</form>
+
+</div>
+
+</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+  window.MP_HANDLERS['popup_main'] = function(mediaId, url){
+    document.getElementById('popupPreviewImg').src = url;
+    document.getElementById('popupImgPreview').style.display = 'block';
+    document.getElementById('popupUploadZone').style.display = 'none';
+    document.getElementById('popupImageLibId').value = mediaId;
+    document.getElementById('popupRemoveFlag').value = '';
+  };
+
+});
+
+function popupRemoveImage(){
+  document.getElementById('popupPreviewImg').src = '';
+  document.getElementById('popupImgPreview').style.display = 'none';
+  document.getElementById('popupUploadZone').style.display = 'flex';
+  document.getElementById('popupImageLibId').value = '';
+  document.getElementById('popupRemoveFlag').value = '1';
+}
+</script>
+{% endblock %}
