@@ -75,9 +75,14 @@ class HeroSerializer(serializers.ModelSerializer):
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
+
+    sale_price = serializers.SerializerMethodField()
+
+    def get_sale_price(self, obj):
+        return obj.attributes.get('sale_price', None)
     class Meta:
         model = ProductVariant
-        fields = ["id", "sku", "price", "stock", "attributes", "is_active", "image"]
+        fields = ["id", "sku", "price", "sale_price", "stock", "attributes", "is_active", "image"]
 
 
 
