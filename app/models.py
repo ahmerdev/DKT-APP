@@ -13,6 +13,7 @@ class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='category/images/', blank=True, null=True)
+    bg_color = models.CharField(max_length=7, default="#FFFFFF")
     position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -28,6 +29,7 @@ class Brand(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to="brands/images/", blank=True, null=True)
+    bg_color = models.CharField(max_length=7, default="#FFFFFF")
     position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -474,3 +476,17 @@ class UsedCoupon(models.Model):
         unique_together = ('user', 'discount') 
     def __str__(self):
         return f"{self.user.name if self.user.name else self.user.number} used {self.discount.code}"    
+
+
+class DiscountPopup(models.Model):
+        is_active = models.BooleanField(default=True)
+
+        banner = models.ImageField(upload_to="discount/banner/", blank=True, null=True)
+        products = models.ForeignKey('Product',on_delete=models.SET_NULL, blank=True, null=True)
+        brand = models.ForeignKey('Brand', on_delete=models.SET_NULL, blank=True, null=True)
+        category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
+
+        created_at = models.DateTimeField(auto_now_add=True)
+
+        def __str__(self):
+            return f"Discount Popup #{self.id}"
