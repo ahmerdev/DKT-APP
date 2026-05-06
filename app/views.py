@@ -1548,7 +1548,19 @@ def add_or_edit_redeem(request, pk=None):
     if request.method == "POST":
         form = RedeemForm(request.POST, request.FILES, instance=redeem)
         if form.is_valid():
-            redeem = form.save()
+            obj = form.save(commit=False)
+
+            image_lib_id = request.POST.get('image_lib_id', '').strip()
+            remove_flag  = request.POST.get('remove_image', '').strip()
+
+            if image_lib_id:
+                _assign_lib_image(obj, 'image', image_lib_id)
+            elif remove_flag == '1':
+                if obj.image:
+                    obj.image.delete(save=False)
+                obj.image = None
+
+            obj.save()
             messages.success(request, success_message)
             return redirect("redeem")
         else:
@@ -1561,6 +1573,7 @@ def add_or_edit_redeem(request, pk=None):
         "form": form,
         "redeem": redeem,
     })
+
 
 
 @login_required(login_url='login')
