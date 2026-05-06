@@ -18,8 +18,8 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, PointSetting, UsedCoupon, Redeem, Category, Brand, Banner, Rider, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
-from .serializers import CategorySerializer, RiderSerializer, RiderOrderSerializer, AppUserRegisterStepOneSerializer, AppUserRegisterStepTwoSerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ReviewSerializer, ContactFormSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
+from .models import Product, PointSetting, UsedCoupon, DiscountPopup, Redeem, Category, Brand, Banner, Rider, Ad, Hero, Order, OrderItem, Payment, AppUser, Address, Privacy, About, ContactInfo, ContactForm, Review, Discount
+from .serializers import CategorySerializer, DiscountPopupSerializer, RiderSerializer, RiderOrderSerializer, AppUserRegisterStepOneSerializer, AppUserRegisterStepTwoSerializer, DiscountValidateSerializer, BrandSerializer, BannerSerializer, HeroSerializer, PrivacySerializer, AboutSerializer, ContactInfoSerializer, ReviewSerializer, ContactFormSerializer, AdSerializer, ProductSerializer, RedeemSerializer, OrderSerializer, AppUserSerializer, AddressSerializer
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -348,6 +348,16 @@ def category_list_api(request):
 def brand_list_api(request):
     brands = Brand.objects.all().order_by('-id')
     serializer = BrandSerializer(brands, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def active_discount_popup(request):
+    popup = DiscountPopup.objects.filter(is_active=True).order_by('-created_at').first()
+
+    if not popup:
+        return Response({"message": "No active popup"})
+
+    serializer = DiscountPopupSerializer(popup)
     return Response(serializer.data)
 
 
