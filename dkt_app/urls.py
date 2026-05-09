@@ -106,6 +106,8 @@ urlpatterns = [
     path("riders/delete/<int:pk>/", views.delete_rider, name="delete_rider"),
     path("rider/forgot-password/", views.rider_forgot_password, name="rider_forgot_password"),
     path("rider/reset-password/<uuid:token>/", views.rider_reset_password, name="rider_reset_password"),
+    path("riders/import/", views.import_riders, name="import_riders"),
+    path("riders/template/", views.rider_template, name="rider_template"),
 
 # AdBanner Route
     path('add-hero/', views.add_or_edit_hero, name='add_hero'),
