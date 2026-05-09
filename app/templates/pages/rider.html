@@ -6,6 +6,22 @@
 
 <div class="flex justify-between mb-20">
     <h3>Riders</h3>
+    <a href="{% url 'rider_template' %}" class="tf-button style-3">
+            📄 Sample Excel
+        </a>
+
+        <!-- Import Button -->
+        <form method="post" action="{% url 'import_riders' %}"
+              enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <input type="file" name="excel_file" id="rider_excel"
+                   accept=".xlsx,.xls" style="display:none"
+                   onchange="this.form.submit()">
+            <button type="button" class="tf-button style-2"
+                    onclick="document.getElementById('rider_excel').click()">
+                <i class="fa fa-file-excel"></i>Import Excel
+            </button>
+        </form>
     <a href="{% url 'add_rider' %}" class="tf-button style-1">+ Add Rider</a>
 </div>
 
