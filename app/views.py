@@ -2104,3 +2104,42 @@ def delete_discount_popup(request, pk):
     messages.success(request, "Popup deleted successfully!")
     return redirect("discount-popup-list")
 
+
+
+from .import_export import import_riders_from_excel
+import openpyxl
+from django.http import HttpResponse
+
+# ---- RIDER IMPORT ----
+def import_riders(request):
+    if request.method == "POST":
+        excel_file = request.FILES.get("excel_file")
+
+        if not excel_file:
+            messages.error(request, "Koi file select nahi ki!")
+            return redirect("rider_list")
+
+        success_count, errors = import_riders_from_excel(excel_file)
+
+        if success_count:
+            messages.success(request, f"✅ {success_count} Riders import ho gaye!")
+        for err in errors:
+            messages.warning(request, err)
+
+    return redirect("rider_list")
+
+
+# ---- RIDER TEMPLATE DOWNLOAD ----
+def rider_template(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Riders"
+    ws.append(["name", "phone", "email", "password", "designation", "cities"])
+    ws.append(["Ali Khan", "03001234567", "ali@example.com", "pass123", "Delivery Rider", "Karachi,Lahore"])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="rider_template.xlsx"'
+    wb.save(response)
+    return response
