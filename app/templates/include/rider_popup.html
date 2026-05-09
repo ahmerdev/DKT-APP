@@ -1,51 +1,80 @@
-<div class="modal-header">
-    <h5 class="modal-title">Available Riders - {{ city.name }}</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<div class="modal-header px-4 py-3 d-flex align-items-center justify-content-between" 
+     style="border-bottom:1px solid #e9ecef;">
+  <div class="d-flex align-items-center gap-2">
+    <div class="rounded-2 d-flex align-items-center justify-content-center" 
+         style="width:36px;height:36px;background:#0f6e56;">
+      <i class="ti ti-motorbike text-white" style="font-size:18px;"></i>
+    </div>
+    <span class="fw-semibold" style="font-size:15px;">Available Riders</span>
+    <span class="rounded-pill px-2 py-1" 
+          style="font-size:11px;background:#E1F5EE;color:#085041;font-weight:500;">
+      {{ city.name }}
+    </span>
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
-<div class="modal-body">
+<div class="modal-body p-0">
+  <div class="px-4 py-2 d-grid border-bottom" 
+       style="grid-template-columns:1.8fr 1.2fr 1.6fr 90px;font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    padding: 20px 20px !important;
+    background: #7d1d27;
+    text-transform:uppercase;letter-spacing:.07em;">
+    <span>Rider</span>
+    <span>Phone</span>
+    <span>Email</span>
+    <span class="text-end">Action</span>
+  </div>
 
-<div class="table-responsive card-body shadow">
-  <table class="table table-hover align-middle">
-    <thead class="table-head text-white text-center">
-      <tr>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Email</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {% for rider in riders %}
-      <tr>
-        <td class="text-center">{{ rider.name }}</td>
-        <td class="text-center">{{ rider.phone }}</td>
-        <td class="text-center">{{ rider.email }}</td>
-
-        <td class="text-center">
-          <a href="{% url 'assign_rider' order.id rider.id %}" 
-             class="btn btn-success btn-sm">
-             Assign
-          </a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="4" class="text-center text-muted">
-          No riders in this city
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-
-  </table>
+  {% for rider in riders %}
+  <div class="px-4 py-3 d-grid align-items-center border-bottom rider-row"
+       style="grid-template-columns:1.8fr 1.2fr 1.6fr 90px;">
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-semibold"
+           style="width:34px;height:34px;background:#E1F5EE;color:#085041;font-size:12px;">
+        {% with words=rider.name.split %}
+          {% if words|length >= 2 %}{{ words.0|slice:":1"|upper }}{{ words.1|slice:":1"|upper }}
+          {% else %}{{ rider.name|slice:":2"|upper }}{% endif %}
+        {% endwith %}
+      </div>
+      <span class="fw-semibold" style="font-size:13.5px;">{{ rider.name }}</span>
+    </div>
+    <span class="text-muted d-flex align-items-center gap-1" style="font-size:13px;">
+      <i class="ti ti-phone" style="font-size:14px;"></i>{{ rider.phone }}
+    </span>
+    <span class="text-muted d-flex align-items-center gap-1 text-truncate" style="font-size:13px;">
+      <i class="ti ti-mail" style="font-size:14px;flex-shrink:0;"></i>{{ rider.email }}
+    </span>
+    <div class="text-end">
+      <a href="{% url 'assign_rider' order.id rider.id %}"
+         class="d-inline-flex align-items-center gap-1 px-3 py-1 rounded-2 text-decoration-none fw-semibold"
+         style="font-size:12px;background:#E1F5EE;color:#085041;border:1px solid #5DCAA5;">
+        <i class="ti ti-check" style="font-size:13px;"></i>Assign
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center py-5 text-muted">
+    <i class="ti ti-motorbike d-block mx-auto mb-2" style="font-size:28px;opacity:.4;"></i>
+    No riders available in this city
+  </div>
+  {% endfor %}
 </div>
 
+<div class="modal-footer px-4 py-3 justify-content-end" style="border-top:1px solid #e9ecef;">
+  <button type="button" 
+          class="btn btn-sm d-inline-flex align-items-center gap-1"
+          style="color:#dc3545;border:1px solid #dc3545;border-radius:8px;padding:6px 16px;"
+          data-bs-dismiss="modal">
+    <i class="ti ti-x" style="font-size:13px;"></i>Close
+  </button>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
-        Close
-    </button>
-</div>
+<style>
+  .rider-row { transition: background .12s; }
+  .rider-row:hover { background: #f8fffe; }
+  .rider-row:last-child { border-bottom: none !important; }
+</style>
