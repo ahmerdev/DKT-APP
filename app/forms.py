@@ -77,7 +77,7 @@ class ProductForm(forms.ModelForm):
         image = forms.ImageField(required=False)
         model = Product
         fields = [
-            "name", "slug", "category", "brand",
+            "name", "slug", "category", "brand", "offer",
             "short_description", "description",
             "image",
             "cost_price", "regular_price", "sale_price", "sku", "quantity",
