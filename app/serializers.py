@@ -132,6 +132,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "slug",
+            "offer",
             "short_description",
             "description",
             "image",
