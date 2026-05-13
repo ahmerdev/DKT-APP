@@ -169,6 +169,10 @@
                 <input type="text" id="productSlug" name="slug" class="form-input-master" placeholder="product-url-slug" value="{{ product.slug|default_if_none:'' }}" required>
               </div>
               <div class="col-12">
+                <label class="label-master">Offer</label>
+              <input type="text" id="productOffer" name="offer" class="form-input-master" placeholder="Special offer title" value="{{ product.offer|default_if_none:'' }}">
+              </div>
+              <div class="col-12">
                 <label class="label-master">Short Description <span>*</span></label>
                 <textarea name="short_description" class="form-input-master" rows="2" placeholder="A brief summary for product listing pages..." required>{{ product.short_description|default_if_none:'' }}</textarea>
               </div>
