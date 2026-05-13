@@ -1,63 +1,261 @@
 {% extends 'dashboard.html' %}
 {% load static %}
+{% load order_filters %}
 {% block title %}Orders List{% endblock %}
 {% block content %}
 
 <div class="main-content-inner">
   <div class="main-content-wrap">
     <div class="order-head d-flex justify-content-between pb-4">
-         <h3 class="mb-4">Orders Management</h3>
-         <!-- Tabs -->
-        <div class="tabs">
-            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link fs-4 active p-4 rounded-pill" id="pills-home-tab"
-                 data-bs-toggle="pill" data-bs-target="#pills-home" 
-                 type="button" role="tab" aria-controls="pills-home"
-                  aria-selected="true"> Normal Orders ({{ normal_orders|length }})</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link fs-4 p-4 rounded-pill" id="pills-profile-tab"
-                 data-bs-toggle="pill" data-bs-target="#pills-profile"
-                  type="button" role="tab" aria-controls="pills-profile"
-                   aria-selected="false"> Redeem Orders ({{ redeem_orders|length }})</button>
-            </li>
-            </ul>
-        </div>
-        </div>
-        <div class="wg-box">
-            <div class="flex items-center justify-between gap10 flex-wrap">
-                <div class="wg-filter flex-grow">
-                    <form class="form-search" method="GET" action="#">
-                    <fieldset class="name">
-                        <input type="text" placeholder="Search here..." name="q" 
-                            value="{{ request.GET.q|default_if_none:'' }}" tabindex="2">
-                    </fieldset>
-                    <div class="button-submit">
-                        <button type="submit"><i class="icon-search"></i></button>
-                    </div>
-                </form>
+      <h3 class="mb-4">Orders Management</h3>
 
-                </div>
-                <a class="tf-button style-1 w208" href="{% url 'create_order_ui' %}"><i
-                        class="icon-plus"></i>Add new</a>
+      <!-- Normal / Redeem Tabs -->
+      <div class="tabs">
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fs-4 active p-4 rounded-pill"
+              id="pills-home-tab" data-bs-toggle="pill"
+              data-bs-target="#pills-home" type="button"
+              role="tab">
+              Normal Orders ({{ normal_orders|length }})
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fs-4 p-4 rounded-pill"
+              id="pills-profile-tab" data-bs-toggle="pill"
+              data-bs-target="#pills-profile" type="button"
+              role="tab">
+              Redeem Orders ({{ redeem_orders|length }})
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wg-box">
+      <div class="flex items-center justify-between gap10 flex-wrap">
+        <div class="wg-filter flex-grow">
+          <form class="form-search" method="GET" action="#">
+            <fieldset class="name">
+              <input type="text" placeholder="Search here..."
+                name="q" value="{{ request.GET.q|default_if_none:'' }}" tabindex="2">
+            </fieldset>
+            <div class="button-submit">
+              <button type="submit"><i class="icon-search"></i></button>
             </div>
-
-
-    <!-- Tab Content -->
-    <div class="tab-content" id="pills-tabContent">
-      <!-- Normal Orders -->
-      <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
-        {% include "include/order_table.html" with orders=normal_orders %}
+          </form>
+        </div>
+        <a class="tf-button style-1 w208" href="{% url 'create_order_ui' %}">
+          <i class="icon-plus"></i>Add new
+        </a>
       </div>
 
-      <!-- Redeem Orders -->
-      <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
-        {% include "include/order_table.html" with orders=redeem_orders %}
+      <style>
+/* ── Status Filter Tabs ── */
+#status-tab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#status-tab .nav-item {
+  list-style: none;
+}
+
+#status-tab .nav-link {
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 16px;
+  border: 1.5px solid transparent;
+  transition: all .18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ── All (Gray) ── */
+#status-all-tab {
+  background: #F1EFE8;
+  color: #444441;
+  border-color: #B4B2A9;
+}
+#status-all-tab.active,
+#status-all-tab:hover {
+  background: #888780 !important;
+  color: #F1EFE8 !important;
+  border-color: #5F5E5A !important;
+}
+
+/* ── Pending (Amber) ── */
+#status-pending-tab {
+  background: #FAEEDA;
+  color: #633806;
+  border-color: #EF9F27;
+}
+#status-pending-tab.active,
+#status-pending-tab:hover {
+  background: #EF9F27 !important;
+  color: #412402 !important;
+  border-color: #BA7517 !important;
+}
+
+/* ── In Process (Blue) ── */
+#status-process-tab {
+  background: #E6F1FB;
+  color: #0C447C;
+  border-color: #85B7EB;
+}
+#status-process-tab.active,
+#status-process-tab:hover {
+  background: #378ADD !important;
+  color: #042C53 !important;
+  border-color: #185FA5 !important;
+}
+
+/* ── On The Way (Purple) ── */
+#status-on_the_way-tab {
+  background: #EEEDFE;
+  color: #3C3489;
+  border-color: #AFA9EC;
+}
+#status-on_the_way-tab.active,
+#status-on_the_way-tab:hover {
+  background: #7F77DD !important;
+  color: #26215C !important;
+  border-color: #534AB7 !important;
+}
+
+/* ── Delivered (Green) ── */
+#status-completed-tab {
+  background: #EAF3DE;
+  color: #27500A;
+  border-color: #97C459;
+}
+#status-completed-tab.active,
+#status-completed-tab:hover {
+  background: #639922 !important;
+  color: #173404 !important;
+  border-color: #3B6D11 !important;
+}
+
+/* ── Cancelled (Red) ── */
+#status-cancelled-tab {
+  background: #FCEBEB;
+  color: #791F1F;
+  border-color: #F09595;
+}
+#status-cancelled-tab.active,
+#status-cancelled-tab:hover {
+  background: #E24B4A !important;
+  color: #501313 !important;
+  border-color: #A32D2D !important;
+}
+</style>
+
+<!-- STATUS FILTER TABS (naya section) -->
+      <div class="mt-3 mb-2">
+        <ul class="nav nav-pills" id="status-tab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="status-all-tab"
+              data-bs-toggle="pill" data-bs-target="#status-all"
+              type="button" role="tab">
+              <i class="ti ti-layout-list"></i> All
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="status-pending-tab"
+              data-bs-toggle="pill" data-bs-target="#status-pending"
+              type="button" role="tab">
+              <i class="ti ti-clock"></i> Pending
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="status-process-tab"
+              data-bs-toggle="pill" data-bs-target="#status-process"
+              type="button" role="tab">
+              <i class="ti ti-settings"></i> In Process
+            </button>
+          </li>
+           <li class="nav-item" role="presentation">
+            <button class="nav-link" id="status-on_the_way-tab"
+              data-bs-toggle="pill" data-bs-target="#status-on_the_way"
+              type="button" role="tab">
+              <i class="ti ti-truck"></i> On The way
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="status-completed-tab"
+              data-bs-toggle="pill" data-bs-target="#status-completed"
+              type="button" role="tab">
+              <i class="ti ti-circle-check"></i> Delivered
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="status-cancelled-tab"
+              data-bs-toggle="pill" data-bs-target="#status-cancelled"
+              type="button" role="tab">
+              <i class="ti ti-circle-x"></i>Cancelled
+            </button>
+          </li>
+        </ul>
+      </div>
+
+
+      <!-- Normal / Redeem Tab Content -->
+      <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active" id="pills-home"
+          role="tabpanel" tabindex="0">
+          <!-- Status Tab Content (Normal Orders) -->
+          <div class="tab-content" id="status-tabContent-normal">
+            <div class="tab-pane fade show active" id="status-all">
+              {% include "include/order_table.html" with orders=normal_orders %}
+            </div>
+            <div class="tab-pane fade" id="status-pending">
+              {% include "include/order_table.html" with orders=normal_orders|filter_status:"pending" %}
+            </div>
+            <div class="tab-pane fade" id="status-process">
+              {% include "include/order_table.html" with orders=normal_orders|filter_status:"process" %}
+            </div>
+             <div class="tab-pane fade" id="status-on_the_way">
+              {% include "include/order_table.html" with orders=normal_orders|filter_status:"on_the_way" %}
+            </div>
+            <div class="tab-pane fade" id="status-completed">
+              {% include "include/order_table.html" with orders=normal_orders|filter_status:"delivered" %}
+            </div>
+            <div class="tab-pane fade" id="status-cancelled">
+              {% include "include/order_table.html" with orders=normal_orders|filter_status:"cancelled" %}
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-profile"
+          role="tabpanel" tabindex="0">
+          <!-- Status Tab Content (Redeem Orders) -->
+          <div class="tab-content" id="status-tabContent-redeem">
+            <div class="tab-pane fade show active" id="status-all-r">
+              {% include "include/order_table.html" with orders=redeem_orders %}
+            </div>
+            <div class="tab-pane fade" id="status-pending-r">
+              {% include "include/order_table.html" with orders=redeem_orders|filter_status:"pending" %}
+            </div>
+            <div class="tab-pane fade" id="status-process-r">
+              {% include "include/order_table.html" with orders=redeem_orders|filter_status:"process" %}
+            </div>
+            <div class="tab-pane fade" id="status-on_the_way-r">
+              {% include "include/order_table.html" with orders=redeem_orders|filter_status:"on_the_way" %}
+            </div>
+            <div class="tab-pane fade" id="status-completed-r">
+              {% include "include/order_table.html" with orders=redeem_orders|filter_status:"delivered" %}
+            </div>
+            <div class="tab-pane fade" id="status-cancelled-r">
+              {% include "include/order_table.html" with orders=redeem_orders|filter_status:"cancelled" %}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 {% endblock %}
-  
