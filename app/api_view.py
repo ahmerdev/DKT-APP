@@ -950,6 +950,17 @@ def update_order_status(request, order_pk):
                             points=F("points") + earned
                         )
 
+                    # First order bonus
+                    first_order = not Order.objects.filter(
+                        user=order.user,
+                        status="delivered"
+                    ).exclude(pk=order.pk).exists()
+
+                    if first_order:
+                        AppUser.objects.filter(pk=order.user.pk).update(
+                            points=F("points") + 20
+                        )    
+
             Order.objects.filter(id=order_pk).update(
                 status=new_status,
                 is_points_added=True
@@ -1242,6 +1253,16 @@ def rider_update_order_status_api(request, order_id):
             if earned > 0:
                 AppUser.objects.filter(pk=order.user.pk).update(
                     points=F("points") + earned
+                )
+
+            first_order = not Order.objects.filter(
+                user=order.user,
+                status="delivered"
+            ).exclude(pk=order.pk).exists()
+
+            if first_order:
+                AppUser.objects.filter(pk=order.user.pk).update(
+                    points=F("points") + 20
                 )
         order.is_points_added = True
 
