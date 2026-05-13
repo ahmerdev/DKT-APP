@@ -1105,6 +1105,15 @@ def update_order_status_ui(request, pk):
                         AppUser.objects.filter(pk=order.user.pk).update(
                             points=F("points") + earned
                         )
+                    first_order = not Order.objects.filter(
+                    user=order.user,
+                    status="delivered"
+                    ).exclude(pk=order.pk).exists()
+
+                    if first_order:
+                        AppUser.objects.filter(pk=order.user.pk).update(
+                            points=F("points") + 20
+                        )           
 
             order.is_points_added = True
 
