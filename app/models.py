@@ -138,6 +138,8 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
 
+    offer = models.CharField(max_length=255, blank=True, null=True)
+
     short_description = models.TextField(max_length=300)
     description = models.TextField(blank=True, null=True)
 
