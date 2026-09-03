@@ -2,8 +2,12 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.db.models import Sum, Avg, Q
 import ast
-from .sms import send_sms
-from .models import Category, Brand, PointSetting, DiscountPopup, Product, Discount, Redeem, Banner, Hero, Rider, Ad, ProductImage, ProductVariant, Order, OrderItem, Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address
+from .models import (
+    Category, Brand, DiscountPopup, PointSetting, Product, Discount, Redeem,
+    Banner, Hero, Rider, Ad, ProductImage, ProductVariant, Order, OrderItem,
+    Payment, AppUser, Privacy, Review, About, ContactInfo, ContactForm, Address,
+)
+
 
 class CategorySerializer(serializers.ModelSerializer):
     position = serializers.IntegerField(read_only=True)
@@ -18,79 +22,86 @@ class BrandSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Brand
-        fields = ['id', 'name', 'slug', 'is_active', 'image', 'bg_color', 'position', 'created_at']   
+        fields = ['id', 'name', 'slug', 'is_active', 'image', 'bg_color', 'position', 'created_at']
+
 
 class DiscountPopupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DiscountPopup
-        fields = ['id', 'banner', 'products', 'brand', 'category', 'is_active']        
+        fields = ['id', 'banner', 'products', 'brand', 'category', 'is_active']
+
 
 class PrivacySerializer(serializers.ModelSerializer):
     class Meta:
         model = Privacy
-        fields = ['id', 'p_title', 't_title', 'p_text', 't_text', 'created_at']      
+        fields = ['id', 'p_title', 't_title', 'p_text', 't_text', 'created_at']
+
 
 class AboutSerializer(serializers.ModelSerializer):
     class Meta:
         model = About
-        fields = ['id', 'title', 'text', 'created_at']     
+        fields = ['id', 'title', 'text', 'created_at']
+
 
 class ContactInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactInfo
-        fields = ['id', 'title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text', 'created_at']     
+        fields = ['id', 'title', 'tagline', 'mailing_address', 'helpline_number', 'corporate_contact', 'email_generic', 'email_collaboration', 'email_hr', 'drop_us_line_text', 'created_at']
+
 
 class ContactFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactForm
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'message', 'created_at']             
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'message', 'created_at']
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['id', 'item', 'user', 'rating', 'comment', 'created_at']
 
+
 class BannerSerializer(serializers.ModelSerializer):
     category = serializers.StringRelatedField(many=True)
-    brand = serializers.StringRelatedField(many=True) 
+    brand = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Banner
-        fields = ["id", "category", "brand", "image", "created_at"]   
+        fields = ["id", "category", "brand", "image", "created_at"]
 
 
 class AdSerializer(serializers.ModelSerializer):
     category = serializers.StringRelatedField(many=True)
     brand = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Ad
-        fields = ["id", "category", "brand", "image", "created_at"] 
+        fields = ["id", "category", "brand", "image", "created_at"]
 
 
 class HeroSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hero
-        fields = ['id', 'title', 'subtext', 'image', 'created_at']          
-
+        fields = ['id', 'title', 'subtext', 'image', 'created_at']
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
-        sale_price = serializers.SerializerMethodField()
-        attributes = serializers.SerializerMethodField()
+    sale_price = serializers.SerializerMethodField()
+    attributes = serializers.SerializerMethodField()
 
-        def get_sale_price(self, obj):
-            attrs = obj.attributes or {}
-            return attrs.get('sale_price', None)
+    class Meta:
+        model = ProductVariant
+        fields = ["id", "sku", "price", "sale_price", "stock", "attributes", "is_active", "image"]
 
-        def get_attributes(self, obj):
-            attrs = dict(obj.attributes or {})
-            attrs.pop('sale_price', None)
-            return attrs
+    def get_sale_price(self, obj):
+        attrs = obj.attributes or {}
+        return attrs.get('sale_price', None)
 
-        class Meta:
-            model = ProductVariant
-            fields = ["id", "sku", "price", "sale_price", "stock", "attributes", "is_active", "image"]
-
+    def get_attributes(self, obj):
+        attrs = dict(obj.attributes or {})
+        attrs.pop('sale_price', None)
+        return attrs
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -121,7 +132,7 @@ class ProductSerializer(serializers.ModelSerializer):
     position = serializers.IntegerField(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     total_sold = serializers.IntegerField(read_only=True, default=0)
-    
+
     reviews = serializers.SerializerMethodField()
     avg_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
@@ -181,14 +192,10 @@ class ProductSerializer(serializers.ModelSerializer):
         return Review.objects.filter(item__in=order_items).count()
 
 
-
-
-
-
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = [ "id",'image', 'name', 'pts', 'variants', 'price', 'quantity', 'cost_price']
+        fields = ["id", 'image', 'name', 'pts', 'variants', 'price', 'quantity', 'cost_price']
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -202,51 +209,26 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         fields = ['id', 'street', 'city', 'state', 'postal_code', 'country']
 
-class AppUserRegisterStepOneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AppUser
-        fields = ["number"]
-
-    def validate_number(self, value):
-        import re
-        if not re.fullmatch(r"\+?\d{9,15}", value):
-            raise serializers.ValidationError("Enter a valid phone number.")
-        return value
-
-class AppUserRegisterStepTwoSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6, required=True)
-
-    class Meta:
-        model = AppUser
-        fields = ["name", "email", "password"]  
-
-    def update(self, instance, validated_data):
-        from django.contrib.auth.hashers import make_password
-        instance.name = validated_data.get("name", instance.name)
-        instance.email = validated_data.get("email", instance.email)
-        if "password" in validated_data:
-            instance.password_hash = make_password(validated_data["password"])
-        instance.save()
-        return instance
-
 
 class AppUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6)
+    password = serializers.CharField(write_only=True, min_length=6, required=False)
     password_hash = serializers.CharField(read_only=True)
     addresses = AddressSerializer(many=True, required=False)
 
-    # NAYE DYNAMIC FIELDS (YEH ADD KARNA HAI API RESPONSE MEIN)
     point_value = serializers.SerializerMethodField(read_only=True)
     points_in_rupees = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = AppUser
         fields = [
-            "id", "number", "name", "email", "image", "is_active", 
+            "id", "number", "name", "email", "image", "is_active",
             "password", "password_hash", "created_at", "api_token", "addresses",
-            "points", "point_value", "points_in_rupees"  
+            "points", "point_value", "points_in_rupees"
         ]
-        read_only_fields = ["id", "created_at", "password_hash", "api_token", "points", "point_value", "points_in_rupees"]
+        read_only_fields = [
+            "id", "created_at", "password_hash", "api_token",
+            "points", "point_value", "points_in_rupees"
+        ]
 
     def validate_number(self, value):
         import re
@@ -255,10 +237,10 @@ class AppUserSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        from django.contrib.auth.hashers import make_password
         addresses_data = validated_data.pop("addresses", None)
-        password = validated_data.pop("password")
-        validated_data["password_hash"] = make_password(password)
+        password = validated_data.pop("password", None)
+        if password:
+            validated_data["password_hash"] = make_password(password)
         user = super().create(validated_data)
         if addresses_data:
             for addr_data in addresses_data:
@@ -266,15 +248,16 @@ class AppUserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        from django.contrib.auth.hashers import make_password
         instance.name = validated_data.get("name", instance.name)
         instance.email = validated_data.get("email", instance.email)
         instance.image = validated_data.get("image", instance.image)
+        password = validated_data.get("password")
+        if password:
+            instance.password_hash = make_password(password)
         instance.save()
         return instance
-    
+
     def get_point_value(self, obj):
-        from .models import PointSetting
         setting = PointSetting.objects.first()
         return float(setting.point_value) if setting else 0.50
 
@@ -283,25 +266,6 @@ class AppUserSerializer(serializers.ModelSerializer):
         point_val = float(setting.point_value) if setting else 0.50
         return round((obj.points or 0) * point_val, 2)
 
-    # Method to calculate total points
-    # def get_total_points(self, obj):
-    #     normal_pts = (
-    #         Order.objects.filter(user=obj, type="normal", status="delivered")
-    #         .aggregate(total=Sum("items__pts"))["total"]
-    #         or 0
-    #     )
-    #     redeem_pts = (
-    #         Order.objects.filter(user=obj, type="redeem", status="delivered")
-    #         .aggregate(total=Sum("items__pts"))["total"]
-    #         or 0
-    #     )
-    #     return normal_pts - redeem_pts
-
-
-# class SimpleUserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = AppUser
-#         fields = ['id', 'number', 'name', 'email'] 
 
 class OrderSerializer(serializers.ModelSerializer):
     total_amount = serializers.FloatField(read_only=True)
@@ -315,11 +279,15 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = [ 'id', 'user_detail', 'address', 'shipping', 'status', 'type', 'items', "discount_code",
+        fields = [
+            'id', 'user_detail', 'address', 'shipping', 'status', 'type', 'items',
+            "discount_code",
             "discount_type",
             "discount_amount",
-            "total_amount", 'payments',"points_used",       
-            "points_discount", 
+            "total_amount",
+            'payments',
+            "points_used",
+            "points_discount",
             'created_at'
         ]
 
@@ -334,6 +302,7 @@ class OrderSerializer(serializers.ModelSerializer):
             return ast.literal_eval(obj.shipping) if obj.shipping else {}
         except Exception:
             return {}
+
 
 class DiscountValidateSerializer(serializers.ModelSerializer):
     discount_amount = serializers.FloatField(read_only=True)
@@ -378,7 +347,7 @@ class RiderOrderItemSerializer(serializers.ModelSerializer):
 class RiderOrderSerializer(serializers.ModelSerializer):
     user_detail = AppUserSerializer(source="user", read_only=True)
     items = RiderOrderItemSerializer(many=True, read_only=True)
-    payments = PaymentSerializer(many=True, read_only=True) 
+    payments = PaymentSerializer(many=True, read_only=True)
     city = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
 
