@@ -9,7 +9,6 @@ from app import views, api_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('media-library/', include('media_library.urls')),
-    path('bulk-delete/', views.bulk_delete, name='bulk_delete'),
 
     # ── Custom login / logout ──
     path('login/', views.user_login, name='login'),
